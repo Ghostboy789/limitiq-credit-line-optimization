@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 from sklearn.calibration import CalibratedClassifierCV, calibration_curve
 from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.inspection import permutation_importance
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     average_precision_score,
@@ -54,7 +55,7 @@ from limitiq.features import (
     clean_source,
     engineer_features,
 )
-from limitiq.optimizer import recommend_portfolio, summarize_portfolio
+from limitiq.optimizer import portfolio_sensitivity, recommend_portfolio, summarize_portfolio
 
 
 def _write_json(path: Path, value: Any) -> None:
@@ -291,26 +292,79 @@ def _segment_metrics(
 
 
 def _permutation_importance(
-    _model: Any, X: pd.DataFrame, y: pd.Series, sample_size: int = 1_500
+    model: Any, X: pd.DataFrame, y: pd.Series, sample_size: int = 1_500
 ) -> list[dict[str, float | str]]:  # noqa: N803
     sample = X.sample(min(sample_size, len(X)), random_state=SEED)
     target = y.loc[sample.index]
-    rng = np.random.default_rng(SEED)
-    features = engineer_features(sample)
-    # Use engineered-feature correlation to outcome as a transparent governance proxy because the
-    # calibrated pipeline does not expose a single stable coefficient vector across folds.
-    values = []
-    for name in FEATURE_NAMES:
-        shuffled = features[name].to_numpy().copy()
-        rng.shuffle(shuffled)
-        correlation = abs(float(np.corrcoef(features[name], target)[0, 1]))
-        values.append(
-            {"feature": name, "importance": 0.0 if math.isnan(correlation) else correlation}
-        )
-    total = sum(item["importance"] for item in values) or 1.0
-    for item in values:
-        item["importance"] = float(item["importance"] / total)
+    result = permutation_importance(
+        model,
+        sample,
+        target,
+        scoring="neg_brier_score",
+        n_repeats=5,
+        random_state=SEED,
+        n_jobs=1,
+    )
+    positive = np.maximum(result.importances_mean, 0)
+    total = float(positive.sum()) or 1.0
+    values = [
+        {
+            "feature": name,
+            "importance": float(value / total),
+            "brier_degradation": float(raw),
+        }
+        for name, value, raw in zip(sample.columns, positive, result.importances_mean, strict=True)
+    ]
     return sorted(values, key=lambda item: item["importance"], reverse=True)
+
+
+def _drift_indicators(reference: pd.DataFrame, comparison: pd.DataFrame) -> list[dict[str, Any]]:
+    reference_features = engineer_features(reference)
+    comparison_features = engineer_features(comparison)
+    rows = []
+    for name in FEATURE_NAMES:
+        expected = reference_features[name].to_numpy()
+        actual = comparison_features[name].to_numpy()
+        edges = np.unique(np.quantile(expected, np.linspace(0, 1, 11)))
+        if len(edges) < 3:
+            psi = 0.0
+        else:
+            edges[0], edges[-1] = -np.inf, np.inf
+            expected_share = np.histogram(expected, bins=edges)[0] / len(expected)
+            actual_share = np.histogram(actual, bins=edges)[0] / len(actual)
+            expected_share = np.clip(expected_share, 1e-6, None)
+            actual_share = np.clip(actual_share, 1e-6, None)
+            psi = float(
+                np.sum((actual_share - expected_share) * np.log(actual_share / expected_share))
+            )
+        status = "Stable" if psi < 0.10 else "Monitor" if psi < 0.25 else "Investigate"
+        rows.append({"feature": name, "psi": psi, "status": status})
+    return sorted(rows, key=lambda item: item["psi"], reverse=True)
+
+
+def _save_model_ready_splits(
+    splits: dict[str, tuple[pd.DataFrame, pd.Series]],
+    dataset_version: str,
+    output_dir: Path | None = None,
+) -> dict[str, Any]:
+    directory = output_dir or (PROCESSED_DIR / "splits")
+    directory.mkdir(parents=True, exist_ok=True)
+    files: dict[str, Any] = {}
+    for name, (features, target) in splits.items():
+        output = features.copy()
+        output[TARGET] = target
+        path = directory / f"{name}.csv"
+        output.reset_index(drop=True).to_csv(path, index=False)
+        files[name] = {"rows": len(output), "sha256": _sha256(path)}
+    metadata = {
+        "dataset_version": dataset_version,
+        "random_seed": SEED,
+        "stratified": True,
+        "columns": [*MODEL_INPUT_COLUMNS, TARGET],
+        "files": files,
+    }
+    _write_json(directory / "metadata.json", metadata)
+    return metadata
 
 
 def train_models() -> dict[str, Any]:
@@ -322,6 +376,14 @@ def train_models() -> dict[str, Any]:
     )
     validation_x, test_x, validation_y, test_y = train_test_split(
         holdout_x, holdout_y, test_size=0.5, stratify=holdout_y, random_state=SEED
+    )
+    split_metadata = _save_model_ready_splits(
+        {
+            "train": (train_x, train_y),
+            "validation": (validation_x, validation_y),
+            "test": (test_x, test_y),
+        },
+        quality["dataset_version"],
     )
     audit_test = frame.loc[test_x.index, DEMOGRAPHIC_COLUMNS]
     validation_results: dict[str, Any] = {}
@@ -353,6 +415,7 @@ def train_models() -> dict[str, Any]:
         audit_test, test_y, test_probability, selected_threshold
     )
     test_metrics["feature_importance"] = _permutation_importance(champion, test_x, test_y)
+    test_metrics["drift_indicators"] = _drift_indicators(combined_x, test_x)
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     model_path = MODEL_DIR / "champion.joblib"
     joblib.dump(champion, model_path, compress=3)
@@ -371,9 +434,12 @@ def train_models() -> dict[str, Any]:
         "decision_features": FEATURE_NAMES,
         "excluded_from_decisioning": [ID_COLUMN, TARGET, *DEMOGRAPHIC_COLUMNS],
         "split": {"train": len(train_x), "validation": len(validation_x), "test": len(test_x)},
+        "split_artifacts": split_metadata,
         "validation_models": validation_results,
         "test_metrics": test_metrics,
         "audit_note": "Sex and age are used only for offline test diagnostics, never model inference.",
+        "feature_importance_method": "Five-repeat permutation importance on untouched test data using Brier-score degradation; descriptive, not causal.",
+        "drift_method": "PSI comparing development train+validation engineered features with the untouched test split; a development reference, not production monitoring.",
     }
     _write_json(MODEL_DIR / "metadata.json", metadata)
     _write_json(
@@ -432,6 +498,9 @@ def generate_demo(
         "classification": "Simulated portfolio outcome",
         "assumptions": assumptions.to_dict(),
         "summary": summary,
+        "sensitivity": portfolio_sensitivity(
+            frame[MODEL_INPUT_COLUMNS], probabilities, account_ids, assumptions
+        ),
         "limitations": [
             "Limit response, drawdown, revenue, costs, LGD and CCF are transparent assumptions.",
             "No simulated outcome is an observed or causal production result.",
@@ -489,6 +558,12 @@ def resimulate_existing(assumptions: PolicyAssumptions | None = None) -> dict[st
         "classification": "Simulated portfolio outcome",
         "assumptions": assumptions.to_dict(),
         "summary": summarize_portfolio(decisions),
+        "sensitivity": portfolio_sensitivity(
+            demo[MODEL_INPUT_COLUMNS],
+            demo["pd"].to_numpy(),
+            demo["account_id"].tolist(),
+            assumptions,
+        ),
         "limitations": [
             "Limit response is a simulated monthly elasticity annualized over 12 periods; drawdown, revenue, costs, LGD and CCF are also assumptions.",
             "No simulated outcome is an observed or causal production result.",

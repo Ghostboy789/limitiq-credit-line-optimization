@@ -133,13 +133,14 @@ def _candidate(
     servicing = assumptions.servicing_cost if increase_pct else 0.0
     contribution = interchange + interest - incremental_ecl - funding - capital - servicing
     checks = {
-        "within_maximum_increase": increase_pct <= assumptions.max_increase + 1e-12,
-        "within_account_exposure": proposed_limit <= assumptions.max_account_exposure,
-        "within_expected_loss_ceiling": pd_value * assumptions.lgd
-        <= assumptions.expected_loss_ceiling,
-        "meets_profitability_hurdle": contribution >= assumptions.profitability_hurdle,
+        "within_maximum_increase": bool(increase_pct <= assumptions.max_increase + 1e-12),
+        "within_account_exposure": bool(proposed_limit <= assumptions.max_account_exposure),
+        "within_expected_loss_ceiling": bool(
+            pd_value * assumptions.lgd <= assumptions.expected_loss_ceiling
+        ),
+        "meets_profitability_hurdle": bool(contribution >= assumptions.profitability_hurdle),
         "payment_history_eligible": bool((behavior["statuses"] <= 0).all()),
-        "not_overextended": utilization <= 1.10,
+        "not_overextended": bool(utilization <= 1.10),
     }
     eligible = increase_pct == 0 or all(checks.values())
     return {
@@ -272,11 +273,67 @@ def recommend_portfolio(
     return [by_id[account_id] for account_id in account_ids]
 
 
+SENSITIVITY_ASSUMPTIONS = (
+    "lgd",
+    "ccf",
+    "interchange_rate",
+    "apr",
+    "funding_cost",
+    "capital_cost",
+    "response_elasticity",
+    "max_increase",
+    "expected_loss_ceiling",
+    "profitability_hurdle",
+)
+
+
+def portfolio_sensitivity(
+    frame: pd.DataFrame,
+    probabilities: np.ndarray,
+    account_ids: list[str],
+    assumptions: PolicyAssumptions | None = None,
+) -> list[dict[str, Any]]:
+    """Re-optimize low/base/high one-at-a-time scenarios for key assumptions."""
+    assumptions = assumptions or PolicyAssumptions()
+    base_values = assumptions.to_dict()
+    base_summary = summarize_portfolio(
+        recommend_portfolio(frame, probabilities, account_ids, assumptions)
+    )
+    rows: list[dict[str, Any]] = []
+    for name in SENSITIVITY_ASSUMPTIONS:
+        base = base_values[name]
+        for label, factor in (("Low", 0.8), ("Base", 1.0), ("High", 1.2)):
+            values = dict(base_values)
+            values[name] = min(base * factor, 1.0) if base <= 1 else base * factor
+            if factor == 1.0:
+                summary = base_summary
+            else:
+                scenario = PolicyAssumptions(**values)
+                summary = summarize_portfolio(
+                    recommend_portfolio(frame, probabilities, account_ids, scenario)
+                )
+            rows.append(
+                {
+                    "assumption": name,
+                    "scenario": label,
+                    "value": values[name],
+                    "eligible_increases": summary["eligible_increases"],
+                    "proposed_limit": summary["proposed_limit"],
+                    "proposed_expected_loss": summary["proposed_expected_loss"],
+                    "incremental_contribution": summary["incremental_contribution"],
+                    "risk_adjusted_return": summary["risk_adjusted_return"],
+                }
+            )
+    return rows
+
+
 def summarize_portfolio(decisions: list[Decision]) -> dict[str, Any]:
     current_limit = sum(item.current_limit for item in decisions)
     proposed_limit = sum(item.proposed_limit for item in decisions)
     current_ecl = sum(item.current_expected_loss for item in decisions)
     proposed_ecl = sum(item.proposed_expected_loss for item in decisions)
+    current_ead = sum(item.current_ead for item in decisions)
+    proposed_ead = sum(item.proposed_ead for item in decisions)
     contribution = sum(item.incremental_contribution for item in decisions)
     incremental_exposure = sum(item.proposed_ead - item.current_ead for item in decisions)
     action_counts: dict[str, int] = {}
@@ -288,6 +345,8 @@ def summarize_portfolio(decisions: list[Decision]) -> dict[str, Any]:
         "accounts": len(decisions),
         "current_limit": current_limit,
         "proposed_limit": proposed_limit,
+        "current_ead": current_ead,
+        "proposed_ead": proposed_ead,
         "current_expected_loss": current_ecl,
         "proposed_expected_loss": proposed_ecl,
         "incremental_contribution": contribution,

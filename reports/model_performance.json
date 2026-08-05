@@ -1,14 +1,14 @@
 {
-  "model_version": "limitiq-1.0.0-4a84b86c3f7f",
+  "model_version": "limitiq-1.0.0-f8fe4953fac4",
   "champion": "Histogram gradient boosting",
   "selection_rule": "Lowest validation Brier score among models within 0.02 ROC-AUC of the best",
   "threshold_rule": "Minimize validation cost with false negatives weighted 5x false positives",
   "selected_threshold": 0.14909909909909907,
-  "trained_at": "2026-08-05T17:52:32.667711+00:00",
+  "trained_at": "2026-08-05T19:37:30.442196+00:00",
   "random_seed": 42,
   "dataset_version": "uci-350-30c6be3abd8d",
   "dataset_checksum": "30c6be3abd8dcfd3e6096c828bad8c2f011238620f5369220bd60cfc82700933",
-  "model_checksum": "4a84b86c3f7f0fa4cc74a9e1a9140192313719712d3df5ee865e1dfd2eacff96",
+  "model_checksum": "f8fe4953fac4252ba7b2736fba5f259d460751a1881430052223ca879f59c043",
   "decision_features": [
     "limit_bal",
     "current_utilization",
@@ -40,6 +40,47 @@
     "train": 18000,
     "validation": 6000,
     "test": 6000
+  },
+  "split_artifacts": {
+    "dataset_version": "uci-350-30c6be3abd8d",
+    "random_seed": 42,
+    "stratified": true,
+    "columns": [
+      "LIMIT_BAL",
+      "PAY_0",
+      "PAY_2",
+      "PAY_3",
+      "PAY_4",
+      "PAY_5",
+      "PAY_6",
+      "BILL_AMT1",
+      "BILL_AMT2",
+      "BILL_AMT3",
+      "BILL_AMT4",
+      "BILL_AMT5",
+      "BILL_AMT6",
+      "PAY_AMT1",
+      "PAY_AMT2",
+      "PAY_AMT3",
+      "PAY_AMT4",
+      "PAY_AMT5",
+      "PAY_AMT6",
+      "default_next_month"
+    ],
+    "files": {
+      "train": {
+        "rows": 18000,
+        "sha256": "8e04b4415e548757262d3dc3019be386a253948fc30160d968a7552cee06e1b8"
+      },
+      "validation": {
+        "rows": 6000,
+        "sha256": "80c33b096a5b1f992d9ddc5c2db8884c687da7cc66e7b7413d2acd5d9c028e7c"
+      },
+      "test": {
+        "rows": 6000,
+        "sha256": "e3a331952ae2e30f03758530b220fdc39c2062599987245d0eea90d56c5544d1"
+      }
+    }
   },
   "validation_models": {
     "Regularized logistic regression": {
@@ -328,74 +369,190 @@
     ],
     "feature_importance": [
       {
-        "feature": "delinquent_month_count",
-        "importance": 0.1896546761119764
+        "feature": "PAY_0",
+        "importance": 0.5420200672385843,
+        "brier_degradation": 0.03018394236518075
       },
       {
-        "feature": "maximum_delinquency_severity",
-        "importance": 0.1735170042608112
+        "feature": "BILL_AMT1",
+        "importance": 0.05761466439561641,
+        "brier_degradation": 0.0032084378690374836
       },
       {
-        "feature": "recent_payment_deterioration",
-        "importance": 0.093766718625799
+        "feature": "LIMIT_BAL",
+        "importance": 0.054771587799023184,
+        "brier_degradation": 0.0030501129926753133
       },
       {
-        "feature": "payment_consistency",
-        "importance": 0.09345986606540221
+        "feature": "PAY_2",
+        "importance": 0.05163486036862356,
+        "brier_degradation": 0.0028754353272212986
       },
       {
-        "feature": "average_utilization",
-        "importance": 0.07400188540391332
+        "feature": "PAY_4",
+        "importance": 0.036303086007149925,
+        "brier_degradation": 0.002021641488848569
       },
       {
-        "feature": "revolving_balance_proxy",
-        "importance": 0.06832404034280233
+        "feature": "PAY_3",
+        "importance": 0.030342208585348883,
+        "brier_degradation": 0.0016896929293382212
       },
       {
-        "feature": "current_utilization",
-        "importance": 0.06832035529815496
+        "feature": "PAY_5",
+        "importance": 0.02719690161685021,
+        "brier_degradation": 0.0015145374876925966
       },
       {
-        "feature": "limit_headroom",
-        "importance": 0.06637238719272764
+        "feature": "PAY_AMT3",
+        "importance": 0.022737499170814336,
+        "brier_degradation": 0.0012662028695666517
       },
       {
-        "feature": "maximum_utilization",
-        "importance": 0.057002490290847314
+        "feature": "PAY_AMT5",
+        "importance": 0.020636100175963602,
+        "brier_degradation": 0.0011491804381464077
       },
       {
-        "feature": "average_payment_ratio",
-        "importance": 0.04145491668421244
+        "feature": "PAY_AMT1",
+        "importance": 0.020166858121900444,
+        "brier_degradation": 0.001123049348226951
       },
       {
-        "feature": "inactive_month_count",
-        "importance": 0.030517075452200074
+        "feature": "BILL_AMT3",
+        "importance": 0.01879890667758478,
+        "brier_degradation": 0.0010468710477371745
       },
+      {
+        "feature": "PAY_AMT6",
+        "importance": 0.01676007154679515,
+        "brier_degradation": 0.0009333326645673656
+      },
+      {
+        "feature": "PAY_AMT2",
+        "importance": 0.016447359791041317,
+        "brier_degradation": 0.0009159184133558263
+      },
+      {
+        "feature": "BILL_AMT5",
+        "importance": 0.015810220636637378,
+        "brier_degradation": 0.0008804374917487978
+      },
+      {
+        "feature": "PAY_AMT4",
+        "importance": 0.014624241937274492,
+        "brier_degradation": 0.0008143928655963417
+      },
+      {
+        "feature": "BILL_AMT4",
+        "importance": 0.014403059173492975,
+        "brier_degradation": 0.0008020756688767339
+      },
+      {
+        "feature": "BILL_AMT6",
+        "importance": 0.014224952202302885,
+        "brier_degradation": 0.0007921572712413338
+      },
+      {
+        "feature": "PAY_6",
+        "importance": 0.013524727496919199,
+        "brier_degradation": 0.0007531632497512153
+      },
+      {
+        "feature": "BILL_AMT2",
+        "importance": 0.011982627058076902,
+        "brier_degradation": 0.0006672869629109956
+      }
+    ],
+    "drift_indicators": [
       {
         "feature": "recent_payment_ratio",
-        "importance": 0.01833082822206456
+        "psi": 0.002235957501074467,
+        "status": "Stable"
       },
       {
         "feature": "utilization_trend",
-        "importance": 0.01450062719908661
+        "psi": 0.001806724797176413,
+        "status": "Stable"
       },
       {
-        "feature": "balance_volatility",
-        "importance": 0.0049173389556376205
+        "feature": "average_utilization",
+        "psi": 0.0017549044168065733,
+        "status": "Stable"
       },
       {
         "feature": "payment_volatility",
-        "importance": 0.0041854413352084155
+        "psi": 0.0015454556017689908,
+        "status": "Stable"
+      },
+      {
+        "feature": "recent_payment_deterioration",
+        "psi": 0.0013766874139329512,
+        "status": "Stable"
+      },
+      {
+        "feature": "current_utilization",
+        "psi": 0.0013442486058700743,
+        "status": "Stable"
+      },
+      {
+        "feature": "limit_headroom",
+        "psi": 0.0013302811497522486,
+        "status": "Stable"
+      },
+      {
+        "feature": "balance_volatility",
+        "psi": 0.001204104205761209,
+        "status": "Stable"
+      },
+      {
+        "feature": "maximum_utilization",
+        "psi": 0.0010553903326245536,
+        "status": "Stable"
+      },
+      {
+        "feature": "revolving_balance_proxy",
+        "psi": 0.0009251930153610512,
+        "status": "Stable"
       },
       {
         "feature": "recent_balance_growth",
-        "importance": 0.0016743485591559654
+        "psi": 0.0007939761245398407,
+        "status": "Stable"
+      },
+      {
+        "feature": "average_payment_ratio",
+        "psi": 0.0007101638669188035,
+        "status": "Stable"
+      },
+      {
+        "feature": "delinquent_month_count",
+        "psi": 0.0003001668727893162,
+        "status": "Stable"
+      },
+      {
+        "feature": "payment_consistency",
+        "psi": 0.00028457496102877317,
+        "status": "Stable"
+      },
+      {
+        "feature": "maximum_delinquency_severity",
+        "psi": 0.00017175776746443578,
+        "status": "Stable"
+      },
+      {
+        "feature": "inactive_month_count",
+        "psi": 0.00013702438112699798,
+        "status": "Stable"
       },
       {
         "feature": "limit_bal",
-        "importance": 0.0
+        "psi": 0.0,
+        "status": "Stable"
       }
     ]
   },
-  "audit_note": "Sex and age are used only for offline test diagnostics, never model inference."
+  "audit_note": "Sex and age are used only for offline test diagnostics, never model inference.",
+  "feature_importance_method": "Five-repeat permutation importance on untouched test data using Brier-score degradation; descriptive, not causal.",
+  "drift_method": "PSI comparing development train+validation engineered features with the untouched test split; a development reference, not production monitoring."
 }

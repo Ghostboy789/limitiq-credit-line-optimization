@@ -18,7 +18,8 @@ UCI reports no missing values. The observed default rate is 22.12%.
 The pipeline validates required names, numeric conversion, positive limits,
 binary target, repayment status range -2 to 9, non-negative payment amounts,
 missingness and duplicate IDs. It removes invalid/duplicate-ID rows, uses fixed
-stratified 60/20/20 splits and records lineage/checksums. The committed demo has
+stratified 60/20/20 splits, saves model-ready split CSVs with checksums during
+rebuild and records lineage/checksums. The committed demo has
 6,000 untouched-test accounts with deterministic synthetic IDs; original IDs and
 all demographics are removed.
 
@@ -50,4 +51,3 @@ cannot establish legally relevant groups across jurisdictions.
 
 The download URL and CC BY 4.0 metadata are recorded. A rebuild computes the raw
 checksum; unexpected checksum/schema changes require review before retraining.
-

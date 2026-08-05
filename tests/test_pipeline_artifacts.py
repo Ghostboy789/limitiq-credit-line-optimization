@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
 
 import joblib
 import numpy as np
@@ -9,7 +10,8 @@ import pandas as pd
 
 from limitiq.config import MODEL_DIR, PROCESSED_DIR, REPORT_DIR, ROOT, SEED
 from limitiq.features import MODEL_INPUT_COLUMNS
-from limitiq.pipeline import synthetic_account_id
+from limitiq.pipeline import _model_candidates, _save_model_ready_splits, synthetic_account_id
+from limitiq.reporting import build_reports
 
 
 def test_data_quality_evidence_matches_source() -> None:
@@ -51,22 +53,47 @@ def test_committed_demo_has_no_demographics_or_source_ids() -> None:
     assert demo["account_id"].str.match(r"^LIQ-[A-F0-9]{10}$").all()
 
 
-def test_training_configuration_and_predictions_are_reproducible() -> None:
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.pipeline import make_pipeline
-    from sklearn.preprocessing import StandardScaler
-
-    demo = pd.read_csv(PROCESSED_DIR / "demo_portfolio.csv", nrows=400)
+def test_real_candidate_pipelines_train_reproducibly() -> None:
+    demo = pd.read_csv(PROCESSED_DIR / "demo_portfolio.csv", nrows=240)
     x = demo[MODEL_INPUT_COLUMNS]
-    y = (demo["pd"] >= demo["pd"].median()).astype(int)
-    first_model = make_pipeline(StandardScaler(), LogisticRegression(random_state=SEED))
-    second_model = make_pipeline(StandardScaler(), LogisticRegression(random_state=SEED))
-    first = first_model.fit(x, y).predict_proba(x)[:, 1]
-    second = second_model.fit(x, y).predict_proba(x)[:, 1]
-    assert np.array_equal(first, second)
+    y = pd.Series(np.tile([0, 0, 1], 80), index=x.index)
+    for name in _model_candidates():
+        first_model = _model_candidates()[name].fit(x, y)
+        second_model = _model_candidates()[name].fit(x, y)
+        first = first_model.predict_proba(x)[:, 1]
+        second = second_model.predict_proba(x)[:, 1]
+        assert np.array_equal(first, second), name
 
 
-def test_reports_are_generated_and_nonempty() -> None:
+def test_model_ready_splits_are_saved_with_metadata(tmp_path) -> None:
+    demo = pd.read_csv(PROCESSED_DIR / "demo_portfolio.csv", nrows=9)
+    target = pd.Series(np.tile([0, 1, 0], 3))
+    metadata = _save_model_ready_splits(
+        {
+            "train": (demo[MODEL_INPUT_COLUMNS].iloc[:5], target.iloc[:5]),
+            "validation": (demo[MODEL_INPUT_COLUMNS].iloc[5:7], target.iloc[5:7]),
+            "test": (demo[MODEL_INPUT_COLUMNS].iloc[7:], target.iloc[7:]),
+        },
+        "test-dataset",
+        tmp_path,
+    )
+    assert metadata["random_seed"] == SEED
+    assert metadata["files"]["train"]["rows"] == 5
+    assert list(pd.read_csv(tmp_path / "train.csv").columns) == [
+        *MODEL_INPUT_COLUMNS,
+        "default_next_month",
+    ]
+
+
+def test_reports_are_actually_generated_and_nonempty(tmp_path) -> None:
+    report_dir = tmp_path / "reports"
+    model_dir = tmp_path / "models"
+    report_dir.mkdir()
+    model_dir.mkdir()
+    for name in ("data_quality.json", "eda.json", "policy_simulation.json"):
+        shutil.copyfile(REPORT_DIR / name, report_dir / name)
+    shutil.copyfile(MODEL_DIR / "metadata.json", model_dir / "metadata.json")
+    build_reports(report_dir, model_dir)
     expected = [
         "executive_report.html",
         "executive_report.pdf",
@@ -77,8 +104,11 @@ def test_reports_are_generated_and_nonempty() -> None:
         "financial_impact_analysis.html",
     ]
     for name in expected:
-        assert (REPORT_DIR / name).stat().st_size > 1_000
-    assert (REPORT_DIR / "executive_report.pdf").read_bytes().startswith(b"%PDF")
+        assert (report_dir / name).stat().st_size > 1_000
+    assert (report_dir / "executive_report.pdf").read_bytes().startswith(b"%PDF")
+    assert "One-at-a-time sensitivity" in (report_dir / "policy_simulation_report.html").read_text(
+        encoding="utf-8"
+    )
 
 
 def test_no_unresolved_placeholder_tokens_in_user_artifacts() -> None:

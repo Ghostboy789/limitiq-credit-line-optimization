@@ -65,7 +65,7 @@ before one untouched-test read.
 Champion: **calibrated histogram gradient boosting**. Untouched-test ROC-AUC
 0.781082, PR-AUC 0.568754, Brier 0.133120, log loss 0.426325, precision 0.360506,
 recall 0.773173 and F1 0.491733 at threshold 0.149099. Model artifact SHA-256:
-`4a84b86c3f7f0fa4cc74a9e1a9140192313719712d3df5ee865e1dfd2eacff96`.
+`f8fe4953fac4252ba7b2736fba5f259d460751a1881430052223ca879f59c043`.
 
 ## Simulated business result
 
@@ -160,6 +160,7 @@ debug, source secrets, personal data or uploaded deserialization.
 - [Data card](docs/DATA_CARD.md), [model card](docs/MODEL_CARD.md), [dictionary](docs/DATA_DICTIONARY.md)
 - [Assumptions](docs/ASSUMPTIONS.md), [case study](docs/CASE_STUDY.md), [five-minute walkthrough](docs/INTERVIEW_WALKTHROUGH.md)
 - [Deployment runbook](docs/DEPLOYMENT.md), [dataset attribution](NOTICE.md)
+- [Verified QA evidence](docs/QA_REPORT.md)
 - Generated [quality](reports/data_quality_report.html), [EDA](reports/eda_report.html), [model](reports/model_performance_report.html), [policy](reports/policy_simulation_report.html) and [financial](reports/financial_impact_analysis.html) reports
 
 ## Limitations and roadmap
@@ -178,4 +179,3 @@ small monitored pilot; outcome/calibration/drift monitoring and rollback.
 ## Licence
 
 Code: [MIT](LICENSE). Dataset: CC BY 4.0 with attribution in [NOTICE.md](NOTICE.md).
-

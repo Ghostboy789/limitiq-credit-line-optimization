@@ -140,6 +140,39 @@ def _decision_frame(decisions: list[Decision]) -> pd.DataFrame:
     )
 
 
+def _directional_sensitivity(
+    summary: dict[str, Any],
+    assumptions: PolicyAssumptions,
+    pd_values: np.ndarray,
+    current_ead: np.ndarray,
+    proposed_ead: np.ndarray,
+    current_limit: np.ndarray,
+    proposed_limit: np.ndarray,
+    utilization: np.ndarray,
+) -> dict[str, list[dict[str, Any]]]:
+    """Fast fixed-action sensitivity; the offline report performs full re-optimization."""
+    contribution = float(summary["incremental_contribution"])
+    loss_driver = float(np.sum(pd_values * (proposed_ead - current_ead)))
+    spend_driver = float(np.sum((proposed_limit - current_limit) * utilization * 12))
+    revenue_rate = assumptions.interchange_rate + assumptions.revolving_rate * assumptions.apr
+    charts: dict[str, list[dict[str, Any]]] = {}
+    for name, base, driver in (
+        ("lgd", assumptions.lgd, -loss_driver),
+        ("response_elasticity", assumptions.response_elasticity, spend_driver * revenue_rate),
+    ):
+        points = []
+        for label, factor in (("Low", 0.8), ("Base", 1.0), ("High", 1.2)):
+            value = min(base * factor, 1.0)
+            result = contribution + (value - base) * driver
+            points.append({"label": label, "value": value, "contribution": result})
+        maximum = max(abs(point["contribution"]) for point in points) or 1.0
+        for point in points:
+            point["width"] = max(2.0, abs(point["contribution"]) / maximum * 100)
+            point["negative"] = point["contribution"] < 0
+        charts[name] = points
+    return charts
+
+
 def _markdownish(text: str) -> str:
     """Tiny safe Markdown subset for repository-authored docs; avoids a runtime dependency."""
     lines = text.splitlines()
@@ -414,6 +447,7 @@ def create_app() -> FastAPI:
         assumptions = PolicyAssumptions()
         error = None
         baseline = simulation["summary"]
+        source = portfolio.rename(columns={"account_id": "ACCOUNT_ID"})
         if request.method == "POST":
             form = await request.form()
             try:
@@ -422,8 +456,10 @@ def create_app() -> FastAPI:
                 error = str(exc)
         if request.method == "GET" or error:
             summary = baseline
+            current_ead = source["current_ead"].to_numpy()
+            proposed_ead = source["proposed_ead"].to_numpy()
+            proposed_limit = source["proposed_limit"].to_numpy()
         else:
-            source = portfolio.rename(columns={"account_id": "ACCOUNT_ID"})
             decisions = recommend_portfolio(
                 source[MODEL_INPUT_COLUMNS],
                 source["pd"].to_numpy(),
@@ -431,6 +467,22 @@ def create_app() -> FastAPI:
                 assumptions,
             )
             summary = summarize_portfolio(decisions)
+            current_ead = np.asarray([item.current_ead for item in decisions])
+            proposed_ead = np.asarray([item.proposed_ead for item in decisions])
+            proposed_limit = np.asarray([item.proposed_limit for item in decisions])
+        utilization = np.clip(
+            source["BILL_AMT1"].to_numpy() / source["LIMIT_BAL"].to_numpy(), 0, 1.2
+        )
+        sensitivity = _directional_sensitivity(
+            summary,
+            assumptions,
+            source["pd"].to_numpy(),
+            current_ead,
+            proposed_ead,
+            source["LIMIT_BAL"].to_numpy(),
+            proposed_limit,
+            utilization,
+        )
         changes = {
             key: summary[key] - baseline[key]
             for key in (
@@ -452,6 +504,7 @@ def create_app() -> FastAPI:
                 baseline=baseline,
                 changes=changes,
                 actions=actions,
+                sensitivity=sensitivity,
                 error=error,
             ),
         )

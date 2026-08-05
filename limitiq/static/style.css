@@ -88,6 +88,7 @@ p { margin-top: 0; }
 .bar-row > div:first-child { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
 .bar-track { overflow: hidden; height: 9px; border-radius: 8px; background: #e8eef2; }
 .bar-track span { display: block; min-width: 2px; height: 100%; border-radius: inherit; background: var(--teal-600); }
+.bar-track span.negative-bar { background: var(--danger); }
 .bar-track span.risk-low { background: #2e8b66; }.bar-track span.risk-moderate { background: #d69b1d; }.bar-track span.risk-high { background: #df783d; }.bar-track span.risk-very-high { background: #b6404c; }
 .assumption-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--line); }
 .assumption-grid div { min-width: 0; padding: 14px; background: #fff; }

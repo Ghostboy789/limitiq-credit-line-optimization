@@ -53,12 +53,14 @@ def _table(headers: list[str], rows: list[list[str]]) -> str:
     return f"<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>"
 
 
-def _write_html(name: str, title: str, label: str, sections: list[tuple[str, str]]) -> None:
-    (REPORT_DIR / name).write_text(_html_page(title, label, sections), encoding="utf-8")
+def _write_html(
+    directory: Path, name: str, title: str, label: str, sections: list[tuple[str, str]]
+) -> None:
+    (directory / name).write_text(_html_page(title, label, sections), encoding="utf-8")
 
 
-def _executive_pdf(summary: dict[str, Any], model: dict[str, Any]) -> None:
-    path = REPORT_DIR / "executive_report.pdf"
+def _executive_pdf(summary: dict[str, Any], model: dict[str, Any], directory: Path) -> None:
+    path = directory / "executive_report.pdf"
     styles = getSampleStyleSheet()
     styles.add(
         ParagraphStyle(
@@ -126,6 +128,10 @@ def _executive_pdf(summary: dict[str, Any], model: dict[str, Any]) -> None:
                     f"{_money(simulation['current_limit'])} / {_money(simulation['proposed_limit'])}",
                 ],
                 [
+                    "Current / proposed EAD",
+                    f"{_money(simulation['current_ead'])} / {_money(simulation['proposed_ead'])}",
+                ],
+                [
                     "Current / proposed expected loss",
                     f"{_money(simulation['current_expected_loss'])} / {_money(simulation['proposed_expected_loss'])}",
                 ],
@@ -160,12 +166,14 @@ def _executive_pdf(summary: dict[str, Any], model: dict[str, Any]) -> None:
     doc.build(story)
 
 
-def build_reports() -> None:
-    REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    quality = _load(REPORT_DIR / "data_quality.json")
-    eda = _load(REPORT_DIR / "eda.json")
-    model = _load(MODEL_DIR / "metadata.json")
-    simulation = _load(REPORT_DIR / "policy_simulation.json")
+def build_reports(report_dir: Path | None = None, model_dir: Path | None = None) -> None:
+    report_dir = report_dir or REPORT_DIR
+    model_dir = model_dir or MODEL_DIR
+    report_dir.mkdir(parents=True, exist_ok=True)
+    quality = _load(report_dir / "data_quality.json")
+    eda = _load(report_dir / "eda.json")
+    model = _load(model_dir / "metadata.json")
+    simulation = _load(report_dir / "policy_simulation.json")
     summary = simulation["summary"]
     test = model["test_metrics"]
     metrics = "".join(
@@ -174,12 +182,18 @@ def build_reports() -> None:
             ("Untouched-test ROC-AUC", f"{test['roc_auc']:.3f}"),
             ("Untouched-test PR-AUC", f"{test['pr_auc']:.3f}"),
             ("Brier score", f"{test['brier_score']:.3f}"),
-            ("Current exposure", _money(summary["current_limit"])),
-            ("Proposed exposure — simulated", _money(summary["proposed_limit"])),
+            ("Current credit limits", _money(summary["current_limit"])),
+            ("Proposed credit limits — simulated", _money(summary["proposed_limit"])),
+            ("Current EAD — simulated", _money(summary["current_ead"])),
+            ("Proposed EAD — simulated", _money(summary["proposed_ead"])),
+            ("Current expected loss — simulated", _money(summary["current_expected_loss"])),
+            ("Proposed expected loss — simulated", _money(summary["proposed_expected_loss"])),
             ("Incremental contribution — simulated", _money(summary["incremental_contribution"])),
+            ("Risk-adjusted return — simulated", _pct(summary["risk_adjusted_return"])),
         )
     )
     _write_html(
+        report_dir,
         "executive_report.html",
         "Executive Report",
         "Observed, modelled and simulated evidence",
@@ -200,9 +214,14 @@ def build_reports() -> None:
                 "Recommendation",
                 "<p>Use the platform as a portfolio-design and governance demonstration. Production use requires current ability-to-pay data, jurisdiction-specific legal review, independent validation, monitoring and controlled overrides.</p>",
             ),
+            (
+                "Limitations and roadmap",
+                "<p>The old single-market source has no affordability, external-obligation, line-treatment, EAD/LGD or causal response outcomes. Next steps are current multi-market data, verified affordability inputs, randomized line experiments, independent validation, shadow mode, a monitored pilot and controlled rollback.</p>",
+            ),
         ],
     )
     _write_html(
+        report_dir,
         "data_quality_report.html",
         "Data Quality Report",
         "Observed source-data evidence",
@@ -229,6 +248,7 @@ def build_reports() -> None:
         ],
     )
     _write_html(
+        report_dir,
         "eda_report.html",
         "Exploratory Data Analysis",
         "Observed source-data statistics",
@@ -261,7 +281,27 @@ def build_reports() -> None:
                 f"{values['log_loss']:.3f}",
             ]
         )
+    importance_rows = [
+        [item["feature"], f"{item['importance']:.2%}", f"{item['brier_degradation']:.6f}"]
+        for item in test["feature_importance"][:12]
+    ]
+    drift_rows = [
+        [item["feature"], f"{item['psi']:.4f}", item["status"]]
+        for item in test["drift_indicators"][:12]
+    ]
+    segment_rows = [
+        [
+            item["dimension"],
+            item["segment"],
+            str(item["accounts"]),
+            _pct(item["observed_default_rate"]),
+            _pct(item["mean_pd"]),
+            "n/a" if item["roc_auc"] is None else f"{item['roc_auc']:.3f}",
+        ]
+        for item in test["segments"]
+    ]
     _write_html(
+        report_dir,
         "model_performance_report.html",
         "Model Performance Report",
         "Model estimates on held-out data",
@@ -285,10 +325,47 @@ def build_reports() -> None:
                 "Selection",
                 f"<p>{html.escape(model['selection_rule'])}. Threshold: {model['selected_threshold']:.3f}; {html.escape(model['threshold_rule'])}.</p>",
             ),
+            (
+                "Permutation importance",
+                _table(
+                    ["Raw behavioral field", "Normalized share", "Brier degradation"],
+                    importance_rows,
+                )
+                + f"<p>{html.escape(model['feature_importance_method'])}</p>",
+            ),
+            (
+                "Development-split drift indicators",
+                _table(["Engineered feature", "PSI", "Status"], drift_rows)
+                + f"<p>{html.escape(model['drift_method'])}</p>",
+            ),
+            (
+                "Fairness diagnostics",
+                _table(
+                    ["Dimension", "Segment", "N", "Observed", "Mean PD", "ROC-AUC"],
+                    segment_rows,
+                )
+                + "<p>Sex and age are audit-only. These historical diagnostics identify review questions and do not prove fair-lending compliance.</p>",
+            ),
+            (
+                "Monitoring, override and rollback",
+                "<p>Monitor schema/ranges, feature and PD drift, calibration, risk-band loss, action/override rates and segment gaps. Record every human override with actor, rationale and approval. On material deterioration, disable automatic increases and restore the prior checksum-verified artifact.</p>",
+            ),
         ],
     )
     assumptions = simulation["assumptions"]
+    sensitivity_rows = [
+        [
+            item["assumption"].replace("_", " ").title(),
+            item["scenario"],
+            f"{item['value']:.4f}",
+            f"{item['eligible_increases']:,}",
+            _money(item["proposed_expected_loss"]),
+            _money(item["incremental_contribution"]),
+        ]
+        for item in simulation.get("sensitivity", [])
+    ]
     _write_html(
+        report_dir,
         "policy_simulation_report.html",
         "Policy Simulation Report",
         "Deterministic simulation — not observed impact",
@@ -310,9 +387,25 @@ def build_reports() -> None:
                 + "".join(f"<li>{html.escape(note)}</li>" for note in simulation["limitations"])
                 + "</ul>",
             ),
+            (
+                "One-at-a-time sensitivity",
+                _table(
+                    [
+                        "Assumption",
+                        "Scenario",
+                        "Value",
+                        "Increases",
+                        "Expected loss",
+                        "Contribution",
+                    ],
+                    sensitivity_rows,
+                )
+                + "<p>Each low/base/high row re-optimizes the full demonstration portfolio while holding other assumptions fixed.</p>",
+            ),
         ],
     )
     _write_html(
+        report_dir,
         "financial_impact_analysis.html",
         "Financial Impact Analysis",
         "Simulated economics",
@@ -329,6 +422,14 @@ def build_reports() -> None:
                 "Interpretation",
                 "<p>These values are scenario outputs driven by visible assumptions. They are neither causal estimates nor realized business results.</p>",
             ),
+            (
+                "Sensitivity and limitations",
+                "<p>The policy report re-optimizes low/base/high scenarios for LGD, CCF, interchange, APR, funding, capital, response elasticity, maximum increase, expected-loss ceiling and profitability hurdle. Results remain assumption-driven and exclude taxes, rewards, fraud, collections, macro stress and verified affordability.</p>",
+            ),
+            (
+                "Roadmap",
+                "<p>Estimate economics from governed experiments, validate affordability and loss assumptions, add macro scenarios and concentration limits, run shadow mode, then pilot with monitoring and rollback thresholds.</p>",
+            ),
         ],
     )
-    _executive_pdf(simulation, model)
+    _executive_pdf(simulation, model, report_dir)

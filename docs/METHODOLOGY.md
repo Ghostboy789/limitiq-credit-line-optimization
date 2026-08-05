@@ -22,7 +22,9 @@ scenario mechanics, not causal estimates or realized production outcomes.
 ## Data and features
 
 The fixed seed is 42. Stratified partitions are 60% train, 20% validation and
-20% untouched test. Customer ID, target, sex, education, marital status and age
+20% untouched test. Model-ready decision fields plus target are saved with
+per-file checksums under `data/processed/splits/` during a rebuild. Customer
+ID, target, sex, education, marital status and age
 are excluded from the decision pipeline. Sex and age are retained only for
 offline test diagnostics. Behavioral engineering occurs inside the sklearn
 pipeline so training and inference share one transformation: utilization
@@ -63,7 +65,16 @@ Incremental contribution is:
 Monthly incremental spend is simulated as incremental line × response
 elasticity × observed current utilization, annualized over 12 periods. Interest
 uses the revolving-rate and APR assumptions. Funding and capital costs apply to
-incremental EAD. Every assumption is visible, editable and sensitivity-tested.
+incremental EAD. Every assumption is visible and editable. The generated policy
+report fully re-optimizes low/base/high one-at-a-time scenarios for the ten
+decision-critical assumptions; the interactive page also shows fast
+fixed-action LGD and response-elasticity contribution sensitivities.
+
+Model feature importance is five-repeat permutation importance on the untouched
+test set using Brier-score degradation. PSI indicators compare engineered
+feature distributions in train-plus-validation with the test split. Both are
+descriptive development diagnostics, not causal explanations, adverse-action
+reasons or substitutes for production drift monitoring.
 
 ## Policy order
 
@@ -115,4 +126,3 @@ Basel, IFRS, Federal Reserve/OCC and CFPB materials operate under different
 purposes and jurisdictions. Citing them informs design; it does not establish
 compliance. Local counsel, policy owners and independent validators must approve
 a production use.
-

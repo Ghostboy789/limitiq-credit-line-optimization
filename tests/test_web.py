@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 
+import numpy as np
 import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
@@ -72,6 +73,13 @@ def test_account_decision_and_missing_account() -> None:
 def test_policy_simulator_recalculates_and_validates_extremes() -> None:
     baseline = client.get("/simulator")
     assert baseline.text.count('step="0.001"') >= 10
+    for label in (
+        "Current / proposed EAD",
+        "Current / proposed expected loss",
+        "Risk-adjusted return",
+        "Computed directional sensitivity",
+    ):
+        assert label in baseline.text
     stressed = client.post(
         "/simulator",
         data={
@@ -137,6 +145,9 @@ def test_batch_missing_extra_duplicate_invalid_types_and_ranges() -> None:
     invalid_range = sample.copy()
     invalid_range.loc[0, "PAY_0"] = 99
     cases.append((invalid_range, "between -2 and 9"))
+    non_finite = sample.copy()
+    non_finite.loc[0, "BILL_AMT1"] = np.inf
+    cases.append((non_finite, "finite"))
     for frame, message in cases:
         response = _upload(frame)
         assert response.status_code == 422
@@ -193,5 +204,10 @@ def test_static_assets_and_navigation_are_real() -> None:
     js = client.get("/static/app.js")
     assert css.status_code == js.status_code == 200
     overview = client.get("/").text
+    assert "Current expected loss" in overview
     for path in ("/portfolio", "/simulator", "/batch", "/governance", "/reports"):
         assert f'href="{path}"' in overview
+
+    governance = client.get("/governance").text
+    assert "Permutation ranking" in governance
+    assert "Drift indicators" in governance
