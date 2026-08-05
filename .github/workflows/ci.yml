@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: pytest --cov=limitiq --cov-report=term-missing
+      - run: bandit -q -r limitiq
+      - run: pip-audit -r requirements.txt
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: docker build -t limitiq:test .
+      - run: docker run -d --rm --name limitiq -p 8000:8000 limitiq:test
+      - run: |
+          for i in {1..30}; do
+            python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)" && exit 0
+            sleep 2
+          done
+          docker logs limitiq
+          exit 1
+

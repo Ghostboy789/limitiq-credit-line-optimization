@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="LimitIQ educational credit-line optimization platform">
+  <title>{{ title }} · LimitIQ</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=1.0.0">
+  <script src="{{ url_for('static', path='/app.js') }}?v=1.0.0" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="LimitIQ home"><span class="brand-mark">LQ</span><span>LimitIQ</span></a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <nav id="primary-nav" aria-label="Primary">
+      <a href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Overview</a>
+      <a href="/portfolio" {% if request.url.path.startswith('/portfolio') %}aria-current="page"{% endif %}>Portfolio</a>
+      <a href="/simulator" {% if request.url.path == '/simulator' %}aria-current="page"{% endif %}>Simulator</a>
+      <a href="/batch" {% if request.url.path == '/batch' %}aria-current="page"{% endif %}>Batch</a>
+      <a href="/governance" {% if request.url.path == '/governance' %}aria-current="page"{% endif %}>Governance</a>
+      <a href="/reports" {% if request.url.path == '/reports' %}aria-current="page"{% endif %}>Reports</a>
+    </nav>
+  </header>
+  <main id="main" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+  <footer>
+    <p><strong>Educational demonstration.</strong> {{ disclaimer }}</p>
+    <p>Model {{ model_version }} · <a href="/health">System status</a></p>
+  </footer>
+</body>
+</html>

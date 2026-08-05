@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: limitiq-credit-line-optimization
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: MAX_UPLOAD_BYTES
+        value: 5242880
+

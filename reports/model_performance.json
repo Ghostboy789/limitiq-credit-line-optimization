@@ -1,0 +1,401 @@
+{
+  "model_version": "limitiq-1.0.0-4a84b86c3f7f",
+  "champion": "Histogram gradient boosting",
+  "selection_rule": "Lowest validation Brier score among models within 0.02 ROC-AUC of the best",
+  "threshold_rule": "Minimize validation cost with false negatives weighted 5x false positives",
+  "selected_threshold": 0.14909909909909907,
+  "trained_at": "2026-08-05T17:52:32.667711+00:00",
+  "random_seed": 42,
+  "dataset_version": "uci-350-30c6be3abd8d",
+  "dataset_checksum": "30c6be3abd8dcfd3e6096c828bad8c2f011238620f5369220bd60cfc82700933",
+  "model_checksum": "4a84b86c3f7f0fa4cc74a9e1a9140192313719712d3df5ee865e1dfd2eacff96",
+  "decision_features": [
+    "limit_bal",
+    "current_utilization",
+    "average_utilization",
+    "maximum_utilization",
+    "utilization_trend",
+    "recent_payment_ratio",
+    "average_payment_ratio",
+    "payment_consistency",
+    "delinquent_month_count",
+    "maximum_delinquency_severity",
+    "recent_payment_deterioration",
+    "revolving_balance_proxy",
+    "limit_headroom",
+    "balance_volatility",
+    "payment_volatility",
+    "recent_balance_growth",
+    "inactive_month_count"
+  ],
+  "excluded_from_decisioning": [
+    "ID",
+    "default_next_month",
+    "SEX",
+    "EDUCATION",
+    "MARRIAGE",
+    "AGE"
+  ],
+  "split": {
+    "train": 18000,
+    "validation": 6000,
+    "test": 6000
+  },
+  "validation_models": {
+    "Regularized logistic regression": {
+      "roc_auc": 0.7328580014645858,
+      "pr_auc": 0.48696146295508064,
+      "brier_score": 0.14407672380554262,
+      "log_loss": 0.4570508600060614,
+      "precision": 0.42759706190975866,
+      "recall": 0.6141672946495855,
+      "f1": 0.5041756882152799,
+      "threshold": 0.19864864864864862,
+      "confusion_matrix": [
+        [
+          3582,
+          1091
+        ],
+        [
+          512,
+          815
+        ]
+      ],
+      "calibration": [
+        {
+          "mean_predicted": 0.082725216136662,
+          "observed_rate": 0.10833333333333334
+        },
+        {
+          "mean_predicted": 0.0985311119042702,
+          "observed_rate": 0.125
+        },
+        {
+          "mean_predicted": 0.10710556110891642,
+          "observed_rate": 0.085
+        },
+        {
+          "mean_predicted": 0.11619453579834224,
+          "observed_rate": 0.09166666666666666
+        },
+        {
+          "mean_predicted": 0.12651944642540805,
+          "observed_rate": 0.16666666666666666
+        },
+        {
+          "mean_predicted": 0.1357549117474148,
+          "observed_rate": 0.15333333333333332
+        },
+        {
+          "mean_predicted": 0.1706042237773666,
+          "observed_rate": 0.17666666666666667
+        },
+        {
+          "mean_predicted": 0.270221138905999,
+          "observed_rate": 0.20666666666666667
+        },
+        {
+          "mean_predicted": 0.41669068295552086,
+          "observed_rate": 0.4583333333333333
+        },
+        {
+          "mean_predicted": 0.6541069085718798,
+          "observed_rate": 0.64
+        }
+      ]
+    },
+    "Histogram gradient boosting": {
+      "roc_auc": 0.7657630431904424,
+      "pr_auc": 0.5340276961292829,
+      "brier_score": 0.1388838236975151,
+      "log_loss": 0.4402339011024687,
+      "precision": 0.3578113750899928,
+      "recall": 0.7490580256217031,
+      "f1": 0.4842874543239951,
+      "threshold": 0.14909909909909907,
+      "confusion_matrix": [
+        [
+          2889,
+          1784
+        ],
+        [
+          333,
+          994
+        ]
+      ],
+      "calibration": [
+        {
+          "mean_predicted": 0.0630191094421137,
+          "observed_rate": 0.045
+        },
+        {
+          "mean_predicted": 0.07508498631095284,
+          "observed_rate": 0.08
+        },
+        {
+          "mean_predicted": 0.09212262159802696,
+          "observed_rate": 0.105
+        },
+        {
+          "mean_predicted": 0.11365934084228177,
+          "observed_rate": 0.11666666666666667
+        },
+        {
+          "mean_predicted": 0.13327106749921566,
+          "observed_rate": 0.15333333333333332
+        },
+        {
+          "mean_predicted": 0.1523588948876239,
+          "observed_rate": 0.17166666666666666
+        },
+        {
+          "mean_predicted": 0.18233355549005478,
+          "observed_rate": 0.17
+        },
+        {
+          "mean_predicted": 0.25768522524892806,
+          "observed_rate": 0.2733333333333333
+        },
+        {
+          "mean_predicted": 0.41305103968235896,
+          "observed_rate": 0.43333333333333335
+        },
+        {
+          "mean_predicted": 0.6834454591541792,
+          "observed_rate": 0.6633333333333333
+        }
+      ]
+    }
+  },
+  "test_metrics": {
+    "roc_auc": 0.7810816873407836,
+    "pr_auc": 0.5687540795494174,
+    "brier_score": 0.1331198496076161,
+    "log_loss": 0.426324939534645,
+    "precision": 0.3605059732958538,
+    "recall": 0.773172569706104,
+    "f1": 0.49173256649892166,
+    "threshold": 0.14909909909909907,
+    "confusion_matrix": [
+      [
+        2853,
+        1820
+      ],
+      [
+        301,
+        1026
+      ]
+    ],
+    "calibration": [
+      {
+        "mean_predicted": 0.061523255672395284,
+        "observed_rate": 0.058333333333333334
+      },
+      {
+        "mean_predicted": 0.07646485209583019,
+        "observed_rate": 0.055
+      },
+      {
+        "mean_predicted": 0.09248543795115138,
+        "observed_rate": 0.09833333333333333
+      },
+      {
+        "mean_predicted": 0.11393178108043504,
+        "observed_rate": 0.11666666666666667
+      },
+      {
+        "mean_predicted": 0.13534980862878432,
+        "observed_rate": 0.13666666666666666
+      },
+      {
+        "mean_predicted": 0.15617770678521947,
+        "observed_rate": 0.165
+      },
+      {
+        "mean_predicted": 0.19207117585525557,
+        "observed_rate": 0.16666666666666666
+      },
+      {
+        "mean_predicted": 0.2705216474809478,
+        "observed_rate": 0.26166666666666666
+      },
+      {
+        "mean_predicted": 0.4267592087934552,
+        "observed_rate": 0.44333333333333336
+      },
+      {
+        "mean_predicted": 0.6856027321908624,
+        "observed_rate": 0.71
+      }
+    ],
+    "risk_bands": [
+      {
+        "band": "Low",
+        "accounts": 0,
+        "mean_pd": 0.0,
+        "observed_default_rate": 0.0
+      },
+      {
+        "band": "Moderate",
+        "accounts": 3178,
+        "mean_pd": 0.09881630608145885,
+        "observed_default_rate": 0.09565764631843927
+      },
+      {
+        "band": "High",
+        "accounts": 1457,
+        "mean_pd": 0.20126032281721712,
+        "observed_default_rate": 0.19011667810569663
+      },
+      {
+        "band": "Very high",
+        "accounts": 1365,
+        "mean_pd": 0.5269289764461843,
+        "observed_default_rate": 0.5465201465201465
+      }
+    ],
+    "segments": [
+      {
+        "dimension": "sex",
+        "segment": "Group 1",
+        "accounts": 2372,
+        "observed_default_rate": 0.2411467116357504,
+        "mean_pd": 0.22583909384424736,
+        "tpr": 0.7622377622377622,
+        "fpr": 0.3894444444444444,
+        "roc_auc": 0.7682930264180264
+      },
+      {
+        "dimension": "sex",
+        "segment": "Group 2",
+        "accounts": 3628,
+        "observed_default_rate": 0.20810363836824697,
+        "mean_pd": 0.21798297500607725,
+        "tpr": 0.7814569536423841,
+        "fpr": 0.3894883397145841,
+        "roc_auc": 0.7902669982919301
+      },
+      {
+        "dimension": "age_band",
+        "segment": "<30",
+        "accounts": 1926,
+        "observed_default_rate": 0.2185877466251298,
+        "mean_pd": 0.23144231669180906,
+        "tpr": 0.7838479809976246,
+        "fpr": 0.4,
+        "roc_auc": 0.784723921054916
+      },
+      {
+        "dimension": "age_band",
+        "segment": "30-39",
+        "accounts": 2206,
+        "observed_default_rate": 0.19900271985494106,
+        "mean_pd": 0.20468426704111145,
+        "tpr": 0.7722095671981777,
+        "fpr": 0.36502546689303905,
+        "roc_auc": 0.7834830665465192
+      },
+      {
+        "dimension": "age_band",
+        "segment": "40-49",
+        "accounts": 1296,
+        "observed_default_rate": 0.24537037037037038,
+        "mean_pd": 0.2241738762665087,
+        "tpr": 0.7515723270440252,
+        "fpr": 0.39263803680981596,
+        "roc_auc": 0.7813484714022971
+      },
+      {
+        "dimension": "age_band",
+        "segment": "50-59",
+        "accounts": 490,
+        "observed_default_rate": 0.2612244897959184,
+        "mean_pd": 0.24415913559554933,
+        "tpr": 0.8203125,
+        "fpr": 0.43922651933701656,
+        "roc_auc": 0.7720778660220995
+      },
+      {
+        "dimension": "age_band",
+        "segment": "60+",
+        "accounts": 82,
+        "observed_default_rate": 0.25609756097560976,
+        "mean_pd": 0.23260791214966425,
+        "tpr": 0.6190476190476191,
+        "fpr": 0.4918032786885246,
+        "roc_auc": 0.6643247462919594
+      }
+    ],
+    "feature_importance": [
+      {
+        "feature": "delinquent_month_count",
+        "importance": 0.1896546761119764
+      },
+      {
+        "feature": "maximum_delinquency_severity",
+        "importance": 0.1735170042608112
+      },
+      {
+        "feature": "recent_payment_deterioration",
+        "importance": 0.093766718625799
+      },
+      {
+        "feature": "payment_consistency",
+        "importance": 0.09345986606540221
+      },
+      {
+        "feature": "average_utilization",
+        "importance": 0.07400188540391332
+      },
+      {
+        "feature": "revolving_balance_proxy",
+        "importance": 0.06832404034280233
+      },
+      {
+        "feature": "current_utilization",
+        "importance": 0.06832035529815496
+      },
+      {
+        "feature": "limit_headroom",
+        "importance": 0.06637238719272764
+      },
+      {
+        "feature": "maximum_utilization",
+        "importance": 0.057002490290847314
+      },
+      {
+        "feature": "average_payment_ratio",
+        "importance": 0.04145491668421244
+      },
+      {
+        "feature": "inactive_month_count",
+        "importance": 0.030517075452200074
+      },
+      {
+        "feature": "recent_payment_ratio",
+        "importance": 0.01833082822206456
+      },
+      {
+        "feature": "utilization_trend",
+        "importance": 0.01450062719908661
+      },
+      {
+        "feature": "balance_volatility",
+        "importance": 0.0049173389556376205
+      },
+      {
+        "feature": "payment_volatility",
+        "importance": 0.0041854413352084155
+      },
+      {
+        "feature": "recent_balance_growth",
+        "importance": 0.0016743485591559654
+      },
+      {
+        "feature": "limit_bal",
+        "importance": 0.0
+      }
+    ]
+  },
+  "audit_note": "Sex and age are used only for offline test diagnostics, never model inference."
+}
