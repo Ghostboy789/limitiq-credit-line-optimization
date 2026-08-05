@@ -22,7 +22,7 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: ruff check .
       - run: ruff format --check .
-      - run: pytest --cov=limitiq --cov-report=term-missing
+      - run: python -m pytest --cov=limitiq --cov-report=term-missing
       - run: bandit -q -r limitiq
       - run: pip-audit -r requirements.txt
       - uses: gitleaks/gitleaks-action@v2
@@ -37,4 +37,3 @@ jobs:
           done
           docker logs limitiq
           exit 1
-
