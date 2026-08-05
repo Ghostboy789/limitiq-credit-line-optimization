@@ -1,0 +1,9 @@
+-r requirements.txt
+httpx==0.28.1
+pytest==9.1.1
+pytest-cov==6.2.1
+ruff==0.12.7
+bandit==1.8.6
+detect-secrets==1.5.0
+pip-audit==2.9.0
+playwright==1.54.0

@@ -1,0 +1,47 @@
+{
+  "classification": "Simulated portfolio outcome",
+  "assumptions": {
+    "lgd": 0.65,
+    "ccf": 0.75,
+    "interchange_rate": 0.018,
+    "apr": 0.18,
+    "revolving_rate": 0.45,
+    "funding_cost": 0.045,
+    "capital_cost": 0.025,
+    "servicing_cost": 60.0,
+    "response_elasticity": 0.35,
+    "max_increase": 0.3,
+    "max_account_exposure": 1000000.0,
+    "portfolio_growth_cap": 0.1,
+    "expected_loss_ceiling": 0.12,
+    "profitability_hurdle": 100.0
+  },
+  "summary": {
+    "accounts": 6000,
+    "current_limit": 1011790000.0,
+    "proposed_limit": 1096231000.0,
+    "current_expected_loss": 101772492.85588068,
+    "proposed_expected_loss": 105871843.13825823,
+    "incremental_contribution": 13925684.585462442,
+    "incremental_exposure": 63443254.75,
+    "risk_adjusted_return": 0.21949826881261073,
+    "eligible_increases": 1904,
+    "early_warning": 1662,
+    "action_counts": {
+      "Freeze automatic increases": 1116,
+      "Increase 30%": 1904,
+      "No change": 2434,
+      "Manual review": 546
+    },
+    "risk_counts": {
+      "Very high": 1365,
+      "Moderate": 3178,
+      "High": 1457
+    }
+  },
+  "limitations": [
+    "Limit response is a simulated monthly elasticity annualized over 12 periods; drawdown, revenue, costs, LGD and CCF are also assumptions.",
+    "No simulated outcome is an observed or causal production result.",
+    "PD is model-estimated from a 2005 Taiwan dataset; portability is unproven."
+  ]
+}

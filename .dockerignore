@@ -1,0 +1,14 @@
+.git
+.github
+.deps
+.venv
+__pycache__
+.pytest_cache
+.ruff_cache
+data/raw
+data/processed/clean_source.csv
+tests
+docs/assets/*.png
+*.log
+.env
+

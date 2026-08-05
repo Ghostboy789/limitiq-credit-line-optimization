@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Model Performance Report — LimitIQ</title><style>
+body{font:16px/1.55 Inter,Arial,sans-serif;color:#17324d;max-width:980px;margin:40px auto;padding:0 24px}
+h1{font-size:38px;margin-bottom:4px}h2{border-bottom:2px solid #0f8b8d;padding-bottom:8px;margin-top:34px}
+.label{color:#087f80;font-weight:700;text-transform:uppercase;letter-spacing:.08em}.notice{background:#eef7f7;padding:16px;border-left:4px solid #0f8b8d}
+table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #dce5eb;text-align:left;padding:10px}th{background:#f4f7f9}
+.metric{display:inline-block;width:29%;padding:14px;margin:4px;background:#f4f7f9;vertical-align:top}small{color:#557083}
+@media(max-width:700px){.metric{width:auto;display:block}}
+</style></head><body><div class="label">Model estimates on held-out data</div><h1>Model Performance Report</h1><section><h2>Validation comparison</h2><table><thead><tr><th>Model</th><th>ROC-AUC</th><th>PR-AUC</th><th>Brier</th><th>Log loss</th></tr></thead><tbody><tr><td>Regularized logistic regression</td><td>0.733</td><td>0.487</td><td>0.144</td><td>0.457</td></tr><tr><td>Histogram gradient boosting</td><td>0.766</td><td>0.534</td><td>0.139</td><td>0.440</td></tr></tbody></table></section><section><h2>Untouched test</h2><table><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody><tr><td>Roc Auc</td><td>0.7811</td></tr><tr><td>Pr Auc</td><td>0.5688</td></tr><tr><td>Brier Score</td><td>0.1331</td></tr><tr><td>Log Loss</td><td>0.4263</td></tr><tr><td>Precision</td><td>0.3605</td></tr><tr><td>Recall</td><td>0.7732</td></tr><tr><td>F1</td><td>0.4917</td></tr><tr><td>Threshold</td><td>0.1491</td></tr></tbody></table></section><section><h2>Selection</h2><p>Lowest validation Brier score among models within 0.02 ROC-AUC of the best. Threshold: 0.149; Minimize validation cost with false negatives weighted 5x false positives.</p></section>
+<p class="notice"><strong>Educational-use notice.</strong> LimitIQ is an educational portfolio demonstration using public and synthetic data. It is not a production credit-decision system and must not be used to make real lending decisions.</p></body></html>

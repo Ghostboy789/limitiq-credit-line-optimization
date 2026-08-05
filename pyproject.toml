@@ -1,0 +1,19 @@
+[project]
+name = "limitiq-credit-line-optimization"
+version = "1.0.0"
+description = "Educational dynamic credit-line optimization platform"
+requires-python = ">=3.12,<3.14"
+license = { file = "LICENSE" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers --cov-fail-under=65"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = [".deps", ".pytest_cache", ".ruff_cache", "data", "reports"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "S", "UP"]
+ignore = ["B008", "E501", "S101"]

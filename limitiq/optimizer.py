@@ -1,0 +1,304 @@
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass, replace
+from typing import Any
+
+import numpy as np
+import pandas as pd
+
+from limitiq.config import PolicyAssumptions
+from limitiq.features import BILL_COLUMNS, PAY_COLUMNS, PAYMENT_COLUMNS
+
+ACTION_LABELS = {
+    0.0: "No change",
+    0.1: "Increase 10%",
+    0.2: "Increase 20%",
+    0.3: "Increase 30%",
+}
+
+
+@dataclass(frozen=True)
+class Decision:
+    account_id: str
+    action: str
+    increase_pct: float
+    current_limit: float
+    proposed_limit: float
+    pd: float
+    risk_band: str
+    current_ead: float
+    proposed_ead: float
+    current_expected_loss: float
+    proposed_expected_loss: float
+    incremental_contribution: float
+    risk_adjusted_return: float
+    reason_codes: tuple[str, ...]
+    policy_checks: dict[str, bool]
+    candidate_results: tuple[dict[str, Any], ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        result = asdict(self)
+        result["reason_codes"] = list(self.reason_codes)
+        result["candidate_results"] = list(self.candidate_results)
+        return result
+
+
+def risk_band(pd_value: float) -> str:
+    if pd_value < 0.05:
+        return "Low"
+    if pd_value < 0.15:
+        return "Moderate"
+    if pd_value < 0.30:
+        return "High"
+    return "Very high"
+
+
+def exposure(limit: float, balance: float, ccf: float) -> float:
+    drawn = min(max(balance, 0.0), limit)
+    return drawn + ccf * max(limit - drawn, 0.0)
+
+
+def expected_loss(pd_value: float, lgd: float, ead: float) -> float:
+    if not 0 <= pd_value <= 1 or not 0 <= lgd <= 1 or ead < 0:
+        raise ValueError("PD and LGD must be in [0, 1], and EAD cannot be negative")
+    return pd_value * lgd * ead
+
+
+def _behavior(row: pd.Series) -> dict[str, Any]:
+    limit = float(row["LIMIT_BAL"])
+    statuses = np.asarray([float(row[column]) for column in PAY_COLUMNS])
+    bills = np.maximum([float(row[column]) for column in BILL_COLUMNS], 0.0)
+    payments = np.maximum([float(row[column]) for column in PAYMENT_COLUMNS], 0.0)
+    return {
+        "limit": limit,
+        "balance": bills[0],
+        "statuses": statuses,
+        "bills": bills,
+        "payments": payments,
+        "utilization": min(max(bills[0] / max(limit, 1.0), 0.0), 1.2),
+        "payment_consistency": float(np.mean(payments > 0)),
+    }
+
+
+def _warning_state(behavior: dict[str, Any]) -> tuple[str | None, list[str]]:
+    statuses = behavior["statuses"]
+    bills = behavior["bills"]
+    payments = behavior["payments"]
+    reasons: list[str] = []
+    severe_months = int((statuses >= 2).sum())
+    delinquent_months = int((statuses > 0).sum())
+    recent_deterioration = statuses[0] >= 2 or (
+        statuses[0] > 0 and statuses[0] > statuses[1:].mean()
+    )
+    recent_payment_ratio = payments[0] / max(bills[0], 1)
+    balance_growth = (bills[0] - bills[2]) / max(behavior["limit"], 1)
+    if recent_deterioration:
+        reasons.append("Recent payment deterioration")
+    if delinquent_months >= 2:
+        reasons.append("Repeated delinquency")
+    if balance_growth > 0.35 and recent_payment_ratio < 0.08:
+        reasons.append("Rising revolving balance")
+    if severe_months >= 2 or statuses[0] >= 2:
+        return "Freeze automatic increases", reasons or ["Repeated delinquency"]
+    if statuses[0] == 1 or (behavior["utilization"] > 1.10 and recent_payment_ratio < 0.05):
+        return "Manual review", reasons or ["Manual review required"]
+    return None, reasons
+
+
+def _candidate(
+    behavior: dict[str, Any],
+    pd_value: float,
+    increase_pct: float,
+    assumptions: PolicyAssumptions,
+) -> dict[str, Any]:
+    limit = behavior["limit"]
+    balance = behavior["balance"]
+    proposed_limit = limit * (1 + increase_pct)
+    current_ead = exposure(limit, balance, assumptions.ccf)
+    proposed_ead = exposure(proposed_limit, balance, assumptions.ccf)
+    current_ecl = expected_loss(pd_value, assumptions.lgd, current_ead)
+    proposed_ecl = expected_loss(pd_value, assumptions.lgd, proposed_ead)
+    delta_ead = proposed_ead - current_ead
+    utilization = behavior["utilization"]
+    # Elasticity is the simulated monthly spend response to incremental line; annual economics
+    # therefore use 12 periods. This is an assumption, never an observed causal estimate.
+    incremental_spend = (
+        (proposed_limit - limit) * assumptions.response_elasticity * utilization * 12
+    )
+    interchange = incremental_spend * assumptions.interchange_rate
+    interest = incremental_spend * assumptions.revolving_rate * assumptions.apr
+    incremental_ecl = proposed_ecl - current_ecl
+    funding = delta_ead * assumptions.funding_cost
+    capital = delta_ead * assumptions.capital_cost
+    servicing = assumptions.servicing_cost if increase_pct else 0.0
+    contribution = interchange + interest - incremental_ecl - funding - capital - servicing
+    checks = {
+        "within_maximum_increase": increase_pct <= assumptions.max_increase + 1e-12,
+        "within_account_exposure": proposed_limit <= assumptions.max_account_exposure,
+        "within_expected_loss_ceiling": pd_value * assumptions.lgd
+        <= assumptions.expected_loss_ceiling,
+        "meets_profitability_hurdle": contribution >= assumptions.profitability_hurdle,
+        "payment_history_eligible": bool((behavior["statuses"] <= 0).all()),
+        "not_overextended": utilization <= 1.10,
+    }
+    eligible = increase_pct == 0 or all(checks.values())
+    return {
+        "increase_pct": increase_pct,
+        "label": ACTION_LABELS.get(increase_pct, f"Increase {increase_pct:.0%}"),
+        "proposed_limit": proposed_limit,
+        "proposed_ead": proposed_ead,
+        "proposed_expected_loss": proposed_ecl,
+        "incremental_contribution": contribution,
+        "risk_adjusted_return": contribution / delta_ead if delta_ead > 0 else 0.0,
+        "eligible": eligible,
+        "checks": checks,
+    }
+
+
+def recommend_account(
+    row: pd.Series,
+    pd_value: float,
+    account_id: str,
+    assumptions: PolicyAssumptions | None = None,
+) -> Decision:
+    assumptions = assumptions or PolicyAssumptions()
+    assumptions.validate()
+    if not 0 <= pd_value <= 1:
+        raise ValueError("PD must be between 0 and 1")
+    behavior = _behavior(row)
+    warning_action, warning_reasons = _warning_state(behavior)
+    allowed = [pct for pct in (0.0, 0.1, 0.2, 0.3) if pct <= assumptions.max_increase + 1e-12]
+    candidates = tuple(_candidate(behavior, pd_value, pct, assumptions) for pct in allowed)
+    baseline = candidates[0]
+    if warning_action:
+        selected = baseline
+        reasons = warning_reasons + (
+            ["Manual review required"] if warning_action == "Manual review" else []
+        )
+        action = warning_action
+    else:
+        eligible = [item for item in candidates if item["eligible"]]
+        selected = max(
+            eligible, key=lambda item: (item["incremental_contribution"], -item["increase_pct"])
+        )
+        action = selected["label"]
+        utilization = behavior["utilization"]
+        payment_consistency = behavior["payment_consistency"]
+        reasons = []
+        if payment_consistency >= 0.8 and int((behavior["statuses"] > 0).sum()) == 0:
+            reasons.append("Strong repayment consistency")
+        if utilization >= 0.65 and pd_value < 0.15:
+            reasons.append("High utilization with low estimated risk")
+        if utilization < 0.20:
+            reasons.append("Low utilization provides no evidence of additional need")
+        if selected["increase_pct"] == 0:
+            failed = [name for name, ok in candidates[-1]["checks"].items() if not ok]
+            mapping = {
+                "within_account_exposure": "Exposure limit reached",
+                "within_expected_loss_ceiling": "Expected loss exceeds policy ceiling",
+                "meets_profitability_hurdle": "Incremental return below profitability hurdle",
+                "payment_history_eligible": "Recent payment deterioration",
+                "not_overextended": "Customer-overextension safeguard",
+            }
+            reasons.extend(mapping[name] for name in failed if name in mapping)
+        if not reasons:
+            reasons.append("Best eligible risk-adjusted contribution")
+    limit = behavior["limit"]
+    balance = behavior["balance"]
+    current_ead = exposure(limit, balance, assumptions.ccf)
+    current_ecl = expected_loss(pd_value, assumptions.lgd, current_ead)
+    return Decision(
+        account_id=account_id,
+        action=action,
+        increase_pct=float(selected["increase_pct"]),
+        current_limit=limit,
+        proposed_limit=float(selected["proposed_limit"]),
+        pd=float(pd_value),
+        risk_band=risk_band(pd_value),
+        current_ead=current_ead,
+        proposed_ead=float(selected["proposed_ead"]),
+        current_expected_loss=current_ecl,
+        proposed_expected_loss=float(selected["proposed_expected_loss"]),
+        incremental_contribution=float(selected["incremental_contribution"]),
+        risk_adjusted_return=float(selected["risk_adjusted_return"]),
+        reason_codes=tuple(dict.fromkeys(reasons)),
+        policy_checks=selected["checks"],
+        candidate_results=candidates,
+    )
+
+
+def recommend_portfolio(
+    frame: pd.DataFrame,
+    probabilities: np.ndarray,
+    account_ids: list[str],
+    assumptions: PolicyAssumptions | None = None,
+) -> list[Decision]:
+    assumptions = assumptions or PolicyAssumptions()
+    if len(frame) != len(probabilities) or len(frame) != len(account_ids):
+        raise ValueError("Frame, probabilities, and account IDs must have equal lengths")
+    decisions = [
+        recommend_account(row, float(probability), account_id, assumptions)
+        for (_, row), probability, account_id in zip(
+            frame.iterrows(), probabilities, account_ids, strict=True
+        )
+    ]
+    current_total = sum(item.current_limit for item in decisions)
+    cap = current_total * (1 + assumptions.portfolio_growth_cap)
+    proposed_total = sum(item.proposed_limit for item in decisions)
+    if proposed_total <= cap:
+        return decisions
+    ranked = sorted(
+        (item for item in decisions if item.increase_pct > 0),
+        key=lambda item: (item.incremental_contribution, item.account_id),
+    )
+    by_id = {item.account_id: item for item in decisions}
+    for item in ranked:
+        if proposed_total <= cap:
+            break
+        proposed_total -= item.proposed_limit - item.current_limit
+        base = item.candidate_results[0]
+        by_id[item.account_id] = replace(
+            item,
+            action="No change",
+            increase_pct=0.0,
+            proposed_limit=item.current_limit,
+            proposed_ead=item.current_ead,
+            proposed_expected_loss=item.current_expected_loss,
+            incremental_contribution=0.0,
+            risk_adjusted_return=0.0,
+            reason_codes=tuple(dict.fromkeys((*item.reason_codes, "Exposure limit reached"))),
+            policy_checks=base["checks"],
+        )
+    return [by_id[account_id] for account_id in account_ids]
+
+
+def summarize_portfolio(decisions: list[Decision]) -> dict[str, Any]:
+    current_limit = sum(item.current_limit for item in decisions)
+    proposed_limit = sum(item.proposed_limit for item in decisions)
+    current_ecl = sum(item.current_expected_loss for item in decisions)
+    proposed_ecl = sum(item.proposed_expected_loss for item in decisions)
+    contribution = sum(item.incremental_contribution for item in decisions)
+    incremental_exposure = sum(item.proposed_ead - item.current_ead for item in decisions)
+    action_counts: dict[str, int] = {}
+    risk_counts: dict[str, int] = {}
+    for item in decisions:
+        action_counts[item.action] = action_counts.get(item.action, 0) + 1
+        risk_counts[item.risk_band] = risk_counts.get(item.risk_band, 0) + 1
+    return {
+        "accounts": len(decisions),
+        "current_limit": current_limit,
+        "proposed_limit": proposed_limit,
+        "current_expected_loss": current_ecl,
+        "proposed_expected_loss": proposed_ecl,
+        "incremental_contribution": contribution,
+        "incremental_exposure": incremental_exposure,
+        "risk_adjusted_return": contribution / incremental_exposure
+        if incremental_exposure
+        else 0.0,
+        "eligible_increases": sum(item.increase_pct > 0 for item in decisions),
+        "early_warning": sum(
+            item.action in {"Freeze automatic increases", "Manual review"} for item in decisions
+        ),
+        "action_counts": action_counts,
+        "risk_counts": risk_counts,
+    }

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-heading"><p class="eyebrow">Account-level decisioning</p><h1>Portfolio explorer</h1><p>Search and filter {{ total|number }} synthetic-ID decisions. Demographics are not present in this view or decision pipeline.</p></section>
+<form class="filters" method="get" action="/portfolio">
+  <label>Search account ID<input type="search" name="search" value="{{ search }}" maxlength="40" placeholder="LIQ-…"></label>
+  <label>Risk band<select name="risk"><option value="">All risk bands</option>{% for value in risk_options %}<option {% if value == risk %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+  <label>Recommendation<select name="action"><option value="">All actions</option>{% for value in action_options %}<option {% if value == action %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+  <label>Delinquency<select name="delinquency"><option value="">All histories</option><option value="yes" {% if delinquency == 'yes' %}selected{% endif %}>Any delay</option><option value="no" {% if delinquency == 'no' %}selected{% endif %}>No delay</option></select></label>
+  <input type="hidden" name="sort" value="{{ sort }}"><input type="hidden" name="direction" value="{{ direction }}">
+  <button type="submit">Apply filters</button><a class="button secondary" href="/portfolio">Reset</a>
+</form>
+<div class="table-toolbar"><p><strong>{{ total|number }}</strong> matching accounts</p><a class="button secondary" href="/portfolio.csv?search={{ search }}&risk={{ risk }}&action={{ action }}&delinquency={{ delinquency }}&sort={{ sort }}&direction={{ direction }}">Download filtered CSV</a></div>
+{% if rows %}<div class="table-wrap"><table><thead><tr>
+  <th><a href="?search={{ search }}&risk={{ risk }}&action={{ action }}&delinquency={{ delinquency }}&sort=account_id&direction={% if sort == 'account_id' and direction == 'asc' %}desc{% else %}asc{% endif %}">Account</a></th><th>Action</th><th>Risk</th><th>Utilization</th><th>Current limit</th><th>Proposed limit</th><th>PD</th><th>Expected loss</th><th>Incremental value</th>
+</tr></thead><tbody>{% for row in rows %}<tr><td><a class="account-link" href="/accounts/{{ row.account_id }}">{{ row.account_id }}</a></td><td><span class="badge action">{{ row.action }}</span></td><td><span class="badge risk-{{ row.risk_band|lower|replace(' ', '-') }}">{{ row.risk_band }}</span></td><td>{{ (([row.BILL_AMT1, 0]|max) / row.LIMIT_BAL)|percent }}</td><td>{{ row.LIMIT_BAL|money }}</td><td>{{ row.proposed_limit|money }}</td><td>{{ row.pd|percent(2) }}</td><td>{{ row.proposed_expected_loss|money }}</td><td class="{% if row.incremental_contribution < 0 %}negative{% endif %}">{{ row.incremental_contribution|money }}</td></tr>{% endfor %}</tbody></table></div>
+<nav class="pagination" aria-label="Pagination"><a {% if page > 1 %}href="?search={{ search }}&risk={{ risk }}&action={{ action }}&delinquency={{ delinquency }}&sort={{ sort }}&direction={{ direction }}&page={{ page - 1 }}"{% else %}aria-disabled="true"{% endif %}>Previous</a><span>Page {{ page }} of {{ pages }}</span><a {% if page < pages %}href="?search={{ search }}&risk={{ risk }}&action={{ action }}&delinquency={{ delinquency }}&sort={{ sort }}&direction={{ direction }}&page={{ page + 1 }}"{% else %}aria-disabled="true"{% endif %}>Next</a></nav>
+{% else %}<div class="empty"><h2>No accounts match</h2><p>Clear a filter or search for another synthetic account ID.</p><a class="button" href="/portfolio">Clear filters</a></div>{% endif %}
+{% endblock %}
+

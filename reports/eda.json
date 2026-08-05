@@ -1,0 +1,26 @@
+{
+  "classification": "Observed source-data statistics",
+  "accounts": 30000,
+  "default_rate": 0.2212,
+  "limit": {
+    "mean": 167484.32266666667,
+    "median": 140000.0,
+    "p10": 30000.0,
+    "p90": 360000.0
+  },
+  "current_utilization": {
+    "mean": 0.4239376019684477,
+    "median": 0.31399385714285716,
+    "p90": 0.9816233333333333
+  },
+  "delinquent_accounts": 10069,
+  "target_by_sex": {
+    "1": 0.2416722745625841,
+    "2": 0.20776280918727916
+  },
+  "notes": [
+    "Demographic attributes are observed but excluded from all model and optimizer inputs.",
+    "Negative bill amounts can represent credits and are clipped to zero only for behavioral ratios.",
+    "No limit-increase response or economics outcome is present in the source dataset."
+  ]
+}
