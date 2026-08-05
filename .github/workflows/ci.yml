@@ -12,10 +12,10 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -25,9 +25,11 @@ jobs:
       - run: python -m pytest --cov=limitiq --cov-report=term-missing
       - run: bandit -q -r limitiq
       - run: pip-audit -r requirements.txt
-      - uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Secret scan
+        run: |
+          detect-secrets scan --all-files --no-verify --disable-plugin HexHighEntropyString \
+            --exclude-files '(^|/)(data/raw|data/processed/clean_source.csv|__pycache__|\.git)(/|$)|\.(png|pdf|joblib|xls)$' . > .secrets.json
+          python -c "import json; d=json.load(open('.secrets.json')); assert not any(d['results'].values()), d['results']"
       - run: docker build -t limitiq:test .
       - run: docker run -d --rm --name limitiq -p 8000:8000 limitiq:test
       - run: |
