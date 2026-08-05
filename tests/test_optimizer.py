@@ -9,6 +9,7 @@ from limitiq.features import MODEL_INPUT_COLUMNS
 from limitiq.optimizer import (
     expected_loss,
     exposure,
+    portfolio_sensitivity,
     recommend_account,
     recommend_portfolio,
     summarize_portfolio,
@@ -107,6 +108,18 @@ def test_summary_reconciles_decisions(healthy_row: pd.Series) -> None:
     summary = summarize_portfolio(decisions)
     assert summary["accounts"] == 1
     assert sum(summary["action_counts"].values()) == 1
+
+
+def test_portfolio_sensitivity_is_deterministic_and_reoptimizes(
+    healthy_row: pd.Series,
+) -> None:
+    frame = pd.DataFrame([healthy_row], columns=MODEL_INPUT_COLUMNS)
+    first = portfolio_sensitivity(frame, np.array([0.04]), ["A"])
+    second = portfolio_sensitivity(frame, np.array([0.04]), ["A"])
+    assert first == second
+    assert len(first) == 30
+    assert {row["scenario"] for row in first} == {"Low", "Base", "High"}
+    assert all(row["proposed_limit"] >= 100_000 for row in first)
 
 
 def test_assumption_validation() -> None:

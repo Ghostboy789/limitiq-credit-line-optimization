@@ -10,7 +10,9 @@
 <div class="metric-grid">
   <article class="metric"><span>Current credit limits</span><strong>{{ summary.current_limit|money }}</strong><small>Observed contractual limits</small></article>
   <article class="metric"><span>Proposed credit limits</span><strong>{{ summary.proposed_limit|money }}</strong><small>Simulated policy outcome</small></article>
-  <article class="metric"><span>Expected loss</span><strong>{{ summary.proposed_expected_loss|money }}</strong><small>Simulated, up {{ ((summary.proposed_expected_loss / summary.current_expected_loss) - 1)|percent }}</small></article>
+  <article class="metric"><span>Current / proposed EAD</span><strong>{{ summary.current_ead|money }}</strong><small>{{ summary.proposed_ead|money }} proposed · simulated</small></article>
+  <article class="metric"><span>Current expected loss</span><strong>{{ summary.current_expected_loss|money }}</strong><small>Simulated management ECL</small></article>
+  <article class="metric"><span>Proposed expected loss</span><strong>{{ summary.proposed_expected_loss|money }}</strong><small>Simulated, up {{ ((summary.proposed_expected_loss / summary.current_expected_loss) - 1)|percent }}</small></article>
   <article class="metric accent"><span>Incremental contribution</span><strong>{{ summary.incremental_contribution|money }}</strong><small>Simulated annualized economics</small></article>
   <article class="metric"><span>Risk-adjusted return</span><strong>{{ summary.risk_adjusted_return|percent }}</strong><small>Contribution ÷ incremental EAD</small></article>
   <article class="metric warning"><span>Early-warning population</span><strong>{{ summary.early_warning|number }}</strong><small>Freeze or manual review</small></article>
@@ -26,4 +28,3 @@
 <section class="panel"><div class="panel-title"><div><p class="eyebrow">Committee controls</p><h2>Policy assumptions</h2></div><a href="/simulator">Stress assumptions →</a></div>
 <dl class="assumption-grid">{% for key, value in assumptions.items() %}<div><dt>{{ key|replace('_',' ')|title }}</dt><dd>{% if value <= 1 %}{{ value|percent }}{% else %}{{ value|number }}{% endif %}</dd></div>{% endfor %}</dl></section>
 {% endblock %}
-

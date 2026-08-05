@@ -2,16 +2,18 @@
 
 ## Model
 
-- Version: `limitiq-1.0.0-4a84b86c3f7f`
+- Version: `limitiq-1.0.0-f8fe4953fac4`
 - Champion: sigmoid-calibrated histogram gradient boosting
 - Baseline: sigmoid-calibrated regularized logistic regression
 - Target: subsequent-month default
 - Seed: 42
 - Split: 18,000 train / 6,000 validation / 6,000 untouched test
+- Model-ready split artifacts: raw decision fields plus target, deterministic
+  CSVs and SHA-256 metadata generated under `data/processed/splits/`
 - Decision threshold: 0.149099, selected on validation with missed defaults
   weighted five times false positives
 - Artifact SHA-256:
-  `4a84b86c3f7f0fa4cc74a9e1a9140192313719712d3df5ee865e1dfd2eacff96`
+  `f8fe4953fac4252ba7b2736fba5f259d460751a1881430052223ca879f59c043`
 
 ## Selection
 
@@ -50,8 +52,9 @@ capital, IFRS 9 provision, punitive line decrease, or causal uplift estimation.
 
 Seventeen engineered behavioral features are built inside the serialized
 pipeline. Customer ID, target and all demographics are excluded. Reason codes
-come from actual behavioral/policy checks; the displayed association ranking is
-not causal and is not an adverse-action explanation.
+come from actual behavioral/policy checks. Five-repeat test-set permutation
+importance uses Brier degradation; it is not causal and is not an adverse-action
+explanation.
 
 ## Fairness
 
@@ -68,3 +71,6 @@ Material deterioration triggers review/recalibration. Rollback disables automati
 increases and restores the prior checksum-verified artifact; freeze/manual-review
 routing remains available.
 
+The governance page includes development-reference PSI indicators comparing
+train-plus-validation with test. These support review but are not evidence of
+live production drift.

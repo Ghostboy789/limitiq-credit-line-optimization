@@ -63,6 +63,14 @@ def test_account_id_duplicate_rejected(healthy_row: pd.Series) -> None:
         validate_input(frame, require_account_id=True)
 
 
+@pytest.mark.parametrize("value", [np.inf, -np.inf])
+def test_non_finite_input_rejected(healthy_row: pd.Series, value: float) -> None:
+    frame = pd.DataFrame([healthy_row])
+    frame.loc[0, "BILL_AMT1"] = value
+    with pytest.raises(SchemaError, match="finite"):
+        validate_input(frame)
+
+
 def test_source_cleaning_rejects_duplicate_and_invalid_rows(healthy_row: pd.Series) -> None:
     frame = pd.DataFrame([healthy_row, healthy_row, healthy_row])
     frame.insert(0, "ID", [1, 1, 3])

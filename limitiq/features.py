@@ -65,6 +65,8 @@ def validate_input(frame: pd.DataFrame, *, require_account_id: bool = False) -> 
         )
         raise SchemaError(f"Numeric values required with no blanks in: {', '.join(bad)}")
     clean[numeric] = converted.astype(float)
+    if not np.isfinite(clean[numeric].to_numpy()).all():
+        raise SchemaError("Numeric values must be finite")
     if (clean["LIMIT_BAL"] <= 0).any():
         raise SchemaError("LIMIT_BAL must be greater than zero")
     if (clean["LIMIT_BAL"] > 10_000_000).any():
