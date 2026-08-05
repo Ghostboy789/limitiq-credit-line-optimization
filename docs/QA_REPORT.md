@@ -1,6 +1,6 @@
 # QA report
 
-Verified 5 August 2026 against model version
+Verified 6 August 2026 against model version
 `limitiq-1.0.0-f8fe4953fac4` and dataset version
 `uci-350-30c6be3abd8d`.
 
@@ -11,7 +11,7 @@ Verified 5 August 2026 against model version
 - 77.60% statement coverage, above the enforced 65% project threshold.
 - Ruff format and lint, Bandit, `pip-audit` and detect-secrets passed locally.
 - GitHub Actions run
-  [31038484167](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/31038484167)
+  [31040997235](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/31040997235)
   independently passed the same checks, built the Docker image, ran it as a
   container and reached its `/health` endpoint.
 
@@ -54,3 +54,10 @@ automated application tests.
 
 Production HTTPS checks remain separate from this local report and are not
 claimed until the deployed URL is exercised.
+
+## Independent audit
+
+An independent read-only review repeated after remediation found no remaining
+material local issues. It reconciled model, report, demo and split checksums;
+verified all 30 re-optimized sensitivity scenarios; reran the 61-test suite,
+Ruff and Bandit; and confirmed the clean Git state at commit `e3a03c0`.
