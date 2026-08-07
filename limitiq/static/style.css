@@ -173,7 +173,11 @@ summary { cursor: pointer; font-weight: 700; }
 .file-type { display: inline-block; padding: 4px 7px; color: var(--teal-700); border-radius: 4px; background: var(--teal-100); font-size: 11px; font-weight: 800; }
 .document { max-width: 900px; margin: 0 auto; padding: 36px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; box-shadow: var(--shadow); }
 .document h1 { font-size: 38px; }.document h2 { margin-top: 32px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }.document h3 { margin-top: 24px; }
-.document p, .document li { color: #334f63; }
+.document p, .document li { color: #334f63; overflow-wrap: anywhere; }
+.document pre, .document table, .document code, .document img { max-width: 100%; }
+.document pre { overflow-x: auto; }
+.document table { display: block; overflow-x: auto; }
+.document img { height: auto; }
 .error-page { max-width: 680px; margin: 80px auto; padding: 50px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; text-align: center; box-shadow: var(--shadow); }
 
 @media (max-width: 1100px) {
