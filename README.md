@@ -16,9 +16,11 @@ banking product.
 
 ![LimitIQ account decision](docs/assets/account-decision.png)
 
-The public deployment link is added only after its HTTPS health and production
-workflows have been verified. The repository remains fully runnable locally in
-the meantime.
+**Live demo:** https://limitiq-credit-line-optimization.onrender.com
+
+**Health:** https://limitiq-credit-line-optimization.onrender.com/health
+
+The free Render service may need about 50 seconds to wake after inactivity.
 
 ## What it delivers
 
@@ -37,6 +39,11 @@ the meantime.
 | Observed | UCI limits, six monthly status/bill/payment fields, default target | Historical Taiwan source data |
 | Model-estimated | Calibrated PD and risk band | Out-of-sample statistical estimate |
 | Simulated | Response, EAD/LGD, revenue/cost, contribution, proposed line | Transparent scenario—not causal or realized impact |
+
+For an India-focused portfolio presentation, observed TWD monetary fields are
+converted before modelling to INR at a fixed **₹2.97 per TWD**. The rate is a
+documented July 2026 USD cross-rate from the Reserve Bank of India and Bank of
+Taiwan, not a claim that the historical customers or economics are Indian.
 
 The source contains no observed response to a line increase. Baseline PD is held
 constant across candidates; ECL changes through EAD. No simulated profit or
@@ -63,18 +70,18 @@ among models within 0.02 ROC-AUC of the best; a cost-weighted threshold is froze
 before one untouched-test read.
 
 Champion: **calibrated histogram gradient boosting**. Untouched-test ROC-AUC
-0.781082, PR-AUC 0.568754, Brier 0.133120, log loss 0.426325, precision 0.360506,
-recall 0.773173 and F1 0.491733 at threshold 0.149099. Model artifact SHA-256:
-`f8fe4953fac4252ba7b2736fba5f259d460751a1881430052223ca879f59c043`.
+0.781138, PR-AUC 0.567889, Brier 0.133149, log loss 0.426351, precision 0.398640,
+recall 0.706858 and F1 0.509783 at threshold 0.173874. Model artifact SHA-256:
+`284f9a7c8ca22ea2f8091dfea814796357f81014cfdbabecf62b7aaa0de14275`.
 
 ## Simulated business result
 
 Under the documented default assumptions, the 6,000-account test scenario
 selects 1,904 +30% increases, 2,434 no-change actions, 546 manual reviews and
-1,116 freezes. Proposed lines increase from TWD 1.011790B to TWD 1.096231B;
-simulated expected loss increases from TWD 101.772M to TWD 105.872M; simulated
-annual incremental contribution is TWD 13.926M and simulated contribution /
-incremental EAD is 21.95%. **These are deterministic scenario outputs, not
+1,116 freezes. Proposed lines increase from ₹3.005016B to ₹3.255868B;
+simulated expected loss increases from ₹302.466M to ₹314.697M; simulated
+annual incremental contribution is ₹41.343M and simulated contribution /
+incremental EAD is 21.93%. **These are deterministic scenario outputs, not
 causal estimates, forecasts or realized business impact.**
 
 ## Architecture
@@ -159,6 +166,7 @@ debug, source secrets, personal data or uploaded deserialization.
 - [Methodology](docs/METHODOLOGY.md), [PRD](docs/PRD.md), [architecture](docs/ARCHITECTURE.md)
 - [Data card](docs/DATA_CARD.md), [model card](docs/MODEL_CARD.md), [dictionary](docs/DATA_DICTIONARY.md)
 - [Assumptions](docs/ASSUMPTIONS.md), [case study](docs/CASE_STUDY.md), [five-minute walkthrough](docs/INTERVIEW_WALKTHROUGH.md)
+- [Career targeting guide](docs/CAREER_TARGETING.md) for India-based risk, analytics, model-governance and risk-technology roles
 - [Deployment runbook](docs/DEPLOYMENT.md), [dataset attribution](NOTICE.md)
 - [Verified QA evidence](docs/QA_REPORT.md)
 - Generated [quality](reports/data_quality_report.html), [EDA](reports/eda_report.html), [model](reports/model_performance_report.html), [policy](reports/policy_simulation_report.html) and [financial](reports/financial_impact_analysis.html) reports
@@ -175,6 +183,10 @@ Roadmap: current multi-market behavioral data; verified affordability inputs;
 randomized line experiments and causal response; empirically estimated LGD/CCF/
 costs; independent model/legal validation; controlled overrides; shadow mode;
 small monitored pilot; outcome/calibration/drift monitoring and rollback.
+
+The public demonstration runs on Render's no-cost tier and may cold-start after
+inactivity. This operational constraint does not affect the deterministic model
+or policy outputs once the service is awake.
 
 ## Licence
 

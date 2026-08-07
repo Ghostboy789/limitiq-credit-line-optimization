@@ -20,6 +20,10 @@ def test_data_quality_evidence_matches_source() -> None:
     assert quality["clean_rows"] == 30_000
     assert quality["missing_cells"] == 0
     assert quality["license"] == "CC BY 4.0"
+    assert quality["source_currency"] == "TWD"
+    assert quality["model_currency"] == "INR"
+    assert quality["twd_to_inr"] == 2.97
+    assert quality["dataset_version"].endswith("-inr297")
 
 
 def test_model_checksum_and_versions_are_bound() -> None:

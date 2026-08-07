@@ -43,8 +43,8 @@ false positive. The selected type and threshold are frozen, the champion is
 refit on train + validation, and the untouched test is read once.
 
 The champion is histogram gradient boosting. Untouched-test results: ROC-AUC
-0.7811, PR-AUC 0.5688, Brier 0.1331, log loss 0.4263, precision 0.3605, recall
-0.7732 and F1 0.4917 at threshold 0.1491. These are historical test results, not
+0.7811, PR-AUC 0.5679, Brier 0.1331, log loss 0.4264, precision 0.3986, recall
+0.7069 and F1 0.5098 at threshold 0.1739. These are historical test results, not
 production performance.
 
 ## Financial logic
@@ -75,6 +75,11 @@ test set using Brier-score degradation. PSI indicators compare engineered
 feature distributions in train-plus-validation with the test split. Both are
 descriptive development diagnostics, not causal explanations, adverse-action
 reasons or substitutes for production drift monitoring.
+
+All source monetary fields are converted before modelling at a fixed 2.97
+INR/TWD, derived from official July 2026 USD reference rates. This is a
+reproducible unit/presentation transform, not Indian borrower evidence or a
+live-FX promise.
 
 ## Policy order
 

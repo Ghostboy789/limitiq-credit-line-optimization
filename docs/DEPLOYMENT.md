@@ -1,5 +1,12 @@
 # Deployment
 
+Live application: https://limitiq-credit-line-optimization.onrender.com
+
+Health endpoint: https://limitiq-credit-line-optimization.onrender.com/health
+
+The `limitiq-production` Blueprint deploys the Docker service from `main` on
+Render's free plan with a `$0` workspace spend limit.
+
 ## Local production smoke test
 
 ```bash
@@ -32,3 +39,7 @@ Do not call a deployment successful until HTTPS, health, model startup,
 simulator, account lookup, filtered CSV, PDF, sample CSV and batch output have
 been exercised on the public URL and browser/server logs show no material error.
 
+This checklist passed on 6 August 2026 for commit `4c185c6`: the health endpoint
+returned model `limitiq-1.0.0-f8fe4953fac4` and dataset
+`uci-350-30c6be3abd8d`; the application, downloads, stressed simulator, valid
+batch scoring and invalid-schema response were exercised over public HTTPS.

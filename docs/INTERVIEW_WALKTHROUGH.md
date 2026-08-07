@@ -5,6 +5,8 @@
 Open Executive Overview. Explain that the product chooses among governed line
 candidates, balancing growth, expected loss, overextension and exposure. Point
 to the evidence boundary: source facts observed, PD modelled, economics simulated.
+Note that source monetary fields are converted to INR at a documented fixed rate
+for presentation; the Taiwan population does not become Indian evidence.
 
 ## 0:40–1:30 — Show the portfolio
 
@@ -41,3 +43,7 @@ overrides and rollback to no automatic increases. Roadmap: current multi-market
 behavior, verified ATP data, randomized line experiments, causal elasticity/LGD/
 CCF estimation, independent validation and limited monitored pilot.
 
+For a target employer, close on the most relevant proof: consumer-risk controls
+for J.P. Morgan, Risk Control and monitoring for UBS, risk technology for Morgan
+Stanley, or model-governance/platform controls for State Street. Do not imply
+that any institution reviewed or endorsed the project.

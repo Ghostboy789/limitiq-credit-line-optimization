@@ -22,6 +22,7 @@ from fastapi.templating import Jinja2Templates
 from limitiq import __version__
 from limitiq.config import (
     DISCLAIMER,
+    DISPLAY_CURRENCY,
     DOCS_DIR,
     MODEL_DIR,
     PROCESSED_DIR,
@@ -62,6 +63,7 @@ DOCUMENT_FILES = {
     "data-dictionary": "DATA_DICTIONARY.md",
     "architecture": "ARCHITECTURE.md",
     "interview-walkthrough": "INTERVIEW_WALKTHROUGH.md",
+    "career-targeting": "CAREER_TARGETING.md",
 }
 
 
@@ -95,10 +97,10 @@ def _load_artifacts() -> tuple[Any, dict[str, Any], pd.DataFrame, dict[str, Any]
 def _money(value: float) -> str:
     magnitude = abs(value)
     if magnitude >= 1_000_000_000:
-        return f"TWD {value / 1_000_000_000:,.2f}B"
+        return f"{DISPLAY_CURRENCY} {value / 1_000_000_000:,.2f}B"
     if magnitude >= 1_000_000:
-        return f"TWD {value / 1_000_000:,.2f}M"
-    return f"TWD {value:,.0f}"
+        return f"{DISPLAY_CURRENCY} {value / 1_000_000:,.2f}M"
+    return f"{DISPLAY_CURRENCY} {value:,.0f}"
 
 
 def _percent(value: float, digits: int = 1) -> str:

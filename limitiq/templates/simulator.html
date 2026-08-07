@@ -4,7 +4,7 @@
 {% if error %}<div class="alert error" role="alert"><strong>Assumptions not applied:</strong> {{ error }}</div>{% endif %}
 <div class="simulator-layout"><form class="panel assumption-form" method="post"><div class="panel-title"><div><p class="eyebrow">Editable controls</p><h2>Policy & economics</h2></div><button type="reset" class="link-button">Reset fields</button></div>
   <div class="field-grid">
-  {% for key, value in assumptions.items() %}<label>{{ key|replace('_',' ')|title }}{% if key not in ['servicing_cost','max_account_exposure','profitability_hurdle'] %}<span>decimal rate</span>{% else %}<span>TWD</span>{% endif %}<input type="number" name="{{ key }}" value="{{ value }}" step="{% if value < 1 %}0.001{% else %}10{% endif %}" min="0" {% if value < 1 %}max="1"{% endif %} required></label>{% endfor %}
+  {% for key, value in assumptions.items() %}<label>{{ key|replace('_',' ')|title }}{% if key not in ['servicing_cost','max_account_exposure','profitability_hurdle'] %}<span>decimal rate</span>{% else %}<span>INR</span>{% endif %}<input type="number" name="{{ key }}" value="{{ value }}" step="{% if value < 1 %}0.001{% else %}10{% endif %}" min="0" {% if value < 1 %}max="1"{% endif %} required></label>{% endfor %}
   </div><button type="submit" class="wide">Run scenario</button></form>
   <section class="simulator-results"><div class="metric-grid two">
     <article class="metric"><span>Current / proposed limits</span><strong>{{ summary.current_limit|money }}</strong><small>{{ summary.proposed_limit|money }} proposed · {{ changes.proposed_limit|money }} delta</small></article>

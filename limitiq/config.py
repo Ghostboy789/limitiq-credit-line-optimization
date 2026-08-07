@@ -20,6 +20,15 @@ DATASET_PAGE = "https://archive.ics.uci.edu/dataset/350/default+of+credit+card+c
 DATASET_DOI = "https://doi.org/10.24432/C55S3H"
 DATASET_LICENSE = "CC BY 4.0"
 
+SOURCE_CURRENCY = "TWD"
+DISPLAY_CURRENCY = "INR"
+TWD_TO_INR = 2.97
+CURRENCY_RATE_DATE = "2026-07-31"
+CURRENCY_RATE_SOURCES = (
+    "https://rate.bot.com.tw/cr?Lang=en-US",
+    "https://m.rbi.org.in/Scripts/BS_ViewBulletin.aspx?Id=22920",
+)
+
 DISCLAIMER = (
     "LimitIQ is an educational portfolio demonstration using public and synthetic data. "
     "It is not a production credit-decision system and must not be used to make real "
@@ -29,7 +38,7 @@ DISCLAIMER = (
 
 @dataclass(frozen=True)
 class PolicyAssumptions:
-    """Annualized simulated economics and policy controls; monetary values are TWD."""
+    """Annualized simulated economics and policy controls; monetary values are INR."""
 
     lgd: float = 0.65
     ccf: float = 0.75
@@ -38,13 +47,13 @@ class PolicyAssumptions:
     revolving_rate: float = 0.45
     funding_cost: float = 0.045
     capital_cost: float = 0.025
-    servicing_cost: float = 60.0
+    servicing_cost: float = 180.0
     response_elasticity: float = 0.35
     max_increase: float = 0.30
-    max_account_exposure: float = 1_000_000.0
+    max_account_exposure: float = 3_000_000.0
     portfolio_growth_cap: float = 0.10
     expected_loss_ceiling: float = 0.12
-    profitability_hurdle: float = 100.0
+    profitability_hurdle: float = 300.0
 
     def validate(self) -> None:
         rates = (

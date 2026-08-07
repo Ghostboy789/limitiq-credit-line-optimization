@@ -1,15 +1,15 @@
 {
-  "classification": "Observed source-data statistics",
+  "classification": "Observed behavior with fixed TWD-to-INR currency conversion",
   "accounts": 30000,
   "default_rate": 0.2212,
   "limit": {
-    "mean": 167484.32266666667,
-    "median": 140000.0,
-    "p10": 30000.0,
-    "p90": 360000.0
+    "mean": 497428.43832,
+    "median": 415800.0,
+    "p10": 89100.0,
+    "p90": 1069200.0
   },
   "current_utilization": {
-    "mean": 0.4239376019684477,
+    "mean": 0.42393760196844776,
     "median": 0.31399385714285716,
     "p90": 0.9816233333333333
   },
@@ -20,6 +20,7 @@
   },
   "notes": [
     "Demographic attributes are observed but excluded from all model and optimizer inputs.",
+    "Source TWD monetary fields are deterministically converted to INR at 2.97 INR per TWD.",
     "Negative bill amounts can represent credits and are clipped to zero only for behavioral ratios.",
     "No limit-increase response or economics outcome is present in the source dataset."
   ]

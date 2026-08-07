@@ -1,14 +1,14 @@
 # QA report
 
-Verified 6 August 2026 against model version
-`limitiq-1.0.0-f8fe4953fac4` and dataset version
-`uci-350-30c6be3abd8d`.
+Verified 7 August 2026 against model version
+`limitiq-1.0.0-284f9a7c8ca2` and dataset version
+`uci-350-30c6be3abd8d-inr297`.
 
 ## Automated evidence
 
-- 61 tests passed: 12 data/feature, 15 optimizer/financial-policy, 9 artifact and
-  reproducibility, and 25 application/integration tests.
-- 77.60% statement coverage, above the enforced 65% project threshold.
+- 62 tests passed: 12 data/feature, 15 optimizer/financial-policy, 9 artifact and
+  reproducibility, and 26 application/integration tests.
+- 77.56% statement coverage, above the enforced 65% project threshold.
 - Ruff format and lint, Bandit, `pip-audit` and detect-secrets passed locally.
 - GitHub Actions run
   [31040997235](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/31040997235)
@@ -52,12 +52,29 @@ automated application tests.
   demographic fields. The official raw workbook and cleaned full duplicate are
   gitignored.
 
-Production HTTPS checks remain separate from this local report and are not
-claimed until the deployed URL is exercised.
+## Production HTTPS evidence
+
+The Render deployment at
+https://limitiq-credit-line-optimization.onrender.com was exercised on 6 August
+2026. `/health` returned `status=ok`, application version `1.0.0`, model
+`limitiq-1.0.0-f8fe4953fac4` and dataset `uci-350-30c6be3abd8d`.
+
+- Overview, portfolio search, account decision, governance, reports and model
+  card rendered with the expected evidence and educational disclaimer.
+- A stressed 90% LGD / 100% CCF / 5% loss-ceiling scenario recalculated to zero
+  increases, TWD 168.22M proposed ECL and zero incremental contribution.
+- A two-row CSV produced a downloadable decision file with bounded PD values,
+  recommendations, ECL, simulated contribution and reason codes.
+- A missing-column upload returned a safe 422 page naming every absent column.
+- The executive PDF and batch decision CSV downloaded successfully from the
+  public application; the PDF had a valid `%PDF-` signature.
+- Render reported the Docker deployment live on the free plan. The public
+  service may take roughly 50 seconds to wake after inactivity.
 
 ## Independent audit
 
 An independent read-only review repeated after remediation found no remaining
 material local issues. It reconciled model, report, demo and split checksums;
-verified all 30 re-optimized sensitivity scenarios; reran the 61-test suite,
-Ruff and Bandit; and confirmed the clean Git state at commit `e3a03c0`.
+verified all 30 re-optimized sensitivity scenarios; reran the 62-test suite,
+Ruff and Bandit; and confirmed the INR-localized working tree builds and tests
+clean before the `v1.0.0` release.
