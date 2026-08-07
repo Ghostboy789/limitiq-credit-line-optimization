@@ -55,9 +55,10 @@ automated application tests.
 ## Production HTTPS evidence
 
 The Render deployment at
-https://limitiq-credit-line-optimization.onrender.com was exercised on 6 August
-2026. `/health` returned `status=ok`, application version `1.0.0`, model
-`limitiq-1.0.0-f8fe4953fac4` and dataset `uci-350-30c6be3abd8d`.
+https://limitiq-credit-line-optimization.onrender.com was first exercised on 6 August
+2026 against the then-current pre-INR build. `/health` returned `status=ok`,
+application version `1.0.0`, model `limitiq-1.0.0-f8fe4953fac4` and dataset
+`uci-350-30c6be3abd8d`.
 
 - Overview, portfolio search, account decision, governance, reports and model
   card rendered with the expected evidence and educational disclaimer.
@@ -70,6 +71,21 @@ https://limitiq-credit-line-optimization.onrender.com was exercised on 6 August
   public application; the PDF had a valid `%PDF-` signature.
 - Render reported the Docker deployment live on the free plan. The public
   service may take roughly 50 seconds to wake after inactivity.
+
+### 7 August 2026 INR-release re-verification
+
+Re-verified live after the INR release deployed (model
+`limitiq-1.0.0-284f9a7c8ca2`, dataset `uci-350-30c6be3abd8d-inr297`, Render
+deployment `dep-d9qmglbtqb8s73b2vuug` success):
+
+- `/health` returns the INR model and dataset versions above.
+- Overview shows INR figures with the documented fixed 2.97 TWD conversion note
+  and the educational disclaimer; account pages carry the same boundary note.
+- All 27 primary pages (9 routes × 1440/768/390 px) loaded with no horizontal
+  overflow and empty console/page-error logs.
+- Batch upload of the sample template returned a decision CSV; an invalid
+  `ACCOUNT_ID` returned a safe 422.
+- Executive PDF and portfolio CSV downloaded successfully from production.
 
 ## Independent audit
 
