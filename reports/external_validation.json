@@ -1,0 +1,472 @@
+{
+  "classification": "External cross-dataset validation of the training recipe",
+  "generated_at": "2026-08-07T07:12:48.032275+00:00",
+  "random_seed": 42,
+  "datasets": {
+    "german_credit": {
+      "key": "german_credit",
+      "dataset": "Statlog (German Credit Data)",
+      "publisher": "UCI Machine Learning Repository",
+      "source_page": "https://archive.ics.uci.edu/",
+      "download_url": "https://archive.ics.uci.edu/static/public/144/statlog+german+credit+data.zip",
+      "doi": "10.24432/C5NC77",
+      "license": "CC BY 4.0",
+      "file_sha256": "b21f3d81db8071257d5ff1deaeba1fd4303b62712e6fcc9715c7a86202cb5871",
+      "notes": [
+        "19 symbolic and numeric attributes plus a binary credit-risk label (1 = bad)."
+      ],
+      "rows": 1000,
+      "risk_rate": 0.3,
+      "n_features": 61,
+      "split": {
+        "train": 600,
+        "validation": 200,
+        "test": 200
+      },
+      "validation_models": {
+        "Regularized logistic regression": {
+          "roc_auc": 0.7924999999999999,
+          "pr_auc": 0.6293242383293653,
+          "brier_score": 0.16658438008086005,
+          "log_loss": 0.5059723195118706,
+          "precision": 0.4444444444444444,
+          "recall": 0.9333333333333333,
+          "f1": 0.6021505376344086,
+          "threshold": 0.23333333333333334,
+          "confusion_matrix": [
+            [
+              70,
+              70
+            ],
+            [
+              4,
+              56
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.09481801087320778,
+              "observed_rate": 0.05
+            },
+            {
+              "mean_predicted": 0.14698814860213205,
+              "observed_rate": 0.1
+            },
+            {
+              "mean_predicted": 0.17407593006864147,
+              "observed_rate": 0.05
+            },
+            {
+              "mean_predicted": 0.21840867430303673,
+              "observed_rate": 0.15
+            },
+            {
+              "mean_predicted": 0.2664873186921953,
+              "observed_rate": 0.3
+            },
+            {
+              "mean_predicted": 0.3120744544093749,
+              "observed_rate": 0.25
+            },
+            {
+              "mean_predicted": 0.3578478485138785,
+              "observed_rate": 0.3
+            },
+            {
+              "mean_predicted": 0.41741898715515974,
+              "observed_rate": 0.5
+            },
+            {
+              "mean_predicted": 0.48660901519638317,
+              "observed_rate": 0.55
+            },
+            {
+              "mean_predicted": 0.5810298895941923,
+              "observed_rate": 0.75
+            }
+          ]
+        },
+        "Histogram gradient boosting": {
+          "roc_auc": 0.8177380952380953,
+          "pr_auc": 0.6670168626508834,
+          "brier_score": 0.15872990661806083,
+          "log_loss": 0.4841780608970987,
+          "precision": 0.4453125,
+          "recall": 0.95,
+          "f1": 0.6063829787234043,
+          "threshold": 0.20855855855855854,
+          "confusion_matrix": [
+            [
+              69,
+              71
+            ],
+            [
+              3,
+              57
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.09079438879789872,
+              "observed_rate": 0.0
+            },
+            {
+              "mean_predicted": 0.12272703685688216,
+              "observed_rate": 0.05
+            },
+            {
+              "mean_predicted": 0.16199727342583428,
+              "observed_rate": 0.05
+            },
+            {
+              "mean_predicted": 0.20413305552581326,
+              "observed_rate": 0.25
+            },
+            {
+              "mean_predicted": 0.25011558246771126,
+              "observed_rate": 0.1
+            },
+            {
+              "mean_predicted": 0.3098127873245658,
+              "observed_rate": 0.35
+            },
+            {
+              "mean_predicted": 0.3625231680464962,
+              "observed_rate": 0.5
+            },
+            {
+              "mean_predicted": 0.41547397964097044,
+              "observed_rate": 0.3
+            },
+            {
+              "mean_predicted": 0.48709440462652803,
+              "observed_rate": 0.6
+            },
+            {
+              "mean_predicted": 0.6190591330739296,
+              "observed_rate": 0.8
+            }
+          ]
+        }
+      },
+      "champion": "Histogram gradient boosting",
+      "selection_rule": "Lowest validation Brier score among models within 0.02 ROC-AUC of the best",
+      "threshold_rule": "Minimize validation cost with false negatives weighted 5x false positives",
+      "selected_threshold": 0.20855855855855854,
+      "test_metrics": {
+        "roc_auc": 0.7507142857142857,
+        "pr_auc": 0.5526939133094828,
+        "brier_score": 0.17694645456050778,
+        "log_loss": 0.5260643732594353,
+        "precision": 0.4166666666666667,
+        "recall": 0.9166666666666666,
+        "f1": 0.5729166666666666,
+        "threshold": 0.20855855855855854,
+        "confusion_matrix": [
+          [
+            63,
+            77
+          ],
+          [
+            5,
+            55
+          ]
+        ],
+        "calibration": [
+          {
+            "mean_predicted": 0.0884935804059679,
+            "observed_rate": 0.0
+          },
+          {
+            "mean_predicted": 0.12918874592320914,
+            "observed_rate": 0.1
+          },
+          {
+            "mean_predicted": 0.17252168277138372,
+            "observed_rate": 0.1
+          },
+          {
+            "mean_predicted": 0.2148693094490076,
+            "observed_rate": 0.25
+          },
+          {
+            "mean_predicted": 0.2562898858466639,
+            "observed_rate": 0.3
+          },
+          {
+            "mean_predicted": 0.3032730828408709,
+            "observed_rate": 0.4
+          },
+          {
+            "mean_predicted": 0.3560410308664606,
+            "observed_rate": 0.25
+          },
+          {
+            "mean_predicted": 0.41323870219373166,
+            "observed_rate": 0.4
+          },
+          {
+            "mean_predicted": 0.48682700313496835,
+            "observed_rate": 0.6
+          },
+          {
+            "mean_predicted": 0.609920761939249,
+            "observed_rate": 0.6
+          }
+        ]
+      },
+      "trained_at": "2026-08-07T07:12:47.422373+00:00"
+    },
+    "australian_credit": {
+      "key": "australian_credit",
+      "dataset": "Australian Credit Approval",
+      "publisher": "UCI Machine Learning Repository",
+      "source_page": "https://archive.ics.uci.edu/",
+      "download_url": "https://archive.ics.uci.edu/static/public/143/statlog+australian+credit+approval.zip",
+      "doi": "10.24432/C59012",
+      "license": "CC BY 4.0",
+      "file_sha256": "3abe5af151afa50b999a9ba21cbc884e80d80a4050b716cf88b34a2e6ecb731c",
+      "notes": [
+        "Six continuous and eight categorical attributes; a few '?' values are median-imputed for modelling. Denied applications (encoded 0) are the risk event."
+      ],
+      "rows": 690,
+      "risk_rate": 0.5550724637681159,
+      "n_features": 42,
+      "split": {
+        "train": 414,
+        "validation": 138,
+        "test": 138
+      },
+      "validation_models": {
+        "Regularized logistic regression": {
+          "roc_auc": 0.9122844368746008,
+          "pr_auc": 0.9251116442277671,
+          "brier_score": 0.11954560568972487,
+          "log_loss": 0.39312226972804715,
+          "precision": 0.6972477064220184,
+          "recall": 0.987012987012987,
+          "f1": 0.8172043010752689,
+          "threshold": 0.11441441441441441,
+          "confusion_matrix": [
+            [
+              28,
+              33
+            ],
+            [
+              1,
+              76
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.03925558831679426,
+              "observed_rate": 0.07142857142857142
+            },
+            {
+              "mean_predicted": 0.0940813695723477,
+              "observed_rate": 0.0
+            },
+            {
+              "mean_predicted": 0.14592891189025797,
+              "observed_rate": 0.21428571428571427
+            },
+            {
+              "mean_predicted": 0.22464078043554978,
+              "observed_rate": 0.38461538461538464
+            },
+            {
+              "mean_predicted": 0.34735051283890694,
+              "observed_rate": 0.42857142857142855
+            },
+            {
+              "mean_predicted": 0.5783773166287638,
+              "observed_rate": 0.7142857142857143
+            },
+            {
+              "mean_predicted": 0.8201932580764583,
+              "observed_rate": 0.9230769230769231
+            },
+            {
+              "mean_predicted": 0.8859499480231044,
+              "observed_rate": 0.9285714285714286
+            },
+            {
+              "mean_predicted": 0.9152128536174982,
+              "observed_rate": 1.0
+            },
+            {
+              "mean_predicted": 0.9581776629545384,
+              "observed_rate": 0.9285714285714286
+            }
+          ]
+        },
+        "Histogram gradient boosting": {
+          "roc_auc": 0.9382584628486268,
+          "pr_auc": 0.9486708403565632,
+          "brier_score": 0.0996648977981968,
+          "log_loss": 0.33018628680464734,
+          "precision": 0.7307692307692307,
+          "recall": 0.987012987012987,
+          "f1": 0.8397790055248618,
+          "threshold": 0.09954954954954955,
+          "confusion_matrix": [
+            [
+              33,
+              28
+            ],
+            [
+              1,
+              76
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.030361510060429923,
+              "observed_rate": 0.0
+            },
+            {
+              "mean_predicted": 0.05058201356186186,
+              "observed_rate": 0.07142857142857142
+            },
+            {
+              "mean_predicted": 0.10802954485909415,
+              "observed_rate": 0.14285714285714285
+            },
+            {
+              "mean_predicted": 0.24297802271992233,
+              "observed_rate": 0.23076923076923078
+            },
+            {
+              "mean_predicted": 0.44038123944281177,
+              "observed_rate": 0.6428571428571429
+            },
+            {
+              "mean_predicted": 0.6300498715007115,
+              "observed_rate": 0.6428571428571429
+            },
+            {
+              "mean_predicted": 0.8163731376979412,
+              "observed_rate": 1.0
+            },
+            {
+              "mean_predicted": 0.8797237780004503,
+              "observed_rate": 0.9285714285714286
+            },
+            {
+              "mean_predicted": 0.9186605364664137,
+              "observed_rate": 0.9285714285714286
+            },
+            {
+              "mean_predicted": 0.9514759269604058,
+              "observed_rate": 1.0
+            }
+          ]
+        }
+      },
+      "champion": "Histogram gradient boosting",
+      "selection_rule": "Lowest validation Brier score among models within 0.02 ROC-AUC of the best",
+      "threshold_rule": "Minimize validation cost with false negatives weighted 5x false positives",
+      "selected_threshold": 0.09954954954954955,
+      "test_metrics": {
+        "roc_auc": 0.937818336162988,
+        "pr_auc": 0.955276286735234,
+        "brier_score": 0.09404589301089743,
+        "log_loss": 0.32474950290912585,
+        "precision": 0.6851851851851852,
+        "recall": 0.9736842105263158,
+        "f1": 0.8043478260869565,
+        "threshold": 0.09954954954954955,
+        "confusion_matrix": [
+          [
+            28,
+            34
+          ],
+          [
+            2,
+            74
+          ]
+        ],
+        "calibration": [
+          {
+            "mean_predicted": 0.0254804301487003,
+            "observed_rate": 0.07142857142857142
+          },
+          {
+            "mean_predicted": 0.07130469933594073,
+            "observed_rate": 0.0
+          },
+          {
+            "mean_predicted": 0.16579275634834575,
+            "observed_rate": 0.21428571428571427
+          },
+          {
+            "mean_predicted": 0.29347545198074293,
+            "observed_rate": 0.15384615384615385
+          },
+          {
+            "mean_predicted": 0.4468069065403258,
+            "observed_rate": 0.2857142857142857
+          },
+          {
+            "mean_predicted": 0.6907182587902708,
+            "observed_rate": 0.8571428571428571
+          },
+          {
+            "mean_predicted": 0.841598424540449,
+            "observed_rate": 1.0
+          },
+          {
+            "mean_predicted": 0.9038443569347281,
+            "observed_rate": 0.9285714285714286
+          },
+          {
+            "mean_predicted": 0.9344849425211371,
+            "observed_rate": 1.0
+          },
+          {
+            "mean_predicted": 0.9640076549990821,
+            "observed_rate": 1.0
+          }
+        ]
+      },
+      "trained_at": "2026-08-07T07:12:48.032275+00:00"
+    }
+  },
+  "comparison": [
+    {
+      "dataset": "Default of Credit Card Clients (production)",
+      "doi": "10.24432/C5HS4C",
+      "rows": 30000,
+      "risk_rate": 0.2212,
+      "champion": "Histogram gradient boosting",
+      "roc_auc": 0.7811379679413443,
+      "pr_auc": 0.5678886862967755,
+      "brier_score": 0.13314937776362512,
+      "selected_threshold": 0.17387387387387387
+    },
+    {
+      "dataset": "Statlog (German Credit Data)",
+      "doi": "10.24432/C5NC77",
+      "rows": 1000,
+      "risk_rate": 0.3,
+      "champion": "Histogram gradient boosting",
+      "roc_auc": 0.7507142857142857,
+      "pr_auc": 0.5526939133094828,
+      "brier_score": 0.17694645456050778,
+      "selected_threshold": 0.20855855855855854
+    },
+    {
+      "dataset": "Australian Credit Approval",
+      "doi": "10.24432/C59012",
+      "rows": 690,
+      "risk_rate": 0.5550724637681159,
+      "champion": "Histogram gradient boosting",
+      "roc_auc": 0.937818336162988,
+      "pr_auc": 0.955276286735234,
+      "brier_score": 0.09404589301089743,
+      "selected_threshold": 0.09954954954954955
+    }
+  ],
+  "methodology": "Per dataset: seeded stratified 60/20/20 split; regularized logistic-regression baseline and calibrated histogram gradient boosting; best of pair chosen by validation Brier within 0.02 ROC-AUC; cost-weighted threshold; all metrics on the untouched test split.",
+  "interpretation": "External datasets have independent feature sets and target definitions, so they do not exercise the production LimitIQ input schema. Comparable discrimination and calibration across datasets is evidence the modelling methodology generalises; it is not evidence about portability of the Taiwan-specific features or about Indian borrowers."
+}

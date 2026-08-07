@@ -52,6 +52,7 @@ REPORT_FILES = {
     "model-performance": "model_performance_report.html",
     "policy-simulation": "policy_simulation_report.html",
     "financial-impact": "financial_impact_analysis.html",
+    "external-validation": "external_validation_report.html",
 }
 DOCUMENT_FILES = {
     "methodology": "METHODOLOGY.md",

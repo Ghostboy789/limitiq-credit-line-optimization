@@ -138,6 +138,9 @@ python -m limitiq.pipeline train
 # Regenerate report files from versioned evidence
 python -m limitiq.pipeline reports
 
+# External cross-dataset validation of the modelling recipe
+python -m limitiq.external
+
 # Unit and integration checks
 python -m pytest
 
@@ -169,7 +172,7 @@ debug, source secrets, personal data or uploaded deserialization.
 - [Career targeting guide](docs/CAREER_TARGETING.md) for India-based risk, analytics, model-governance and risk-technology roles
 - [Deployment runbook](docs/DEPLOYMENT.md), [dataset attribution](NOTICE.md)
 - [Verified QA evidence](docs/QA_REPORT.md)
-- Generated [quality](reports/data_quality_report.html), [EDA](reports/eda_report.html), [model](reports/model_performance_report.html), [policy](reports/policy_simulation_report.html) and [financial](reports/financial_impact_analysis.html) reports
+- Generated [quality](reports/data_quality_report.html), [EDA](reports/eda_report.html), [model](reports/model_performance_report.html), [policy](reports/policy_simulation_report.html), [financial](reports/financial_impact_analysis.html) and [external-validation](reports/external_validation_report.html) reports
 
 ## Limitations and roadmap
 

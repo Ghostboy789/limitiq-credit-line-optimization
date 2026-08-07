@@ -75,3 +75,22 @@ routing remains available.
 The governance page includes development-reference PSI indicators comparing
 train-plus-validation with test. These support review but are not evidence of
 live production drift.
+
+## External cross-dataset validation
+
+The Taiwan repayment panel cannot feed arbitrary datasets, so the *methodology*
+is re-run unchanged on two independent UCI credit datasets (same seed,
+stratified 60/20/20 split, logistic baseline, calibrated histogram gradient
+boosting, cost-weighted threshold):
+
+| Dataset | N | Risk rate | Test ROC-AUC | Test PR-AUC | Test Brier |
+| --- | --- | --- | --- | --- | --- |
+| Default of Credit Card Clients (production) | 30,000 | 22.1% | 0.781 | 0.568 | 0.133 |
+| Statlog (German Credit Data) | 1,000 | 30.0% | 0.751 | 0.553 | 0.177 |
+| Australian Credit Approval | 690 | 55.5% | 0.938 | 0.955 | 0.094 |
+
+Comparable discrimination and calibration across independent feature spaces is
+evidence the modelling recipe generalises. It is **not** evidence that the
+Taiwan-specific inputs port to other portfolios or to Indian borrowers.
+Reproduce with `python -m limitiq.external`; evidence in
+`reports/external_validation_report.html`.
