@@ -12,7 +12,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table
 
-from limitiq.config import DISCLAIMER, MODEL_DIR, REPORT_DIR
+from limitiq.config import DISCLAIMER, DISPLAY_CURRENCY, MODEL_DIR, REPORT_DIR
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -20,7 +20,7 @@ def _load(path: Path) -> dict[str, Any]:
 
 
 def _money(value: float) -> str:
-    return f"TWD {value:,.0f}"
+    return f"{DISPLAY_CURRENCY} {value:,.0f}"
 
 
 def _pct(value: float) -> str:
@@ -157,7 +157,7 @@ def _executive_pdf(summary: dict[str, Any], model: dict[str, Any], directory: Pa
         Spacer(1, 3 * mm),
         Paragraph("Boundaries and committee actions", styles["Teal"]),
         Paragraph(
-            "All line response, drawdown and financial effects are deterministic simulations. PD is not causal. A production build needs current local-law review, verified ability-to-pay inputs, outcome monitoring, model validation, controlled overrides, change approval and rollback. The displayed management ECL is not an IFRS 9 allowance or regulatory-capital calculation.",
+            "All line response, drawdown and financial effects are deterministic simulations. PD is not causal. Source TWD monetary values are converted to INR at the documented fixed rate for presentation; this is not Indian borrower evidence. A production build needs current local-law review, verified ability-to-pay inputs, outcome monitoring, model validation, controlled overrides, change approval and rollback. The displayed management ECL is not an IFRS 9 allowance or regulatory-capital calculation.",
             styles["BodyText"],
         ),
         Spacer(1, 8 * mm),
@@ -204,6 +204,10 @@ def build_reports(report_dir: Path | None = None, model_dir: Path | None = None)
             ),
             ("Evidence snapshot", metrics),
             (
+                "Currency localization",
+                f"<p>Observed TWD monetary fields are converted to INR at {quality['twd_to_inr']:.2f} INR per TWD using the documented July 2026 cross-rate. This presentation transform is not evidence about Indian borrowers.</p>",
+            ),
+            (
                 "Action distribution — simulated",
                 _table(
                     ["Action", "Accounts"],
@@ -228,7 +232,7 @@ def build_reports(report_dir: Path | None = None, model_dir: Path | None = None)
         [
             (
                 "Lineage",
-                f"<p>UCI Default of Credit Card Clients; dataset version <code>{quality['dataset_version']}</code>; CC BY 4.0.</p>",
+                f"<p>UCI Default of Credit Card Clients; dataset version <code>{quality['dataset_version']}</code>; CC BY 4.0. Source {quality['source_currency']} monetary fields are converted to {quality['model_currency']} at {quality['twd_to_inr']:.2f} per TWD before modelling.</p>",
             ),
             (
                 "Validation results",
@@ -251,7 +255,7 @@ def build_reports(report_dir: Path | None = None, model_dir: Path | None = None)
         report_dir,
         "eda_report.html",
         "Exploratory Data Analysis",
-        "Observed source-data statistics",
+        "Observed behavior; currency-converted presentation",
         [
             (
                 "Portfolio",

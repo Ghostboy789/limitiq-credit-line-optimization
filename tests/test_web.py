@@ -90,13 +90,13 @@ def test_policy_simulator_recalculates_and_validates_extremes() -> None:
             "revolving_rate": "0.45",
             "funding_cost": "0.1",
             "capital_cost": "0.1",
-            "servicing_cost": "60",
+            "servicing_cost": "180",
             "response_elasticity": "0",
             "max_increase": "0.3",
-            "max_account_exposure": "1000000",
+            "max_account_exposure": "3000000",
             "portfolio_growth_cap": "0.1",
             "expected_loss_ceiling": "0.01",
-            "profitability_hurdle": "100",
+            "profitability_hurdle": "300",
         },
     )
     assert baseline.status_code == stressed.status_code == 200
@@ -186,6 +186,7 @@ def test_sample_and_filtered_csv_downloads_are_valid() -> None:
         "/documents/data-card",
         "/documents/prd",
         "/documents/case-study",
+        "/documents/career-targeting",
     ],
 )
 def test_report_and_document_downloads(path: str) -> None:
@@ -205,6 +206,8 @@ def test_static_assets_and_navigation_are_real() -> None:
     assert css.status_code == js.status_code == 200
     overview = client.get("/").text
     assert "Current expected loss" in overview
+    assert "INR" in overview
+    assert "2.97" in overview
     for path in ("/portfolio", "/simulator", "/batch", "/governance", "/reports"):
         assert f'href="{path}"' in overview
 

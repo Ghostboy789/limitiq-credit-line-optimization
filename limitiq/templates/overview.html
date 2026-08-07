@@ -5,7 +5,7 @@
   <p class="lede">LimitIQ evaluates governed limit candidates against calibrated default risk, expected loss, simulated economics and customer-protection controls.</p></div>
   <div class="hero-callout"><span>Portfolio posture</span><strong>{{ summary.eligible_increases|number }}</strong><small>accounts eligible for a simulated increase</small></div>
 </section>
-<div class="notice" role="note"><strong>Evidence boundary:</strong> Source statistics are observed, PD is model-estimated, and every limit-response and financial outcome is simulated—not causal or realized.</div>
+<div class="notice" role="note"><strong>Evidence boundary:</strong> Source statistics are observed, PD is model-estimated, and every limit-response and financial outcome is simulated—not causal or realized. Source TWD amounts are shown in INR at the documented fixed 2.97 conversion; the Taiwan population is not Indian evidence.</div>
 <section aria-labelledby="portfolio-heading"><div class="section-heading"><div><p class="eyebrow">Executive overview</p><h2 id="portfolio-heading">Portfolio at a glance</h2></div><a class="button secondary" href="/downloads/reports/executive-report-pdf">Download executive PDF</a></div>
 <div class="metric-grid">
   <article class="metric"><span>Current credit limits</span><strong>{{ summary.current_limit|money }}</strong><small>Observed contractual limits</small></article>
@@ -26,5 +26,5 @@
   </article>
 </section>
 <section class="panel"><div class="panel-title"><div><p class="eyebrow">Committee controls</p><h2>Policy assumptions</h2></div><a href="/simulator">Stress assumptions →</a></div>
-<dl class="assumption-grid">{% for key, value in assumptions.items() %}<div><dt>{{ key|replace('_',' ')|title }}</dt><dd>{% if value <= 1 %}{{ value|percent }}{% else %}{{ value|number }}{% endif %}</dd></div>{% endfor %}</dl></section>
+<dl class="assumption-grid">{% for key, value in assumptions.items() %}<div><dt>{{ key|replace('_',' ')|title }}</dt><dd>{% if key in ['servicing_cost','max_account_exposure','profitability_hurdle'] %}{{ value|money }}{% elif value <= 1 %}{{ value|percent }}{% else %}{{ value|number }}{% endif %}</dd></div>{% endfor %}</dl></section>
 {% endblock %}

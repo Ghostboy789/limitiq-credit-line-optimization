@@ -5,8 +5,7 @@
   manual-review and early-warning freeze actions across seven working web areas.
 - Trained and calibrated logistic and gradient-boosting models with fixed
   60/20/20 splits; selected the champion on validation and achieved 0.781 ROC-AUC,
-  0.569 PR-AUC and 0.133 Brier score on a 6,000-account untouched test set.
+  0.568 PR-AUC and 0.133 Brier score on a 6,000-account untouched test set.
 - Designed a deterministic ECL/EAD and contribution optimizer with transparent
-  policy assumptions; the default scenario selected 1,904 increases and TWD
-  13.93M simulated—not causal or realized—annual incremental contribution.
-
+  policy assumptions; the default scenario selected 1,904 increases and ₹41.34M
+  simulated—not causal or realized—annual incremental contribution.

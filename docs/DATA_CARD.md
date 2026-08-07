@@ -4,7 +4,7 @@
 
 Default of Credit Card Clients, I-Cheng Yeh / UCI Machine Learning Repository,
 DOI https://doi.org/10.24432/C55S3H, CC BY 4.0. Version in this build:
-`uci-350-30c6be3abd8d`; source SHA-256
+`uci-350-30c6be3abd8d-inr297`; source SHA-256
 `30c6be3abd8dcfd3e6096c828bad8c2f011238620f5369220bd60cfc82700933`.
 
 ## Population and time
@@ -22,6 +22,11 @@ stratified 60/20/20 splits, saves model-ready split CSVs with checksums during
 rebuild and records lineage/checksums. The committed demo has
 6,000 untouched-test accounts with deterministic synthetic IDs; original IDs and
 all demographics are removed.
+
+For India-focused presentation, source limits, bills and payments are converted
+from TWD to INR at a fixed 2.97 INR/TWD before splitting and modelling. This is
+a deterministic unit conversion derived from official July 2026 USD reference
+rates; it does not make the 2005 Taiwan population representative of India.
 
 ## Decision and audit fields
 

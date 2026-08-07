@@ -34,22 +34,29 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from limitiq.config import (
+    CURRENCY_RATE_DATE,
+    CURRENCY_RATE_SOURCES,
     DATASET_DOI,
     DATASET_LICENSE,
     DATASET_PAGE,
     DATASET_URL,
+    DISPLAY_CURRENCY,
     MODEL_DIR,
     PROCESSED_DIR,
     RAW_DIR,
     REPORT_DIR,
     SEED,
+    SOURCE_CURRENCY,
+    TWD_TO_INR,
     PolicyAssumptions,
 )
 from limitiq.features import (
+    BILL_COLUMNS,
     DEMOGRAPHIC_COLUMNS,
     FEATURE_NAMES,
     ID_COLUMN,
     MODEL_INPUT_COLUMNS,
+    PAYMENT_COLUMNS,
     TARGET,
     FeatureBuilder,
     clean_source,
@@ -113,12 +120,24 @@ def load_source(path: Path | None = None) -> tuple[pd.DataFrame, dict[str, Any]]
     path = path or download_dataset()
     raw = pd.read_excel(path, sheet_name="Data", header=1)
     clean, quality = clean_source(raw)
+    monetary_columns = ["LIMIT_BAL", *BILL_COLUMNS, *PAYMENT_COLUMNS]
+    clean[monetary_columns] = clean[monetary_columns] * TWD_TO_INR
     quality.update(
         {
             "dataset_sha256": _sha256(path),
-            "dataset_version": f"uci-350-{_sha256(path)[:12]}",
+            "dataset_version": f"uci-350-{_sha256(path)[:12]}-inr297",
             "source": DATASET_PAGE,
             "license": DATASET_LICENSE,
+            "source_currency": SOURCE_CURRENCY,
+            "model_currency": DISPLAY_CURRENCY,
+            "twd_to_inr": TWD_TO_INR,
+            "currency_rate_date": CURRENCY_RATE_DATE,
+            "currency_rate_sources": list(CURRENCY_RATE_SOURCES),
+            "currency_note": (
+                "Observed TWD monetary fields are deterministically converted to INR before "
+                "modelling and simulation; the conversion is presentation localization, not "
+                "evidence about Indian borrowers."
+            ),
         }
     )
     return clean, quality
@@ -130,7 +149,7 @@ def build_data() -> tuple[pd.DataFrame, dict[str, Any]]:
     frame.to_csv(PROCESSED_DIR / "clean_source.csv", index=False)
     engineered = engineer_features(frame[MODEL_INPUT_COLUMNS])
     eda = {
-        "classification": "Observed source-data statistics",
+        "classification": "Observed behavior with fixed TWD-to-INR currency conversion",
         "accounts": len(frame),
         "default_rate": float(frame[TARGET].mean()),
         "limit": {
@@ -150,6 +169,7 @@ def build_data() -> tuple[pd.DataFrame, dict[str, Any]]:
         },
         "notes": [
             "Demographic attributes are observed but excluded from all model and optimizer inputs.",
+            "Source TWD monetary fields are deterministically converted to INR at 2.97 INR per TWD.",
             "Negative bill amounts can represent credits and are clipped to zero only for behavioral ratios.",
             "No limit-increase response or economics outcome is present in the source dataset.",
         ],

@@ -2,7 +2,7 @@
 
 ## Model
 
-- Version: `limitiq-1.0.0-f8fe4953fac4`
+- Version: `limitiq-1.0.0-284f9a7c8ca2`
 - Champion: sigmoid-calibrated histogram gradient boosting
 - Baseline: sigmoid-calibrated regularized logistic regression
 - Target: subsequent-month default
@@ -10,28 +10,28 @@
 - Split: 18,000 train / 6,000 validation / 6,000 untouched test
 - Model-ready split artifacts: raw decision fields plus target, deterministic
   CSVs and SHA-256 metadata generated under `data/processed/splits/`
-- Decision threshold: 0.149099, selected on validation with missed defaults
+- Decision threshold: 0.173874, selected on validation with missed defaults
   weighted five times false positives
 - Artifact SHA-256:
-  `f8fe4953fac4252ba7b2736fba5f259d460751a1881430052223ca879f59c043`
+  `284f9a7c8ca22ea2f8091dfea814796357f81014cfdbabecf62b7aaa0de14275`
 
 ## Selection
 
 Choose the lowest validation Brier score among candidates within 0.02 ROC-AUC
-of the best. Histogram gradient boosting validation ROC-AUC was 0.7658 and Brier
-0.1389 versus logistic 0.7329 and 0.1441. The champion type and threshold were
+of the best. Histogram gradient boosting validation ROC-AUC was 0.7659 and Brier
+0.1389 versus logistic 0.7328 and 0.1441. The champion type and threshold were
 frozen before the single test read.
 
 ## Untouched-test metrics
 
-- ROC-AUC: 0.781082
-- PR-AUC: 0.568754
-- Brier score: 0.133120
-- Log loss: 0.426325
-- Precision: 0.360506
-- Recall: 0.773173
-- F1: 0.491733
-- Confusion matrix: TN 2,853; FP 1,820; FN 301; TP 1,026
+- ROC-AUC: 0.781138
+- PR-AUC: 0.567889
+- Brier score: 0.133149
+- Log loss: 0.426351
+- Precision: 0.398640
+- Recall: 0.706858
+- F1: 0.509783
+- Confusion matrix: TN 3,258; FP 1,415; FN 389; TP 938
 
 These are historical test results, not production performance or business
 impact. Calibration curves, risk-band results and segment diagnostics are in
@@ -40,8 +40,9 @@ the governance page and generated report.
 ## Intended use
 
 Educational one-month PD estimation for candidate-line scenario comparison in
-the LimitIQ demonstration. PD is held constant across candidates and ECL varies
-through EAD.
+the LimitIQ demonstration. Source monetary fields are converted from TWD to INR
+at the documented fixed rate before modelling. PD is held constant across
+candidates and ECL varies through EAD.
 
 ## Non-use
 

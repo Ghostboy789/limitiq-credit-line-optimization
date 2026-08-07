@@ -8,25 +8,25 @@
     "revolving_rate": 0.45,
     "funding_cost": 0.045,
     "capital_cost": 0.025,
-    "servicing_cost": 60.0,
+    "servicing_cost": 180.0,
     "response_elasticity": 0.35,
     "max_increase": 0.3,
-    "max_account_exposure": 1000000.0,
+    "max_account_exposure": 3000000.0,
     "portfolio_growth_cap": 0.1,
     "expected_loss_ceiling": 0.12,
-    "profitability_hurdle": 100.0
+    "profitability_hurdle": 300.0
   },
   "summary": {
     "accounts": 6000,
-    "current_limit": 1011790000.0,
-    "proposed_limit": 1096231000.0,
-    "current_ead": 832816221.25,
-    "proposed_ead": 896259476.0,
-    "current_expected_loss": 101772492.85588056,
-    "proposed_expected_loss": 105871843.13825826,
-    "incremental_contribution": 13925684.58546244,
-    "incremental_exposure": 63443254.75,
-    "risk_adjusted_return": 0.2194982688126107,
+    "current_limit": 3005016300.0,
+    "proposed_limit": 3255868440.0,
+    "current_ead": 2473464177.112509,
+    "proposed_ead": 2661951121.0875,
+    "current_expected_loss": 302465851.33686936,
+    "proposed_expected_loss": 314696675.11661863,
+    "incremental_contribution": 41342974.67332546,
+    "incremental_exposure": 188486943.9749999,
+    "risk_adjusted_return": 0.21934131776686352,
     "eligible_increases": 1904,
     "early_warning": 1662,
     "action_counts": {
@@ -37,8 +37,8 @@
     },
     "risk_counts": {
       "Very high": 1365,
-      "Moderate": 3178,
-      "High": 1457
+      "Moderate": 3180,
+      "High": 1455
     }
   },
   "sensitivity": [
@@ -46,301 +46,301 @@
       "assumption": "lgd",
       "scenario": "Low",
       "value": 0.52,
-      "eligible_increases": 1989,
-      "proposed_limit": 1099456000.0,
-      "proposed_expected_loss": 84821935.99189323,
-      "incremental_contribution": 14926987.91283132,
-      "risk_adjusted_return": 0.22661650011879567
+      "eligible_increases": 1991,
+      "proposed_limit": 3265428870.0,
+      "proposed_expected_loss": 252114761.2065613,
+      "incremental_contribution": 44299920.36769682,
+      "risk_adjusted_return": 0.22640795115234902
     },
     {
       "assumption": "lgd",
       "scenario": "Base",
       "value": 0.65,
       "eligible_increases": 1904,
-      "proposed_limit": 1096231000.0,
-      "proposed_expected_loss": 105871843.13825826,
-      "incremental_contribution": 13925684.58546244,
-      "risk_adjusted_return": 0.2194982688126107
+      "proposed_limit": 3255868440.0,
+      "proposed_expected_loss": 314696675.11661863,
+      "incremental_contribution": 41342974.67332546,
+      "risk_adjusted_return": 0.21934131776686352
     },
     {
       "assumption": "lgd",
       "scenario": "High",
       "value": 0.78,
-      "eligible_increases": 1667,
-      "proposed_limit": 1088026000.0,
-      "proposed_expected_loss": 126421705.94351386,
-      "incremental_contribution": 11870963.178222988,
-      "risk_adjusted_return": 0.20747673199561353
+      "eligible_increases": 1670,
+      "proposed_limit": 3229771050.0,
+      "proposed_expected_loss": 375653148.1715376,
+      "incremental_contribution": 34933073.46327829,
+      "risk_adjusted_return": 0.2070784949469244
     },
     {
       "assumption": "ccf",
       "scenario": "Low",
       "value": 0.6000000000000001,
-      "eligible_increases": 2003,
-      "proposed_limit": 1101802000.0,
-      "proposed_expected_loss": 93389364.3971421,
-      "incremental_contribution": 15677921.080112655,
-      "risk_adjusted_return": 0.2893288245418399
+      "eligible_increases": 2000,
+      "proposed_limit": 3272779620.0,
+      "proposed_expected_loss": 277589583.3844881,
+      "incremental_contribution": 46563317.41235604,
+      "risk_adjusted_return": 0.2888282846035325
     },
     {
       "assumption": "ccf",
       "scenario": "Base",
       "value": 0.75,
       "eligible_increases": 1904,
-      "proposed_limit": 1096231000.0,
-      "proposed_expected_loss": 105871843.13825826,
-      "incremental_contribution": 13925684.58546244,
-      "risk_adjusted_return": 0.2194982688126107
+      "proposed_limit": 3255868440.0,
+      "proposed_expected_loss": 314696675.11661863,
+      "incremental_contribution": 41342974.67332546,
+      "risk_adjusted_return": 0.21934131776686352
     },
     {
       "assumption": "ccf",
       "scenario": "High",
       "value": 0.8999999999999999,
-      "eligible_increases": 1807,
-      "proposed_limit": 1090303000.0,
-      "proposed_expected_loss": 118273967.33411895,
-      "incremental_contribution": 12283840.87844771,
-      "risk_adjusted_return": 0.17372951288013214
+      "eligible_increases": 1805,
+      "proposed_limit": 3238787970.0,
+      "proposed_expected_loss": 351582938.7692827,
+      "incremental_contribution": 36452866.29990534,
+      "risk_adjusted_return": 0.17314509236642622
     },
     {
       "assumption": "interchange_rate",
       "scenario": "Low",
       "value": 0.0144,
-      "eligible_increases": 1885,
-      "proposed_limit": 1094794000.0,
-      "proposed_expected_loss": 105825204.40645091,
-      "incremental_contribution": 13104737.723449793,
-      "risk_adjusted_return": 0.21012798302493965
+      "eligible_increases": 1881,
+      "proposed_limit": 3251662920.0,
+      "proposed_expected_loss": 314557260.5335542,
+      "incremental_contribution": 38900958.141339906,
+      "risk_adjusted_return": 0.20989785567905925
     },
     {
       "assumption": "interchange_rate",
       "scenario": "Base",
       "value": 0.018,
       "eligible_increases": 1904,
-      "proposed_limit": 1096231000.0,
-      "proposed_expected_loss": 105871843.13825826,
-      "incremental_contribution": 13925684.58546244,
-      "risk_adjusted_return": 0.2194982688126107
+      "proposed_limit": 3255868440.0,
+      "proposed_expected_loss": 314696675.11661863,
+      "incremental_contribution": 41342974.67332546,
+      "risk_adjusted_return": 0.21934131776686352
     },
     {
       "assumption": "interchange_rate",
       "scenario": "High",
       "value": 0.021599999999999998,
-      "eligible_increases": 1927,
-      "proposed_limit": 1097647000.0,
-      "proposed_expected_loss": 105922494.32912989,
-      "incremental_contribution": 14750670.05956281,
-      "risk_adjusted_return": 0.22867392922842164
+      "eligible_increases": 1928,
+      "proposed_limit": 3260982780.0,
+      "proposed_expected_loss": 314878226.44027066,
+      "incremental_contribution": 43797997.97971172,
+      "risk_adjusted_return": 0.22773181851719457
     },
     {
       "assumption": "apr",
       "scenario": "Low",
       "value": 0.144,
-      "eligible_increases": 1804,
-      "proposed_limit": 1090333000.0,
-      "proposed_expected_loss": 105670027.89372367,
-      "incremental_contribution": 10271921.061705038,
-      "risk_adjusted_return": 0.17404208311633212
+      "eligible_increases": 1802,
+      "proposed_limit": 3238467210.0,
+      "proposed_expected_loss": 314102960.3007889,
+      "incremental_contribution": 30480843.330191955,
+      "risk_adjusted_return": 0.17374335711628955
     },
     {
       "assumption": "apr",
       "scenario": "Base",
       "value": 0.18,
       "eligible_increases": 1904,
-      "proposed_limit": 1096231000.0,
-      "proposed_expected_loss": 105871843.13825826,
-      "incremental_contribution": 13925684.58546244,
-      "risk_adjusted_return": 0.2194982688126107
+      "proposed_limit": 3255868440.0,
+      "proposed_expected_loss": 314696675.11661863,
+      "incremental_contribution": 41342974.67332546,
+      "risk_adjusted_return": 0.21934131776686352
     },
     {
       "assumption": "apr",
       "scenario": "High",
       "value": 0.216,
-      "eligible_increases": 1972,
-      "proposed_limit": 1100029000.0,
-      "proposed_expected_loss": 106009963.52910358,
-      "incremental_contribution": 17658613.04070912,
-      "risk_adjusted_return": 0.26637721549691096
+      "eligible_increases": 1975,
+      "proposed_limit": 3268066230.0,
+      "proposed_expected_loss": 315133490.056614,
+      "incremental_contribution": 52444446.52046382,
+      "risk_adjusted_return": 0.26535973133065904
     },
     {
       "assumption": "funding_cost",
       "scenario": "Low",
       "value": 0.036,
-      "eligible_increases": 1944,
-      "proposed_limit": 1098712000.0,
-      "proposed_expected_loss": 105960063.9381601,
-      "incremental_contribution": 14509676.258790597,
-      "risk_adjusted_return": 0.22218662261736097
+      "eligible_increases": 1940,
+      "proposed_limit": 3263058810.0,
+      "proposed_expected_loss": 314945222.21924716,
+      "incremental_contribution": 43081268.801014915,
+      "risk_adjusted_return": 0.22220616201251395
     },
     {
       "assumption": "funding_cost",
       "scenario": "Base",
       "value": 0.045,
       "eligible_increases": 1904,
-      "proposed_limit": 1096231000.0,
-      "proposed_expected_loss": 105871843.13825826,
-      "incremental_contribution": 13925684.58546244,
-      "risk_adjusted_return": 0.2194982688126107
+      "proposed_limit": 3255868440.0,
+      "proposed_expected_loss": 314696675.11661863,
+      "incremental_contribution": 41342974.67332546,
+      "risk_adjusted_return": 0.21934131776686352
     },
     {
       "assumption": "funding_cost",
       "scenario": "High",
       "value": 0.054,
-      "eligible_increases": 1859,
-      "proposed_limit": 1093093000.0,
-      "proposed_expected_loss": 105767195.59018789,
-      "incremental_contribution": 13360467.840342803,
-      "risk_adjusted_return": 0.21870226677154572
+      "eligible_increases": 1855,
+      "proposed_limit": 3246031800.0,
+      "proposed_expected_loss": 314370281.3243425,
+      "incremental_contribution": 39661083.40251862,
+      "risk_adjusted_return": 0.21898956869528025
     },
     {
       "assumption": "capital_cost",
       "scenario": "Low",
       "value": 0.020000000000000004,
       "eligible_increases": 1931,
-      "proposed_limit": 1098121000.0,
-      "proposed_expected_loss": 105939842.6795954,
-      "incremental_contribution": 14248042.070935303,
-      "risk_adjusted_return": 0.21967123456785403
+      "proposed_limit": 3261989610.0,
+      "proposed_expected_loss": 314908098.22259843,
+      "incremental_contribution": 42304123.55373784,
+      "risk_adjusted_return": 0.21910400288629453
     },
     {
       "assumption": "capital_cost",
       "scenario": "Base",
       "value": 0.025,
       "eligible_increases": 1904,
-      "proposed_limit": 1096231000.0,
-      "proposed_expected_loss": 105871843.13825826,
-      "incremental_contribution": 13925684.58546244,
-      "risk_adjusted_return": 0.2194982688126107
+      "proposed_limit": 3255868440.0,
+      "proposed_expected_loss": 314696675.11661863,
+      "incremental_contribution": 41342974.67332546,
+      "risk_adjusted_return": 0.21934131776686352
     },
     {
       "assumption": "capital_cost",
       "scenario": "High",
       "value": 0.03,
-      "eligible_increases": 1882,
-      "proposed_limit": 1094590000.0,
-      "proposed_expected_loss": 105819308.75409825,
-      "incremental_contribution": 13609165.390712446,
-      "risk_adjusted_return": 0.21875289293367417
+      "eligible_increases": 1881,
+      "proposed_limit": 3251529270.0,
+      "proposed_expected_loss": 314554409.5301812,
+      "incremental_contribution": 40400909.98803226,
+      "risk_adjusted_return": 0.21810910876454875
     },
     {
       "assumption": "response_elasticity",
       "scenario": "Low",
       "value": 0.27999999999999997,
-      "eligible_increases": 1765,
-      "proposed_limit": 1088317000.0,
-      "proposed_expected_loss": 105604023.65400293,
-      "incremental_contribution": 9471475.130337767,
-      "risk_adjusted_return": 0.16469909443539468
+      "eligible_increases": 1766,
+      "proposed_limit": 3232479690.0,
+      "proposed_expected_loss": 313906522.0015542,
+      "incremental_contribution": 28103862.56242602,
+      "risk_adjusted_return": 0.16440258473163896
     },
     {
       "assumption": "response_elasticity",
       "scenario": "Base",
       "value": 0.35,
       "eligible_increases": 1904,
-      "proposed_limit": 1096231000.0,
-      "proposed_expected_loss": 105871843.13825826,
-      "incremental_contribution": 13925684.58546244,
-      "risk_adjusted_return": 0.2194982688126107
+      "proposed_limit": 3255868440.0,
+      "proposed_expected_loss": 314696675.11661863,
+      "incremental_contribution": 41342974.67332546,
+      "risk_adjusted_return": 0.21934131776686352
     },
     {
       "assumption": "response_elasticity",
       "scenario": "High",
       "value": 0.42,
-      "eligible_increases": 1987,
-      "proposed_limit": 1100839000.0,
-      "proposed_expected_loss": 106038353.02581522,
-      "incremental_contribution": 18494478.339397483,
-      "risk_adjusted_return": 0.2764526811025123
+      "eligible_increases": 1988,
+      "proposed_limit": 3270463020.0,
+      "proposed_expected_loss": 315213468.8421472,
+      "incremental_contribution": 54929578.526313044,
+      "risk_adjusted_return": 0.2754289002326381
     },
     {
       "assumption": "max_increase",
       "scenario": "Low",
       "value": 0.24,
-      "eligible_increases": 1888,
-      "proposed_limit": 1067820000.0,
-      "proposed_expected_loss": 104500049.2200618,
-      "incremental_contribution": 9237933.035998901,
-      "risk_adjusted_return": 0.21924604235386733
+      "eligible_increases": 1889,
+      "proposed_limit": 3171704580.0,
+      "proposed_expected_loss": 310610329.2410808,
+      "incremental_contribution": 27424471.63709546,
+      "risk_adjusted_return": 0.21875866216290143
     },
     {
       "assumption": "max_increase",
       "scenario": "Base",
       "value": 0.3,
       "eligible_increases": 1904,
-      "proposed_limit": 1096231000.0,
-      "proposed_expected_loss": 105871843.13825826,
-      "incremental_contribution": 13925684.58546244,
-      "risk_adjusted_return": 0.2194982688126107
+      "proposed_limit": 3255868440.0,
+      "proposed_expected_loss": 314696675.11661863,
+      "incremental_contribution": 41342974.67332546,
+      "risk_adjusted_return": 0.21934131776686352
     },
     {
       "assumption": "max_increase",
       "scenario": "High",
       "value": 0.36,
       "eligible_increases": 1904,
-      "proposed_limit": 1096231000.0,
-      "proposed_expected_loss": 105871843.13825826,
-      "incremental_contribution": 13925684.58546244,
-      "risk_adjusted_return": 0.2194982688126107
+      "proposed_limit": 3255868440.0,
+      "proposed_expected_loss": 314696675.11661863,
+      "incremental_contribution": 41342974.67332546,
+      "risk_adjusted_return": 0.21934131776686352
     },
     {
       "assumption": "expected_loss_ceiling",
       "scenario": "Low",
       "value": 0.096,
       "eligible_increases": 1613,
-      "proposed_limit": 1087561000.0,
-      "proposed_expected_loss": 105192451.0993312,
-      "incremental_contribution": 11622828.2698095,
-      "risk_adjusted_return": 0.2044305460580884
+      "proposed_limit": 3229396830.0,
+      "proposed_expected_loss": 312622261.9050809,
+      "incremental_contribution": 34278751.57651241,
+      "risk_adjusted_return": 0.20360212475896342
     },
     {
       "assumption": "expected_loss_ceiling",
       "scenario": "Base",
       "value": 0.12,
       "eligible_increases": 1904,
-      "proposed_limit": 1096231000.0,
-      "proposed_expected_loss": 105871843.13825826,
-      "incremental_contribution": 13925684.58546244,
-      "risk_adjusted_return": 0.2194982688126107
+      "proposed_limit": 3255868440.0,
+      "proposed_expected_loss": 314696675.11661863,
+      "incremental_contribution": 41342974.67332546,
+      "risk_adjusted_return": 0.21934131776686352
     },
     {
       "assumption": "expected_loss_ceiling",
       "scenario": "High",
       "value": 0.144,
-      "eligible_increases": 1946,
-      "proposed_limit": 1096876000.0,
-      "proposed_expected_loss": 105933363.92082614,
-      "incremental_contribution": 14080489.198474562,
-      "risk_adjusted_return": 0.22023497870205155
+      "eligible_increases": 1948,
+      "proposed_limit": 3257686080.0,
+      "proposed_expected_loss": 314868882.682982,
+      "incremental_contribution": 41773755.27609489,
+      "risk_adjusted_return": 0.22002739747253053
     },
     {
       "assumption": "profitability_hurdle",
       "scenario": "Low",
-      "value": 80.0,
+      "value": 240.0,
       "eligible_increases": 1910,
-      "proposed_limit": 1096354000.0,
-      "proposed_expected_loss": 105876771.80935031,
-      "incremental_contribution": 13926223.80749039,
-      "risk_adjusted_return": 0.21918805654078619
+      "proposed_limit": 3256732710.0,
+      "proposed_expected_loss": 314728281.46246034,
+      "incremental_contribution": 41344654.68272237,
+      "risk_adjusted_return": 0.21859847549903877
     },
     {
       "assumption": "profitability_hurdle",
       "scenario": "Base",
-      "value": 100.0,
+      "value": 300.0,
       "eligible_increases": 1904,
-      "proposed_limit": 1096231000.0,
-      "proposed_expected_loss": 105871843.13825826,
-      "incremental_contribution": 13925684.58546244,
-      "risk_adjusted_return": 0.2194982688126107
+      "proposed_limit": 3255868440.0,
+      "proposed_expected_loss": 314696675.11661863,
+      "incremental_contribution": 41342974.67332546,
+      "risk_adjusted_return": 0.21934131776686352
     },
     {
       "assumption": "profitability_hurdle",
       "scenario": "High",
-      "value": 120.0,
+      "value": 360.0,
       "eligible_increases": 1901,
-      "proposed_limit": 1096177000.0,
-      "proposed_expected_loss": 105869556.75042461,
-      "incremental_contribution": 13925345.604716092,
-      "risk_adjusted_return": 0.2196331320243793
+      "proposed_limit": 3255663510.0,
+      "proposed_expected_loss": 314687858.4597449,
+      "incremental_contribution": 41341983.29397765,
+      "risk_adjusted_return": 0.2195150567824229
     }
   ],
   "limitations": [

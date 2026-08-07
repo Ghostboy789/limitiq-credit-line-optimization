@@ -3,12 +3,12 @@
 ## Observed UCI fields
 
 - `ID`: source row identifier; excluded and never published.
-- `LIMIT_BAL`: existing credit limit in TWD.
+- `LIMIT_BAL`: existing credit limit, converted from source TWD to INR at 2.97.
 - `PAY_0`, `PAY_2` … `PAY_6`: recent-to-old repayment status. Positive values
   denote months delayed; -1 means paid duly and -2/0 are no-use/revolving states
   documented in common source coding.
-- `BILL_AMT1` … `BILL_AMT6`: recent-to-old statement amounts in TWD.
-- `PAY_AMT1` … `PAY_AMT6`: recent-to-old prior payment amounts in TWD.
+- `BILL_AMT1` … `BILL_AMT6`: recent-to-old statement amounts, converted to INR.
+- `PAY_AMT1` … `PAY_AMT6`: recent-to-old prior payment amounts, converted to INR.
 - `SEX`, `EDUCATION`, `MARRIAGE`, `AGE`: source demographics; excluded from
   decisioning. Sex and age are used only for offline audit diagnostics.
 - `default_next_month`: binary model target; never an input.
@@ -51,5 +51,5 @@
 Exactly `ACCOUNT_ID`, `LIMIT_BAL`, six `PAY_*`, six `BILL_AMT*` and six
 `PAY_AMT*` columns. IDs must be unique 3–40 character letters, numbers,
 underscores or hyphens. Numeric blanks, non-positive/excessive limits, payment
-statuses outside -2…9 and negative payment amounts are rejected.
-
+statuses outside -2…9 and negative payment amounts are rejected. All monetary
+batch fields must be supplied in INR.

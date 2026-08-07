@@ -38,7 +38,16 @@
     "default_next_month"
   ],
   "dataset_sha256": "30c6be3abd8dcfd3e6096c828bad8c2f011238620f5369220bd60cfc82700933",
-  "dataset_version": "uci-350-30c6be3abd8d",
+  "dataset_version": "uci-350-30c6be3abd8d-inr297",
   "source": "https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients",
-  "license": "CC BY 4.0"
+  "license": "CC BY 4.0",
+  "source_currency": "TWD",
+  "model_currency": "INR",
+  "twd_to_inr": 2.97,
+  "currency_rate_date": "2026-07-31",
+  "currency_rate_sources": [
+    "https://rate.bot.com.tw/cr?Lang=en-US",
+    "https://m.rbi.org.in/Scripts/BS_ViewBulletin.aspx?Id=22920"
+  ],
+  "currency_note": "Observed TWD monetary fields are deterministically converted to INR before modelling and simulation; the conversion is presentation localization, not evidence about Indian borrowers."
 }
