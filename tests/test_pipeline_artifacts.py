@@ -115,6 +115,19 @@ def test_reports_are_actually_generated_and_nonempty(tmp_path) -> None:
     )
 
 
+def test_external_validation_evidence_is_present_and_sane() -> None:
+    evidence = json.loads((REPORT_DIR / "external_validation.json").read_text(encoding="utf-8"))
+    keys = {item["dataset"] for item in evidence["comparison"]}
+    assert "Statlog (German Credit Data)" in keys
+    assert "Australian Credit Approval" in keys
+    assert evidence["random_seed"] == SEED
+    for item in evidence["comparison"]:
+        assert 0.0 < item["roc_auc"] <= 1.0
+        assert 0.0 <= item["brier_score"] < 0.5
+        assert item["rows"] > 0
+    assert (REPORT_DIR / "external_validation_report.html").stat().st_size > 1_000
+
+
 def test_no_unresolved_placeholder_tokens_in_user_artifacts() -> None:
     paths = [ROOT / "README.md", *list((ROOT / "docs").glob("*.md"))]
     forbidden = ("TODO", "TBD", "CHANGEME", "example.com/live")
