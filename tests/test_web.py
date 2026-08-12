@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import json
 
 import numpy as np
 import pandas as pd
@@ -29,14 +30,15 @@ def test_health_contract_and_security_headers() -> None:
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
-    assert response.json()["model_version"].startswith("limitiq-1.0.0-")
+    assert response.json()["model_version"].startswith("limitiq-global-2.0.0-")
+    assert response.json()["dataset_version"].startswith("global-7-")
     assert "frame-ancestors 'none'" in response.headers["content-security-policy"]
     assert response.headers["x-content-type-options"] == "nosniff"
     assert response.headers["x-frame-options"] == "DENY"
 
 
 def test_portfolio_filter_search_sort_and_pagination() -> None:
-    demo = pd.read_csv(PROCESSED_DIR / "demo_portfolio.csv", nrows=1)
+    demo = pd.read_csv(PROCESSED_DIR / "global_demo_portfolio.csv", nrows=1)
     account_id = demo.loc[0, "account_id"]
     response = client.get(
         "/portfolio",
@@ -58,13 +60,22 @@ def test_empty_portfolio_state() -> None:
     assert "No accounts match" in response.text
 
 
+def test_portfolio_global_delinquency_filters() -> None:
+    for value in ("yes", "no", "unknown"):
+        response = client.get("/portfolio", params={"delinquency": value})
+        assert response.status_code == 200, value
+
+
 def test_account_decision_and_missing_account() -> None:
-    account_id = pd.read_csv(PROCESSED_DIR / "demo_portfolio.csv", nrows=1).loc[0, "account_id"]
+    account_id = pd.read_csv(PROCESSED_DIR / "global_demo_portfolio.csv", nrows=1).loc[
+        0, "account_id"
+    ]
     response = client.get(f"/accounts/{account_id}")
     assert response.status_code == 200
     assert account_id in response.text
     assert "Reason codes" in response.text
-    assert "Six-month account history" in response.text
+    assert "Harmonized source profile" in response.text
+    assert "Source cohort" in response.text
     missing = client.get("/accounts/LIQ-0000000000")
     assert missing.status_code == 404
     assert "Account not found" in missing.text
@@ -74,8 +85,8 @@ def test_policy_simulator_recalculates_and_validates_extremes() -> None:
     baseline = client.get("/simulator")
     assert baseline.text.count('step="0.001"') >= 10
     for label in (
-        "Current / proposed EAD",
-        "Current / proposed expected loss",
+        "Current / proposed exposure proxy",
+        "Current / proposed loss proxy",
         "Risk-adjusted return",
         "Computed directional sensitivity",
     ):
@@ -107,7 +118,7 @@ def test_policy_simulator_recalculates_and_validates_extremes() -> None:
 
 
 def _sample_frame(rows: int = 2) -> pd.DataFrame:
-    demo = pd.read_csv(PROCESSED_DIR / "demo_portfolio.csv", nrows=rows)
+    demo = pd.read_csv(PROCESSED_DIR / "global_demo_portfolio.csv", nrows=rows)
     return demo.rename(columns={"account_id": "ACCOUNT_ID"})[BATCH_COLUMNS]
 
 
@@ -127,11 +138,31 @@ def test_batch_valid_upload_returns_decisions_without_retention() -> None:
     assert len(result) == 2
     assert {"PD", "RECOMMENDATION", "PROPOSED_EXPECTED_LOSS", "REASON_CODES"} <= set(result.columns)
 
+    nullable = _sample_frame(1)
+    nullable.loc[0, ["utilization", "income_inr", "credit_age_months"]] = np.nan
+    assert _upload(nullable).status_code == 200
+
+
+def test_single_prediction_api_validates_and_returns_no_store_decision() -> None:
+    payload = json.loads(_sample_frame(1).to_json(orient="records"))[0]
+    response = client.post("/api/predict", json=payload)
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
+    result = response.json()
+    assert result["classification"] == "Educational synthetic-economics decision"
+    assert 0 <= result["decision"]["pd"] <= 1
+    assert result["decision"]["account_id"] == payload["ACCOUNT_ID"]
+
+    assert client.post("/api/predict", json={**payload, "UNEXPECTED": 1}).status_code == 422
+    missing = dict(payload)
+    missing.pop("region")
+    assert client.post("/api/predict", json=missing).status_code == 422
+
 
 def test_batch_missing_extra_duplicate_invalid_types_and_ranges() -> None:
     sample = _sample_frame()
     cases = []
-    cases.append((sample.drop(columns=["PAY_6"]), "Missing required columns"))
+    cases.append((sample.drop(columns=["credit_age_months"]), "Missing required columns"))
     extra = sample.copy()
     extra["UNEXPECTED"] = 1
     cases.append((extra, "Unexpected columns"))
@@ -139,14 +170,25 @@ def test_batch_missing_extra_duplicate_invalid_types_and_ranges() -> None:
     duplicate.loc[1, "ACCOUNT_ID"] = duplicate.loc[0, "ACCOUNT_ID"]
     cases.append((duplicate, "Duplicate ACCOUNT_ID"))
     invalid_type = sample.copy()
-    invalid_type["LIMIT_BAL"] = invalid_type["LIMIT_BAL"].astype(object)
-    invalid_type.loc[0, "LIMIT_BAL"] = "not-a-number"
+    invalid_type["utilization"] = invalid_type["utilization"].astype(object)
+    invalid_type.loc[0, "utilization"] = "not-a-number"
     cases.append((invalid_type, "Numeric values required"))
     invalid_range = sample.copy()
-    invalid_range.loc[0, "PAY_0"] = 99
-    cases.append((invalid_range, "between -2 and 9"))
+    invalid_range.loc[0, "debt_to_income"] = 1.1
+    cases.append((invalid_range, "debt_to_income"))
+    invalid_region = sample.copy()
+    invalid_region.loc[0, "region"] = "antarctica"
+    cases.append((invalid_region, "Unsupported region"))
+    missing_exposure = sample.copy()
+    missing_exposure.loc[0, "current_limit_inr"] = np.nan
+    cases.append((missing_exposure, "cannot be blank"))
+    excessive_balance = sample.copy()
+    excessive_balance.loc[0, "current_balance_inr"] = (
+        excessive_balance.loc[0, "current_limit_inr"] * 2.01
+    )
+    cases.append((excessive_balance, "current_balance_inr"))
     non_finite = sample.copy()
-    non_finite.loc[0, "BILL_AMT1"] = np.inf
+    non_finite.loc[0, "income_inr"] = np.inf
     cases.append((non_finite, "finite"))
     for frame, message in cases:
         response = _upload(frame)
@@ -181,6 +223,11 @@ def test_sample_and_filtered_csv_downloads_are_valid() -> None:
         "/downloads/reports/executive-report-pdf",
         "/downloads/reports/executive-report-html",
         "/downloads/reports/data-quality",
+        "/downloads/reports/global-model",
+        "/downloads/reports/global-executive-html",
+        "/downloads/reports/global-executive-pdf",
+        "/downloads/reports/global-policy-simulation",
+        "/downloads/reports/global-financial-impact",
         "/documents/methodology",
         "/documents/model-card",
         "/documents/data-card",
@@ -205,12 +252,16 @@ def test_static_assets_and_navigation_are_real() -> None:
     js = client.get("/static/app.js")
     assert css.status_code == js.status_code == 200
     overview = client.get("/").text
-    assert "Current expected loss" in overview
+    assert "Current loss proxy" in overview
     assert "INR" in overview
-    assert "2.97" in overview
+    assert "heterogeneous outcomes" in overview
     for path in ("/portfolio", "/simulator", "/batch", "/governance", "/reports"):
         assert f'href="{path}"' in overview
 
     governance = client.get("/governance").text
-    assert "Permutation ranking" in governance
-    assert "Drift indicators" in governance
+    assert "Global benchmark governance" in governance
+    assert "Pooled ROC curve" in governance
+    assert "ROC by source cohort" in governance
+    assert "Calibration by source cohort" in governance
+    assert "Source-cohort comparison" in governance
+    assert "<svg" in governance

@@ -23,11 +23,21 @@ DATASET_LICENSE = "CC BY 4.0"
 SOURCE_CURRENCY = "TWD"
 DISPLAY_CURRENCY = "INR"
 TWD_TO_INR = 2.97
+USD_TO_INR = 83.0
+DEM_TO_INR = 45.0
+EUR_TO_INR = 90.0
 CURRENCY_RATE_DATE = "2026-07-31"
 CURRENCY_RATE_SOURCES = (
     "https://rate.bot.com.tw/cr?Lang=en-US",
     "https://m.rbi.org.in/Scripts/BS_ViewBulletin.aspx?Id=22920",
 )
+CURRENCY_RATES = {
+    "TWD": TWD_TO_INR,
+    "USD": USD_TO_INR,
+    "DEM": DEM_TO_INR,
+    "EUR": EUR_TO_INR,
+    "INR": 1.0,
+}
 
 DISCLAIMER = (
     "LimitIQ is an educational portfolio demonstration using public and synthetic data. "

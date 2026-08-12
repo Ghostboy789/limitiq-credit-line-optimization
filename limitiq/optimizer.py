@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 
 from limitiq.config import PolicyAssumptions
-from limitiq.features import BILL_COLUMNS, PAY_COLUMNS, PAYMENT_COLUMNS
 
 ACTION_LABELS = {
     0.0: "No change",
@@ -65,43 +64,46 @@ def expected_loss(pd_value: float, lgd: float, ead: float) -> float:
 
 
 def _behavior(row: pd.Series) -> dict[str, Any]:
-    limit = float(row["LIMIT_BAL"])
-    statuses = np.asarray([float(row[column]) for column in PAY_COLUMNS])
-    bills = np.maximum([float(row[column]) for column in BILL_COLUMNS], 0.0)
-    payments = np.maximum([float(row[column]) for column in PAYMENT_COLUMNS], 0.0)
+    limit = float(row["current_limit_inr"])
+    balance = max(float(row["current_balance_inr"]), 0.0)
+    reported_utilization = pd.to_numeric(row.get("utilization"), errors="coerce")
+    utilization = (
+        float(reported_utilization) if pd.notna(reported_utilization) else balance / max(limit, 1.0)
+    )
+    delinquency = pd.to_numeric(row.get("delinquency_count"), errors="coerce")
+    debt_to_income = pd.to_numeric(row.get("debt_to_income"), errors="coerce")
+    history_fields = (
+        "delinquency_count",
+        "utilization",
+        "debt_to_income",
+        "credit_lines",
+        "credit_age_months",
+    )
     return {
         "limit": limit,
-        "balance": bills[0],
-        "statuses": statuses,
-        "bills": bills,
-        "payments": payments,
-        "utilization": min(max(bills[0] / max(limit, 1.0), 0.0), 1.2),
-        "payment_consistency": float(np.mean(payments > 0)),
+        "balance": balance,
+        "delinquency_count": float(delinquency) if pd.notna(delinquency) else None,
+        "debt_to_income": float(debt_to_income) if pd.notna(debt_to_income) else None,
+        "utilization": min(max(utilization, 0.0), 5.0),
+        "history_fields": sum(pd.notna(row.get(column)) for column in history_fields),
     }
 
 
 def _warning_state(behavior: dict[str, Any]) -> tuple[str | None, list[str]]:
-    statuses = behavior["statuses"]
-    bills = behavior["bills"]
-    payments = behavior["payments"]
+    delinquency = behavior["delinquency_count"]
+    debt_to_income = behavior["debt_to_income"]
     reasons: list[str] = []
-    severe_months = int((statuses >= 2).sum())
-    delinquent_months = int((statuses > 0).sum())
-    recent_deterioration = statuses[0] >= 2 or (
-        statuses[0] > 0 and statuses[0] > statuses[1:].mean()
-    )
-    recent_payment_ratio = payments[0] / max(bills[0], 1)
-    balance_growth = (bills[0] - bills[2]) / max(behavior["limit"], 1)
-    if recent_deterioration:
-        reasons.append("Recent payment deterioration")
-    if delinquent_months >= 2:
+    if behavior["history_fields"] < 2 or delinquency is None:
+        return "Manual review", ["Insufficient behavioral history", "Manual review required"]
+    if delinquency >= 2:
         reasons.append("Repeated delinquency")
-    if balance_growth > 0.35 and recent_payment_ratio < 0.08:
-        reasons.append("Rising revolving balance")
-    if severe_months >= 2 or statuses[0] >= 2:
-        return "Freeze automatic increases", reasons or ["Repeated delinquency"]
-    if statuses[0] == 1 or (behavior["utilization"] > 1.10 and recent_payment_ratio < 0.05):
-        return "Manual review", reasons or ["Manual review required"]
+        return "Freeze automatic increases", reasons
+    if delinquency == 1:
+        return "Manual review", ["Reported delinquency", "Manual review required"]
+    if debt_to_income is not None and debt_to_income > 0.60:
+        return "Manual review", ["Customer-overextension safeguard", "Manual review required"]
+    if behavior["utilization"] > 1.10:
+        return "Manual review", ["Customer-overextension safeguard", "Manual review required"]
     return None, reasons
 
 
@@ -139,8 +141,11 @@ def _candidate(
             pd_value * assumptions.lgd <= assumptions.expected_loss_ceiling
         ),
         "meets_profitability_hurdle": bool(contribution >= assumptions.profitability_hurdle),
-        "payment_history_eligible": bool((behavior["statuses"] <= 0).all()),
-        "not_overextended": bool(utilization <= 1.10),
+        "payment_history_eligible": bool(behavior["delinquency_count"] == 0),
+        "not_overextended": bool(
+            utilization <= 1.10
+            and (behavior["debt_to_income"] is None or behavior["debt_to_income"] <= 0.60)
+        ),
     }
     eligible = increase_pct == 0 or all(checks.values())
     return {
@@ -184,10 +189,9 @@ def recommend_account(
         )
         action = selected["label"]
         utilization = behavior["utilization"]
-        payment_consistency = behavior["payment_consistency"]
         reasons = []
-        if payment_consistency >= 0.8 and int((behavior["statuses"] > 0).sum()) == 0:
-            reasons.append("Strong repayment consistency")
+        if behavior["delinquency_count"] == 0:
+            reasons.append("No reported delinquency in the harmonized source fields")
         if utilization >= 0.65 and pd_value < 0.15:
             reasons.append("High utilization with low estimated risk")
         if utilization < 0.20:
@@ -198,7 +202,7 @@ def recommend_account(
                 "within_account_exposure": "Exposure limit reached",
                 "within_expected_loss_ceiling": "Expected loss exceeds policy ceiling",
                 "meets_profitability_hurdle": "Incremental return below profitability hurdle",
-                "payment_history_eligible": "Recent payment deterioration",
+                "payment_history_eligible": "Payment-history eligibility rule not met",
                 "not_overextended": "Customer-overextension safeguard",
             }
             reasons.extend(mapping[name] for name in failed if name in mapping)

@@ -1,14 +1,24 @@
 # LimitIQ
 
-Dynamic credit-line management and exposure optimization for an existing card
-portfolio. LimitIQ turns calibrated default risk into governed +10%, +20%, +30%,
-no-change, manual-review or early-warning freeze actions—then explains the
-portfolio, account, policy, financial and governance trade-offs in one working
+Dynamic credit-line management and exposure optimization for an existing credit
+portfolio. LimitIQ combines calibrated risk estimates with governed +10%, +20%,
++30%, no-change, manual-review and early-warning-freeze actions, then explains
+the portfolio, account, financial and governance trade-offs in one working
 banking product.
 
 > **Educational-use disclaimer:** LimitIQ is an educational portfolio
 > demonstration using public and synthetic data. It is not a production
 > credit-decision system and must not be used to make real lending decisions.
+
+## Release status
+
+- **Verified public deployment — v1:** Taiwan-only calibrated histogram-
+  gradient-boosting model and synthetic INR decision layer.
+- **Local development — v2:** 1,869,548-row, six-cohort multi-source
+  adverse-credit-outcome benchmark. Its publication gate is **blocked** pending
+  upstream/competition terms review for Give Me Some Credit, FICO/HELOC,
+  Lending Club and Home Credit. The public URL below must not be represented as
+  v2 until that gate, CI, deployment and production QA all pass.
 
 ## Product evidence
 
@@ -16,9 +26,9 @@ banking product.
 
 ![LimitIQ account decision](docs/assets/account-decision.png)
 
-**Live demo:** https://limitiq-credit-line-optimization.onrender.com
+**Verified v1 live demo:** https://limitiq-credit-line-optimization.onrender.com
 
-**Health:** https://limitiq-credit-line-optimization.onrender.com/health
+**Verified v1 health:** https://limitiq-credit-line-optimization.onrender.com/health
 
 The free Render service may need about 50 seconds to wake after inactivity.
 
@@ -26,76 +36,124 @@ The free Render service may need about 50 seconds to wake after inactivity.
 
 - Executive exposure, loss, simulated contribution, return, risk and action view
 - Searchable/filterable/paginated portfolio with safe filtered CSV download
-- Synthetic-ID account decision with PD/ECL/value, reasons, checks and history
+- Synthetic-ID account decision with risk, loss proxy, value, reasons and checks
 - Adjustable policy/economics simulator with baseline deltas and action mix
 - Strict transient CSV batch scoring and downloadable decisions
-- Baseline/champion, calibration, confusion, feature, band and fairness evidence
-- Executive HTML/PDF plus quality, EDA, model, policy and financial reports
+- Baseline/champion, calibration, confusion, feature, band and governance evidence
+- Executive HTML/PDF plus quality, model, policy and financial reports
 
 ## Evidence boundary
 
 | Layer | What LimitIQ uses | What it means |
 |---|---|---|
-| Observed | UCI limits, six monthly status/bill/payment fields, default target | Historical Taiwan source data |
-| Model-estimated | Calibrated PD and risk band | Out-of-sample statistical estimate |
-| Simulated | Response, EAD/LGD, revenue/cost, contribution, proposed line | Transparent scenario—not causal or realized impact |
+| Observed | Source-specific behavior and adverse-outcome labels | Historical source data with different products, periods, events and horizons |
+| Model-estimated | Calibrated adverse-outcome probability and risk band | Within-source statistical interpolation; not a common-horizon regulatory PD |
+| Simulated | Response, EAD/LGD, revenue/cost, contribution and proposed line | Transparent scenario—not causal or realized impact |
 
-For an India-focused portfolio presentation, observed TWD monetary fields are
-converted before modelling to INR at a fixed **₹2.97 per TWD**. The rate is a
-documented July 2026 USD cross-rate from the Reserve Bank of India and Bank of
-Taiwan, not a claim that the historical customers or economics are Indian.
+No source contains observed response to a line increase. Baseline risk is held
+constant across candidates and expected loss changes through simulated EAD. No
+simulated uplift or profit is presented as observed production impact.
 
-The source contains no observed response to a line increase. Baseline PD is held
-constant across candidates; ECL changes through EAD. No simulated profit or
-uplift is presented as observed production impact.
+For India-focused presentation, only source-disclosed currencies are converted
+to INR at documented fixed rates. FX localization does not make a historical
+population Indian or make cross-source amounts economically equivalent.
 
-## Dataset
+## Data
 
-Selected: **Default of Credit Card Clients**, I-Cheng Yeh / UCI Machine Learning
-Repository, 30,000 Taiwan accounts, April–September 2005 behavior and
+### Verified deployed v1
+
+V1 uses **Default of Credit Card Clients**, I-Cheng Yeh / UCI Machine Learning
+Repository: 30,000 Taiwan accounts, April–September 2005 behavior and a
 subsequent-month default target. DOI: https://doi.org/10.24432/C55S3H. Licence:
-CC BY 4.0. The pipeline downloads the official source, validates it and records
-SHA-256 `30c6be3abd8d…`.
+CC BY 4.0. The source SHA-256 begins `30c6be3abd8d`.
 
-Four candidates and the selection rationale are documented in
-[docs/DATASET_CANDIDATES.md](docs/DATASET_CANDIDATES.md). Original IDs and
-demographics are absent from the committed demonstration portfolio.
+Source TWD limits, bills and payments are converted before modelling to INR at a
+fixed ₹2.97 per TWD, derived from documented July 2026 USD reference rates. This
+is a deterministic presentation transform, not Indian borrower evidence.
+
+### Local v2 benchmark — not deployed
+
+V2 trains on six independent cohorts: Taiwan Credit, corrected South German
+Credit, Give Me Some Credit, cleaned FICO/HELOC, Lending Club accepted loans and
+Home Credit application data. Legacy Statlog German is reference-only because it
+represents the same 1,000-credit population as corrected South German.
+
+The training union contains 1,869,548 rows; Lending Club and Home Credit each
+contribute more than 200,000. Labels include next-month default, two-year serious
+delinquency, historical good/bad credit, status at extract and payment
+difficulty. They are not collapsed into a fictional common-horizon PD.
+
+Geography and currency are undisclosed for Give Me Some Credit and Home Credit.
+Home Credit monetary fields are not converted or presented as INR. Complete
+source, mirror, checksum and terms evidence is in [NOTICE.md](NOTICE.md) and the
+[data card](docs/DATA_CARD.md).
 
 ## Model methodology and exact test evidence
 
+### Verified deployed v1
+
 Fixed stratified split: 18,000 train / 6,000 validation / 6,000 untouched test.
 An in-pipeline feature builder feeds sigmoid-calibrated regularized logistic
-regression and histogram gradient boosting. Selection minimizes validation Brier
-among models within 0.02 ROC-AUC of the best; a cost-weighted threshold is frozen
-before one untouched-test read.
-
-Champion: **calibrated histogram gradient boosting**. Untouched-test ROC-AUC
-0.781138, PR-AUC 0.567889, Brier 0.133149, log loss 0.426351, precision 0.398640,
-recall 0.706858 and F1 0.509783 at threshold 0.173874. Model artifact SHA-256:
+regression and histogram gradient boosting. The champion is calibrated histogram
+gradient boosting. Untouched-test ROC-AUC is 0.781138, PR-AUC 0.567889, Brier
+0.133149 and log loss 0.426351 at threshold 0.173874. Model SHA-256:
 `284f9a7c8ca22ea2f8091dfea814796357f81014cfdbabecf62b7aaa0de14275`.
 
-## Simulated business result
+### Local v2 benchmark — not deployed
 
-Under the documented default assumptions, the 6,000-account test scenario
-selects 1,904 +30% increases, 2,434 no-change actions, 546 manual reviews and
-1,116 freezes. Proposed lines increase from ₹3.005016B to ₹3.255868B;
-simulated expected loss increases from ₹302.466M to ₹314.697M; simulated
-annual incremental contribution is ₹41.343M and simulated contribution /
-incremental EAD is 21.93%. **These are deterministic scenario outputs, not
-causal estimates, forecasts or realized business impact.**
+The v2 champion is sigmoid-calibrated histogram gradient boosting, selected
+against a calibrated regularized-logistic baseline using source-macro validation
+evidence. Model version: `limitiq-global-2.0.0-71063a49703a`; threshold:
+`0.16891891891891891`.
+
+| Metric | Source-macro test | Pooled row-weighted test |
+|---|---:|---:|
+| ROC-AUC | 0.684530 | 0.669891 |
+| PR-AUC | 0.402370 | 0.304965 |
+| Brier score | 0.138968 | 0.140629 |
+| Log loss | 0.433385 | 0.444856 |
+| Mean absolute calibration-bin gap | 0.026968 | See versioned evidence |
+
+Macro evidence is primary. Pooled evidence is secondary because Lending Club
+supplies 1,371,166 rows. The seeded random split tests interpolation within each
+source; it does not establish unseen-country, future-vintage,
+leave-one-source-out or Indian-population generalization. Region is one-hot
+encoded, and region plus structural missingness may identify source and base rate.
+
+## Simulated business results
+
+### Verified deployed v1
+
+Under documented assumptions, the 6,000-account scenario selects 1,904 +30%
+increases, 2,434 no-change actions, 546 manual reviews and 1,116 freezes.
+Proposed lines increase from ₹3.005016B to ₹3.255868B; simulated expected loss
+increases from ₹302.466M to ₹314.697M; simulated annual incremental contribution
+is ₹41.343M and simulated contribution / incremental EAD is 21.93%.
+
+### Local v2 synthetic demo — not deployed
+
+The deterministic 1,200-profile synthetic demonstration produces ₹567.613M
+current and ₹608.791M proposed credit limits, ₹500.023M current and ₹530.935M
+proposed exposure proxy, ₹75.984M current and ₹77.625M proposed expected-loss
+proxy, ₹6.412M simulated incremental contribution and 20.74% simulated
+contribution / incremental exposure. It routes 18 profiles to +10%, 18 to +20%,
+216 to +30%, 283 to no change, 619 to manual review and 46 to freeze automatic
+increases.
+
+All values in both sections are simulated scenario outputs—not source
+observations, causal forecasts, realized impact, IFRS 9 ECL or regulatory capital.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  U[Official UCI ZIP] --> P[Offline reproducible pipeline]
-  P --> M[Checksum-verified sklearn model]
-  P --> D[Synthetic-ID demo portfolio]
-  P --> R[HTML and PDF reports]
+  S[Gitignored public-source files] --> H[Deterministic harmonizers]
+  H --> M[Checksum-bound sklearn pipeline]
+  M --> E[Versioned model evidence]
+  M --> D[Synthetic 1,200-profile demo]
   B[Browser] --> W[FastAPI + Jinja single process]
   W --> M
   W --> D
-  W --> R
   W --> O[Deterministic policy optimizer]
   C[Transient CSV] --> V[Strict in-memory validation]
   V --> M
@@ -109,7 +167,8 @@ joblib loading. Uploads are bounded CSV only and are never retained.
 
 ## Setup
 
-Python 3.12 is required.
+Python 3.11 is the tested local, CI and Docker version. The package contract is
+Python `>=3.11,<3.14`.
 
 ```bash
 python -m venv .venv
@@ -118,7 +177,7 @@ python -m venv .venv
 python -m pip install -r requirements-dev.txt
 ```
 
-The committed artifacts let the app start immediately:
+Start the application from the prepared artifacts:
 
 ```bash
 python -m uvicorn limitiq.web:app --host 127.0.0.1 --port 8000
@@ -129,16 +188,13 @@ Open http://127.0.0.1:8000. Health: http://127.0.0.1:8000/health.
 ## Reproducible commands
 
 ```bash
-# Fresh official download, cleaning, training, untouched-test evaluation and reports
+# V1 official-source rebuild
 python -m limitiq.pipeline all
 
-# Retrain from the already-downloaded source
-python -m limitiq.pipeline train
+# Local v2 rebuild from already-downloaded, gitignored raw files
+python -m limitiq.multisource
 
-# Regenerate report files from versioned evidence
-python -m limitiq.pipeline reports
-
-# External cross-dataset validation of the modelling recipe
+# External cross-dataset validation of the v1 modelling recipe
 python -m limitiq.external
 
 # Unit and integration checks
@@ -151,14 +207,13 @@ ruff check . && ruff format --check .
 docker build -t limitiq . && docker run --rm -p 8000:8000 limitiq
 ```
 
-The raw XLS and cleaned 30,000-row duplicate are intentionally gitignored. The
-small reproducible champion (204 KB), synthetic-ID demo portfolio (about 3.3 MB)
-and evidence reports are committed so fresh-clone deployment never trains.
+Raw sources, environments and caches are intentionally gitignored. The local v2
+model and source-derived demo must not be published until the terms gate passes.
 
 ## Security and privacy
 
 Strict upload schema/range/type/duplicate validation; 5 MB / 5,000-row caps;
-in-memory, no-retention processing; formula-safe CSV exports; allowlisted sorts
+in-memory no-retention processing; formula-safe CSV exports; allowlisted sorts
 and report paths; Jinja autoescape; safe production errors; CSP, frame denial,
 nosniff, referrer/permissions/opener headers; non-root one-worker image; no
 debug, source secrets, personal data or uploaded deserialization.
@@ -166,31 +221,45 @@ debug, source secrets, personal data or uploaded deserialization.
 ## Documentation and reports
 
 - [Executive PDF](reports/executive_report.pdf) and [HTML](reports/executive_report.html)
+- [Local v2 model evidence](reports/global_model_report.html)
+- [Local v2 executive PDF](reports/global_executive_report.pdf) and [HTML](reports/global_executive_report.html)
+- [Local v2 policy sensitivity](reports/global_policy_simulation_report.html)
+- [Local v2 financial-impact analysis](reports/global_financial_impact_analysis.html)
 - [Methodology](docs/METHODOLOGY.md), [PRD](docs/PRD.md), [architecture](docs/ARCHITECTURE.md)
 - [Data card](docs/DATA_CARD.md), [model card](docs/MODEL_CARD.md), [dictionary](docs/DATA_DICTIONARY.md)
 - [Assumptions](docs/ASSUMPTIONS.md), [case study](docs/CASE_STUDY.md), [five-minute walkthrough](docs/INTERVIEW_WALKTHROUGH.md)
 - [Career targeting guide](docs/CAREER_TARGETING.md) for India-based risk, analytics, model-governance and risk-technology roles
-- [Deployment runbook](docs/DEPLOYMENT.md), [dataset attribution](NOTICE.md)
-- [Verified QA evidence](docs/QA_REPORT.md)
-- Generated [quality](reports/data_quality_report.html), [EDA](reports/eda_report.html), [model](reports/model_performance_report.html), [policy](reports/policy_simulation_report.html), [financial](reports/financial_impact_analysis.html) and [external-validation](reports/external_validation_report.html) reports
+- [Deployment runbook](docs/DEPLOYMENT.md), [dataset attribution and terms](NOTICE.md)
+- [Verified v1 and local v2 QA evidence](docs/QA_REPORT.md)
 
 ## Limitations and roadmap
 
-The source is old, single-market and lacks income/assets, external obligations,
-macro scenarios, observed EAD/LGD, line treatments, response or profit. Segment
-diagnostics cannot prove fair-lending compliance. The displayed management ECL
-is neither an IFRS 9 provision nor a regulatory-capital calculation. U.S.
-production use requires a governed Regulation Z ability-to-pay assessment.
+V1 is old and single-market. V2 adds scale and source diversity but combines
+different products, sampling frames, event definitions and horizons. Its random
+within-source split is not an out-of-time or unseen-market test; Lending Club
+dominates pooled metrics; region and missingness can reveal source; and several
+source terms remain unresolved. Both versions lack verified production
+affordability, macro scenarios, observed line treatments, causal response and
+profit economics. Segment diagnostics cannot prove fair-lending compliance.
 
-Roadmap: current multi-market behavioral data; verified affordability inputs;
-randomized line experiments and causal response; empirically estimated LGD/CCF/
-costs; independent model/legal validation; controlled overrides; shadow mode;
-small monitored pilot; outcome/calibration/drift monitoring and rollback.
+Roadmap: clear source terms; add current, terms-cleared multi-market behavior;
+perform leave-one-source-out and out-of-time evaluation; assess source-balanced
+training; add verified affordability inputs and causal line experiments;
+independent model/legal validation; shadow mode, monitored pilot and rollback.
 
-The public demonstration runs on Render's no-cost tier and may cold-start after
-inactivity. This operational constraint does not affect the deterministic model
-or policy outputs once the service is awake.
+SBA loan data and Polish Companies Bankruptcy are separate-validation research
+candidates. PAKDD 2009 and Freddie/Fannie data are not accepted into the public
+union because source/terms/access or product-fit requirements are not satisfied.
+
+## Career positioning
+
+For J.P. Morgan, UBS, Morgan Stanley and State Street, lead with model
+governance, provenance, calibration, portfolio controls and production-shaped
+risk technology. Never imply that an employer endorsed, reviewed or uses
+LimitIQ. See the [career guide](docs/CAREER_TARGETING.md).
 
 ## Licence
 
-Code: [MIT](LICENSE). Dataset: CC BY 4.0 with attribution in [NOTICE.md](NOTICE.md).
+Code: [MIT](LICENSE). Dataset terms differ by source; attribution and the blocked
+v2 publication gate are recorded in [NOTICE.md](NOTICE.md). MIT does not
+relicense third-party data or derived-artifact rights.

@@ -1,6 +1,29 @@
 # Financial and policy assumptions
 
-All outcomes below are deterministic simulations in Indian rupees (INR). Source
+## V2 evidence and currency boundary
+
+The model probability is a source-specific adverse-outcome estimate, not a
+common-horizon PD. The expected-loss display is therefore an educational proxy:
+`adverse-outcome probability × LGD × EAD`, not IFRS 9 ECL or regulatory capital.
+
+Only source-disclosed currencies are localized to INR. V2 uses 2.97 INR/TWD and
+83 INR/USD as fixed presentation rates. Give Me Some Credit and Home Credit
+currencies are undisclosed; their monetary values are not converted or shown as
+INR. South German DEM amounts are not used as INR income/exposure fields.
+
+The v2 app operates on 1,200 deterministic synthetic profiles. Current limits,
+balances, economics, actions and financial outcomes are synthetic—not copied
+source rows, causal forecasts or realized impact.
+
+The v2 base policy uses LGD 65%, CCF 75%, interchange 1.8%, APR 18%, revolving
+rate 45%, funding cost 4.5%, capital cost 2.5%, servicing cost ₹180, response
+elasticity 35%, maximum increase 30%, maximum account exposure ₹3,000,000,
+portfolio growth cap 10%, expected-loss ceiling 12% and profitability hurdle
+₹300. All remain adjustable educational assumptions.
+
+## Verified v1 assumptions
+
+All v1 outcomes below are deterministic simulations in Indian rupees (INR). Source
 monetary fields are converted at a fixed 2.97 INR/TWD. This is a presentation
 transform, not Indian borrower evidence or a live exchange-rate commitment.
 

@@ -1,49 +1,53 @@
 # Five-minute interview walkthrough
 
-## 0:00–0:40 — Frame the banking decision
+## 0:00–0:40 — Frame the decision and status
 
-Open Executive Overview. Explain that the product chooses among governed line
-candidates, balancing growth, expected loss, overextension and exposure. Point
-to the evidence boundary: source facts observed, PD modelled, economics simulated.
-Note that source monetary fields are converted to INR at a documented fixed rate
-for presentation; the Taiwan population does not become Indian evidence.
+State that the public link is verified v1 and the multi-source v2 is local with
+a blocked publication gate. Open Executive Overview and explain the governed
+increase/hold/refer/freeze decision. Point to the boundary: source facts
+observed, adverse-outcome probability modelled, economics simulated.
 
-## 0:40–1:30 — Show the portfolio
+## 0:40–1:25 — Explain the multi-source evidence
 
-Open Portfolio Explorer. Filter to `Freeze automatic increases`, sort/search and
-download the filtered CSV. Open one synthetic account. Walk through repayment,
-bill/utilization history, PD/ECL, actual reason codes and pass/fail policy checks.
-Emphasize no personal/original identifier or demographic input.
+Open Governance. Show 1,869,548 rows across six independent cohorts and explain
+why legacy Statlog German is reference-only. Lead with macro ROC-AUC 0.6845,
+PR-AUC 0.4024 and Brier 0.1390; then explain why pooled metrics are secondary and
+Lending Club dominated. State that labels/horizons differ, the split is random
+within source, and missingness plus one-hot region may identify source.
 
-## 1:30–2:20 — Stress the policy
+## 1:25–2:10 — Show the portfolio and account
 
-Open Simulator. Raise LGD/CCF or the profitability hurdle and run the scenario.
-Compare exposure, expected loss, eligible count, action mix and simulated return
-with baseline. State that PD is held constant across candidates because causal
-line-response data do not exist.
+Filter to `Freeze automatic increases`, search, sort and open one synthetic
+`LIQ-*` profile. Walk through source context, missing fields, risk, expected-loss
+proxy, reason codes and policy checks. Emphasize that the 1,200 profiles, limits
+and balances are synthetic INR scenarios with no original identifiers.
 
-## 2:20–3:00 — Exercise batch operations
+## 2:10–2:55 — Stress the policy
 
-Download the sample CSV, upload it, and receive the decision CSV. Explain the 5
-MB / 5,000-row caps, exact schema/range/duplicate checks, in-memory processing,
-no retention and spreadsheet-formula-safe export.
+Raise LGD/CCF or the profitability hurdle. Compare exposure, expected-loss
+proxy, eligible count, action mix and simulated return. Risk is held constant
+across candidate limits because no source observes randomized line treatment.
+The proxy is not IFRS 9 ECL or regulatory capital.
 
-## 3:00–4:05 — Defend the model
+## 2:55–3:30 — Exercise batch controls
 
-Open Governance. Compare calibrated logistic vs histogram boosting; show frozen
-threshold, untouched-test metrics, calibration, confusion matrix, risk bands,
-behavioral signal ranking and audit-only segments. Explain why accuracy was not
-the selection criterion and why segment metrics do not prove compliance.
+Download the sample CSV, upload it and retrieve the decision CSV. Explain the
+size/row/schema/range/duplicate limits, in-memory no-retention handling and
+spreadsheet-formula-safe export.
 
-## 4:05–5:00 — Close with governance and roadmap
+## 3:30–4:20 — Defend governance
 
-Open Reports and the executive PDF/model/data cards. Call out Regulation Z
-ability-to-pay as the production blocker, SR 26-2 validation/monitoring, controlled
-overrides and rollback to no automatic increases. Roadmap: current multi-market
-behavior, verified ATP data, randomized line experiments, causal elasticity/LGD/
-CCF estimation, independent validation and limited monitored pilot.
+Show calibration, per-source metrics, provenance checksums and limitations.
+Explain the terms gate: Give Me Some Credit, FICO/HELOC, Lending Club upstream
+and Home Credit require review before v2 publication. Comparable protected
+attributes are unavailable, so no global fairness claim is made.
 
-For a target employer, close on the most relevant proof: consumer-risk controls
-for J.P. Morgan, Risk Control and monitoring for UBS, risk technology for Morgan
-Stanley, or model-governance/platform controls for State Street. Do not imply
-that any institution reviewed or endorsed the project.
+## 4:20–5:00 — Close with roadmap and employer fit
+
+Roadmap: terms clearance, leave-one-source-out and out-of-time testing,
+source-balanced sensitivity, India-specific affordability/bureau data, causal
+line experiments, independent validation, shadow mode and monitored pilot.
+
+Close on consumer-risk controls for J.P. Morgan, Risk Control/monitoring for UBS,
+risk technology for Morgan Stanley, or model-governance/platform controls for
+State Street. Never imply that any institution reviewed or endorsed LimitIQ.

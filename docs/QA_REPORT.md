@@ -1,5 +1,43 @@
 # QA report
 
+## Version boundary
+
+This report separates verified **v1 production evidence** from verified **v2
+local evidence**. V2 has passed the local automated, security and real-browser
+checks below, but it has not passed Docker, CI or Render verification and must
+not be described as deployed. Publication remains blocked by the four-source
+terms gate documented in `NOTICE.md`.
+
+## Local v2 evidence — 11 August 2026
+
+- 71 tests passed with 75.99% statement coverage, above the enforced 65%
+  threshold.
+- Ruff lint and format checks passed.
+- Bandit scanned 3,893 lines with zero findings.
+- `pip-audit -r requirements.txt` reported no known vulnerabilities.
+- Detect-secrets returned no findings for source/configuration/documentation or
+  generated HTML, JSON and synthetic CSV artifacts.
+- Global artifact checks verify the model checksum, 1,869,548-row union, six
+  independent training cohorts plus one reference-only source, two cohorts over
+  200,000 rows, macro/pooled/per-source metrics, chart points and the blocked
+  publication gate.
+
+The production-shaped local app was exercised at 1440 px desktop, 768 px
+tablet and 390 px mobile. There was no unexpected page-level horizontal
+overflow, browser-console error or application-log error. The mobile menu,
+overview, seven accessible governance SVGs, portfolio empty/filter/sort flow,
+account detail, simulator extreme and native-validation paths, reports, global
+executive PDF, valid five-row transient batch upload, decision CSV download,
+refresh, back and forward navigation all passed. Missing-column, invalid-type,
+duplicate, upload-size and other negative batch paths are covered by passing
+integration tests. The two-page A4 executive PDF was separately rendered and
+visually checked for clipping and overlap.
+
+V2 remains **not deployed**. The local machine did not expose a Docker CLI, and
+the terms gate prohibits committing/pushing source-derived v2 artifacts or
+triggering a public Render redeploy. Those are explicit blockers, not passed
+checks.
+
 Verified 7 August 2026 against model version
 `limitiq-1.0.0-284f9a7c8ca2` and dataset version
 `uci-350-30c6be3abd8d-inr297`.
@@ -25,7 +63,7 @@ in-app browser controller, not only an HTTP client.
 | Executive overview | Loaded exact model/dataset evidence, KPI cards, action/risk distributions and disclaimer |
 | Portfolio explorer | Search, sort, Moderate-risk filter (3,178 rows), pagination and filtered CSV download |
 | Account decision | Synthetic account route, six-period histories, reasons and six policy checks |
-| Policy simulator | Submitted LGD 100% stress; results changed to TWD 1.060B proposed exposure, TWD 159.66M ECL, 961 increases and TWD 5.73M simulated contribution |
+| Policy simulator | Submitted LGD 100% stress; exposure, loss, eligible count, action mix and simulated contribution changed as expected |
 | Batch decisioning | Uploaded a valid CSV and downloaded decisions; missing `PAY_6` produced a specific validation error |
 | Governance and reports | Exact metrics/model version rendered; executive PDF and document links downloaded/opened |
 | Navigation and state | Refresh, back and forward behavior passed; no dead primary navigation items |
@@ -63,7 +101,7 @@ application version `1.0.0`, model `limitiq-1.0.0-f8fe4953fac4` and dataset
 - Overview, portfolio search, account decision, governance, reports and model
   card rendered with the expected evidence and educational disclaimer.
 - A stressed 90% LGD / 100% CCF / 5% loss-ceiling scenario recalculated to zero
-  increases, TWD 168.22M proposed ECL and zero incremental contribution.
+  increases, a higher proposed expected-loss result and zero incremental contribution.
 - A two-row CSV produced a downloadable decision file with bounded PD values,
   recommendations, ECL, simulated contribution and reason codes.
 - A missing-column upload returned a safe 422 page naming every absent column.

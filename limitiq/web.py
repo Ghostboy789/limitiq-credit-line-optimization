@@ -32,10 +32,8 @@ from limitiq.config import (
 )
 from limitiq.features import (
     BATCH_COLUMNS,
-    BILL_COLUMNS,
+    EXPOSURE_COLUMNS,
     MODEL_INPUT_COLUMNS,
-    PAY_COLUMNS,
-    PAYMENT_COLUMNS,
     SchemaError,
     validate_input,
 )
@@ -45,6 +43,10 @@ MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(5 * 1024 * 1024)))
 MAX_UPLOAD_ROWS = 5_000
 ACCOUNT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{2,39}$")
 REPORT_FILES = {
+    "global-executive-html": "global_executive_report.html",
+    "global-executive-pdf": "global_executive_report.pdf",
+    "global-policy-simulation": "global_policy_simulation_report.html",
+    "global-financial-impact": "global_financial_impact_analysis.html",
     "executive-report-html": "executive_report.html",
     "executive-report-pdf": "executive_report.pdf",
     "data-quality": "data_quality_report.html",
@@ -53,6 +55,7 @@ REPORT_FILES = {
     "policy-simulation": "policy_simulation_report.html",
     "financial-impact": "financial_impact_analysis.html",
     "external-validation": "external_validation_report.html",
+    "global-model": "global_model_report.html",
 }
 DOCUMENT_FILES = {
     "methodology": "METHODOLOGY.md",
@@ -77,22 +80,62 @@ def _sha256(path: Path) -> str:
 
 
 def _load_artifacts() -> tuple[Any, dict[str, Any], pd.DataFrame, dict[str, Any]]:
-    model_path = MODEL_DIR / "champion.joblib"
-    metadata_path = MODEL_DIR / "metadata.json"
-    portfolio_path = PROCESSED_DIR / "demo_portfolio.csv"
-    simulation_path = REPORT_DIR / "policy_simulation.json"
+    model_path = MODEL_DIR / "global_champion.joblib"
+    metadata_path = MODEL_DIR / "global_metadata.json"
+    portfolio_path = PROCESSED_DIR / "global_demo_portfolio.csv"
+    simulation_path = REPORT_DIR / "global_policy_simulation.json"
     for path in (model_path, metadata_path, portfolio_path, simulation_path):
         if not path.exists():
             raise RuntimeError(
-                f"Required artifact missing: {path.name}; run python -m limitiq.pipeline all"
+                f"Required artifact missing: {path.name}; run python -m limitiq.multisource"
             )
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     if _sha256(model_path) != metadata["model_checksum"]:
         raise RuntimeError("Champion model checksum does not match trusted metadata")
     model = joblib.load(model_path)  # noqa: S301 — repository-built artifact, checksum verified above.
     portfolio = pd.read_csv(portfolio_path)
+    names = {key: value["name"] for key, value in metadata["datasets"].items()}
+    portfolio["source_name"] = portfolio["source_dataset"].map(names)
+    portfolio["display_utilization"] = portfolio["utilization"].fillna(
+        portfolio["current_balance_inr"] / portfolio["current_limit_inr"]
+    )
     simulation = json.loads(simulation_path.read_text(encoding="utf-8"))
     return model, metadata, portfolio, simulation
+
+
+def _svg_points(x_values: list[float], y_values: list[float]) -> str:
+    """Map bounded probabilities into the chart's 640x360 SVG plot area."""
+    return " ".join(
+        f"{56 + min(max(float(x), 0), 1) * 560:.2f},{304 - min(max(float(y), 0), 1) * 280:.2f}"
+        for x, y in zip(x_values, y_values, strict=True)
+    )
+
+
+def _governance_charts(metadata: dict[str, Any]) -> dict[str, Any]:
+    pooled = metadata["test_metrics"]
+    sources = metadata["per_market_test_metrics"]
+
+    def series(key: str, value: dict[str, Any], x_key: str, y_key: str) -> dict[str, str]:
+        if x_key == "fpr":
+            points = value["roc_points"]
+            x_values, y_values = points[x_key], points[y_key]
+        else:
+            points = value["calibration_points"]
+            x_values = [point[x_key] for point in points]
+            y_values = [point[y_key] for point in points]
+        return {
+            "label": metadata["datasets"].get(key, {}).get("name", "Pooled test"),
+            "points": _svg_points(x_values, y_values),
+        }
+
+    return {
+        "pooled_roc": [series("pooled", pooled, "fpr", "tpr")],
+        "source_roc": [series(key, value, "fpr", "tpr") for key, value in sources.items()],
+        "pooled_calibration": [series("pooled", pooled, "mean_predicted", "observed_rate")],
+        "source_calibration": [
+            series(key, value, "mean_predicted", "observed_rate") for key, value in sources.items()
+        ],
+    }
 
 
 def _money(value: float) -> str:
@@ -236,6 +279,9 @@ def create_app() -> FastAPI:
             "request": request,
             "disclaimer": DISCLAIMER,
             "model_version": metadata["model_version"],
+            "dataset_version": metadata["dataset_version"],
+            "benchmark_classification": metadata["classification"],
+            "target_note": metadata["target_note"],
             **values,
         }
 
@@ -291,6 +337,7 @@ def create_app() -> FastAPI:
             "version": __version__,
             "model_version": metadata["model_version"],
             "dataset_version": metadata["dataset_version"],
+            "benchmark": "multi-source-adverse-credit-outcome",
         }
 
     @app.get("/", response_class=HTMLResponse)
@@ -332,12 +379,14 @@ def create_app() -> FastAPI:
         if action:
             result = result[result["action"] == action]
         if delinquency == "yes":
-            result = result[result[PAY_COLUMNS].gt(0).any(axis=1)]
+            result = result[result["delinquency_count"].gt(0)]
         elif delinquency == "no":
-            result = result[~result[PAY_COLUMNS].gt(0).any(axis=1)]
+            result = result[result["delinquency_count"].eq(0)]
+        elif delinquency == "unknown":
+            result = result[result["delinquency_count"].isna()]
         allowed_sort = {
             "account_id",
-            "LIMIT_BAL",
+            "current_limit_inr",
             "proposed_limit",
             "pd",
             "current_expected_loss",
@@ -354,7 +403,7 @@ def create_app() -> FastAPI:
         search: str = Query("", max_length=40),
         risk: str = Query("", max_length=20),
         action: str = Query("", max_length=40),
-        delinquency: str = Query("", max_length=3),
+        delinquency: str = Query("", max_length=7),
         sort: str = Query("pd", max_length=40),
         direction: str = Query("desc", pattern="^(asc|desc)$"),
         page: int = Query(1, ge=1),
@@ -391,16 +440,17 @@ def create_app() -> FastAPI:
         search: str = Query("", max_length=40),
         risk: str = Query("", max_length=20),
         action: str = Query("", max_length=40),
-        delinquency: str = Query("", max_length=3),
+        delinquency: str = Query("", max_length=7),
         sort: str = Query("pd", max_length=40),
         direction: str = Query("desc", pattern="^(asc|desc)$"),
     ) -> Response:
         result = filtered_portfolio(search, risk, action, delinquency, sort, direction)
         columns = [
             "account_id",
+            "source_name",
             "action",
             "risk_band",
-            "LIMIT_BAL",
+            "current_limit_inr",
             "proposed_limit",
             "pd",
             "current_expected_loss",
@@ -421,28 +471,25 @@ def create_app() -> FastAPI:
         if match.empty:
             raise HTTPException(404, "Account not found")
         row = match.iloc[0].to_dict()
-        history = [
-            {
-                "month": month,
-                "bill": row[bill],
-                "payment": row[payment],
-                "utilization": max(row[bill], 0) / max(row["LIMIT_BAL"], 1),
-                "delinquency": row[status],
-            }
-            for month, bill, payment, status in zip(
-                ["Recent", "-1 month", "-2 months", "-3 months", "-4 months", "-5 months"],
-                BILL_COLUMNS,
-                PAYMENT_COLUMNS,
-                PAY_COLUMNS,
-                strict=True,
-            )
-        ]
         row["reason_list"] = str(row["reason_codes"]).split("|")
         row["checks"] = json.loads(row["policy_checks"])
+        profile_rows = [
+            ("Utilization", row.get("utilization"), "percent"),
+            ("Debt to income", row.get("debt_to_income"), "percent"),
+            ("Reported delinquency count", row.get("delinquency_count"), "number"),
+            ("Credit lines", row.get("credit_lines"), "number"),
+            ("Annual income", row.get("income_inr"), "money"),
+            ("Credit age (months)", row.get("credit_age_months"), "number"),
+        ]
         return templates.TemplateResponse(
             request,
             "account.html",
-            context(request, title=f"Account {account_id}", account=row, history=history),
+            context(
+                request,
+                title=f"Account {account_id}",
+                account=row,
+                profile_rows=profile_rows,
+            ),
         )
 
     @app.api_route("/simulator", methods=["GET", "POST"], response_class=HTMLResponse)
@@ -464,7 +511,7 @@ def create_app() -> FastAPI:
             proposed_limit = source["proposed_limit"].to_numpy()
         else:
             decisions = recommend_portfolio(
-                source[MODEL_INPUT_COLUMNS],
+                source[[*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]],
                 source["pd"].to_numpy(),
                 source["ACCOUNT_ID"].tolist(),
                 assumptions,
@@ -473,8 +520,11 @@ def create_app() -> FastAPI:
             current_ead = np.asarray([item.current_ead for item in decisions])
             proposed_ead = np.asarray([item.proposed_ead for item in decisions])
             proposed_limit = np.asarray([item.proposed_limit for item in decisions])
-        utilization = np.clip(
-            source["BILL_AMT1"].to_numpy() / source["LIMIT_BAL"].to_numpy(), 0, 1.2
+        utilization = (
+            source["utilization"]
+            .fillna(source["current_balance_inr"] / source["current_limit_inr"])
+            .clip(0, 1.2)
+            .to_numpy()
         )
         sensitivity = _directional_sensitivity(
             summary,
@@ -482,7 +532,7 @@ def create_app() -> FastAPI:
             source["pd"].to_numpy(),
             current_ead,
             proposed_ead,
-            source["LIMIT_BAL"].to_numpy(),
+            source["current_limit_inr"].to_numpy(),
             proposed_limit,
             utilization,
         )
@@ -526,6 +576,35 @@ def create_app() -> FastAPI:
             ),
         )
 
+    @app.post("/api/predict")
+    def predict(payload: dict[str, Any]) -> JSONResponse:
+        extra = sorted(set(payload) - set(BATCH_COLUMNS))
+        if extra:
+            raise HTTPException(422, f"Unexpected fields: {', '.join(extra)}")
+        try:
+            clean = validate_input(pd.DataFrame([payload]), require_account_id=True)
+        except SchemaError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        account_id = clean.loc[0, "ACCOUNT_ID"]
+        if not ACCOUNT_ID_PATTERN.fullmatch(account_id):
+            raise HTTPException(
+                422, "ACCOUNT_ID must be 3–40 letters, numbers, underscores or hyphens"
+            )
+        probability = model.predict_proba(clean[MODEL_INPUT_COLUMNS])[:, 1]
+        decision = recommend_portfolio(
+            clean[[*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]],
+            probability,
+            [account_id],
+        )[0]
+        return JSONResponse(
+            {
+                "classification": "Educational synthetic-economics decision",
+                "model_output": "Source-horizon adverse-credit-outcome probability",
+                "decision": decision.to_dict(),
+            },
+            headers={"Cache-Control": "no-store"},
+        )
+
     @app.post("/batch")
     async def batch_process(file: UploadFile = File(...)) -> Response:
         if file.content_type not in {
@@ -566,7 +645,9 @@ def create_app() -> FastAPI:
             )
         probability = model.predict_proba(clean[MODEL_INPUT_COLUMNS])[:, 1]
         decisions = recommend_portfolio(
-            clean[MODEL_INPUT_COLUMNS], probability, clean["ACCOUNT_ID"].tolist()
+            clean[[*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]],
+            probability,
+            clean["ACCOUNT_ID"].tolist(),
         )
         result = _decision_frame(decisions)
         return Response(
@@ -589,6 +670,14 @@ def create_app() -> FastAPI:
 
     @app.get("/governance", response_class=HTMLResponse)
     def governance(request: Request) -> HTMLResponse:
+        cohorts = [
+            {
+                "source_name": metadata["datasets"][key]["name"],
+                "region": metadata["datasets"][key]["region"],
+                **value,
+            }
+            for key, value in metadata["per_market_test_metrics"].items()
+        ]
         return templates.TemplateResponse(
             request,
             "governance.html",
@@ -598,6 +687,9 @@ def create_app() -> FastAPI:
                 metadata=metadata,
                 test=metadata["test_metrics"],
                 candidates=metadata["validation_models"],
+                macro=metadata["macro_test_metrics"],
+                cohorts=cohorts,
+                charts=_governance_charts(metadata),
             ),
         )
 

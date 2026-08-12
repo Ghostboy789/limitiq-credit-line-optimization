@@ -1,0 +1,89 @@
+{% macro line_chart(id, title, description, series, x_label, y_label, reference=true) %}
+<figure class="chart-card" aria-labelledby="{{ id }}-heading">
+  <figcaption><h3 id="{{ id }}-heading">{{ title }}</h3><p>{{ description }}</p></figcaption>
+  {% if series %}
+  <div class="chart-frame">
+    <svg class="line-chart" viewBox="0 0 640 360" role="img" aria-labelledby="{{ id }}-title {{ id }}-desc" preserveAspectRatio="xMidYMid meet">
+      <title id="{{ id }}-title">{{ title }}</title>
+      <desc id="{{ id }}-desc">{{ description }} Values run from zero to one on both axes. Exact metrics are provided in the adjacent table.</desc>
+      <g class="chart-grid" aria-hidden="true">
+        {% for tick in [0, 0.25, 0.5, 0.75, 1] %}
+        <line x1="{{ 56 + tick * 560 }}" y1="24" x2="{{ 56 + tick * 560 }}" y2="304"></line>
+        <line x1="56" y1="{{ 304 - tick * 280 }}" x2="616" y2="{{ 304 - tick * 280 }}"></line>
+        <text x="{{ 56 + tick * 560 }}" y="326" text-anchor="middle">{{ tick }}</text>
+        <text x="46" y="{{ 308 - tick * 280 }}" text-anchor="end">{{ tick }}</text>
+        {% endfor %}
+      </g>
+      <line class="chart-axis" x1="56" y1="304" x2="616" y2="304" aria-hidden="true"></line>
+      <line class="chart-axis" x1="56" y1="24" x2="56" y2="304" aria-hidden="true"></line>
+      {% if reference %}<line class="chart-reference" x1="56" y1="304" x2="616" y2="24" aria-hidden="true"></line>{% endif %}
+      {% for item in series %}<polyline class="chart-line chart-series-{{ loop.index0 }}" points="{{ item.points }}" vector-effect="non-scaling-stroke"></polyline>{% endfor %}
+      <text class="chart-axis-label" x="336" y="352" text-anchor="middle">{{ x_label }}</text>
+      <text class="chart-axis-label" x="16" y="164" text-anchor="middle" transform="rotate(-90 16 164)">{{ y_label }}</text>
+    </svg>
+  </div>
+  <ul class="chart-legend" aria-label="Chart series">
+    {% for item in series %}<li><svg viewBox="0 0 30 8" aria-hidden="true"><line class="chart-line chart-series-{{ loop.index0 }}" x1="1" y1="4" x2="29" y2="4"></line></svg><span>{{ item.label }}</span></li>{% endfor %}
+    {% if reference %}<li><svg viewBox="0 0 30 8" aria-hidden="true"><line class="chart-reference" x1="1" y1="4" x2="29" y2="4"></line></svg><span>Reference line</span></li>{% endif %}
+  </ul>
+  {% else %}<p class="chart-empty">Chart evidence is unavailable.</p>{% endif %}
+</figure>
+{% endmacro %}
+
+{% macro horizontal_bars(id, title, description, rows) %}
+<figure class="chart-card" aria-labelledby="{{ id }}-heading">
+  <figcaption><h3 id="{{ id }}-heading">{{ title }}</h3><p>{{ description }}</p></figcaption>
+  {% if rows %}
+  {% set scale = namespace(maximum=1) %}{% for item in rows %}{% if item[1] > scale.maximum %}{% set scale.maximum = item[1] %}{% endif %}{% endfor %}
+  <div class="chart-frame">
+    <svg class="bar-chart" viewBox="0 0 640 {{ 44 + rows|length * 48 }}" role="img" aria-labelledby="{{ id }}-title {{ id }}-desc" preserveAspectRatio="xMidYMid meet">
+      <title id="{{ id }}-title">{{ title }}</title><desc id="{{ id }}-desc">{{ description }} Exact account counts are printed beside each bar.</desc>
+      {% for item in rows %}
+      <text class="bar-label" x="12" y="{{ 38 + loop.index0 * 48 }}">{{ item[0] }}</text>
+      <rect class="bar-track-svg" x="190" y="{{ 22 + loop.index0 * 48 }}" width="350" height="20" rx="5"></rect>
+      <rect class="bar-fill-svg chart-series-{{ loop.index0 }}" x="190" y="{{ 22 + loop.index0 * 48 }}" width="{{ item[1] / scale.maximum * 350 }}" height="20" rx="5"></rect>
+      <text class="bar-value" x="628" y="{{ 38 + loop.index0 * 48 }}" text-anchor="end">{{ item[1]|number }}</text>
+      {% endfor %}
+    </svg>
+  </div>
+  {% else %}<p class="chart-empty">No accounts are available for this view.</p>{% endif %}
+</figure>
+{% endmacro %}
+
+{% macro histogram(id, title, description, bins) %}
+<figure class="chart-card" aria-labelledby="{{ id }}-heading">
+  <figcaption><h3 id="{{ id }}-heading">{{ title }}</h3><p>{{ description }}</p></figcaption>
+  {% if bins %}
+  {% set scale = namespace(maximum=1) %}{% for bin in bins %}{% if bin.count > scale.maximum %}{% set scale.maximum = bin.count %}{% endif %}{% endfor %}
+  <div class="chart-frame">
+    <svg class="histogram-chart" viewBox="0 0 640 340" role="img" aria-labelledby="{{ id }}-title {{ id }}-desc" preserveAspectRatio="xMidYMid meet">
+      <title id="{{ id }}-title">{{ title }}</title><desc id="{{ id }}-desc">{{ description }} Twenty bins cover model scores from zero to one.</desc>
+      <line class="chart-axis" x1="56" y1="286" x2="616" y2="286" aria-hidden="true"></line>
+      {% for bin in bins %}<rect class="histogram-bar" x="{{ 58 + loop.index0 * 28 }}" y="{{ 286 - bin.count / scale.maximum * 244 }}" width="24" height="{{ bin.count / scale.maximum * 244 }}"><title>{{ bin.lower|percent }} to {{ bin.upper|percent }}: {{ bin.count|number }} accounts</title></rect>{% endfor %}
+      {% for tick in [0, 0.25, 0.5, 0.75, 1] %}<text class="chart-tick" x="{{ 56 + tick * 560 }}" y="310" text-anchor="middle">{{ tick }}</text>{% endfor %}
+      <text class="chart-axis-label" x="336" y="334" text-anchor="middle">Model-estimated adverse-outcome probability</text>
+    </svg>
+  </div>
+  {% else %}<p class="chart-empty">Score distribution is unavailable.</p>{% endif %}
+</figure>
+{% endmacro %}
+
+{% macro cohort_comparison(id, title, description, rows) %}
+<figure class="chart-card" aria-labelledby="{{ id }}-heading">
+  <figcaption><h3 id="{{ id }}-heading">{{ title }}</h3><p>{{ description }}</p></figcaption>
+  {% if rows %}
+  <div class="chart-frame chart-frame-wide">
+    <svg class="cohort-chart" viewBox="0 0 760 {{ 58 + rows|length * 62 }}" role="img" aria-labelledby="{{ id }}-title {{ id }}-desc" preserveAspectRatio="xMidYMid meet">
+      <title id="{{ id }}-title">{{ title }}</title><desc id="{{ id }}-desc">{{ description }} Teal bars show ROC-AUC, where higher is better. Amber bars show Brier score, where lower is better. Exact values are in the table below.</desc>
+      {% for row in rows %}
+      <text class="bar-label" x="12" y="{{ 43 + loop.index0 * 62 }}">{{ row.source_name|truncate(27, true, '…') }}</text>
+      <rect class="cohort-roc" x="220" y="{{ 20 + loop.index0 * 62 }}" width="{{ row.roc_auc * 430 }}" height="16" rx="4"></rect>
+      <rect class="cohort-brier" x="220" y="{{ 40 + loop.index0 * 62 }}" width="{{ row.brier_score * 430 }}" height="12" rx="4"></rect>
+      <text class="bar-value" x="745" y="{{ 33 + loop.index0 * 62 }}" text-anchor="end">{{ row.roc_auc|round(3) }} / {{ row.brier_score|round(3) }}</text>
+      {% endfor %}
+    </svg>
+  </div>
+  <ul class="chart-legend"><li><span class="legend-block cohort-roc"></span>ROC-AUC (higher is better)</li><li><span class="legend-block cohort-brier"></span>Brier (lower is better)</li></ul>
+  {% else %}<p class="chart-empty">Source-cohort comparison is unavailable.</p>{% endif %}
+</figure>
+{% endmacro %}

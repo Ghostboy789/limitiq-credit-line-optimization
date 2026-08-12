@@ -1,11 +1,21 @@
 # Product requirements document
 
+## Version status
+
+V1 is the verified public Taiwan-model demonstration. V2 is a local multi-source
+adverse-credit-outcome benchmark over 1,869,548 rows; it is not a common-horizon
+regulatory PD and is blocked from publication pending source-terms review.
+
 ## Product
 
 LimitIQ is a dynamic credit-line management and exposure-optimization platform
 for an existing card portfolio. It translates calibrated PD, behavior, simulated
 economics and policy into explainable +10%, +20%, +30%, no-change, manual-review
 or freeze recommendations.
+
+For v2 UI compatibility, the legacy label `PD` means calibrated probability of
+the source-specific adverse outcome. Product copy and governance materials must
+explain that meaning and must not imply common event/horizon comparability.
 
 ## Users and jobs
 
@@ -61,4 +71,3 @@ Docker image, reproducible pipeline, automated tests and public documentation.
 Production lending, customer communications, authentication/roles, persistent
 overrides, real-time bureau/core integration, regulatory capital/IFRS 9 engines,
 causal uplift, a production database, LLMs and automated line decreases.
-

@@ -16,3 +16,13 @@ document.querySelectorAll('input[type="file"]').forEach((input) => {
   });
 });
 
+if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
+  const observer = new IntersectionObserver(
+    (entries) => entries.forEach((entry) => entry.isIntersecting && entry.target.classList.add("is-visible")),
+    { rootMargin: "0px 0px -8%", threshold: 0.08 },
+  );
+  document.querySelectorAll("main > section, main > .notice, main > .metric-grid, main > .two-column, main > .dashboard-grid").forEach((item) => {
+    item.classList.add("reveal");
+    observer.observe(item);
+  });
+}

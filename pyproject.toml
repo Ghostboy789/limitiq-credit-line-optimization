@@ -1,17 +1,21 @@
 [project]
 name = "limitiq-credit-line-optimization"
-version = "1.0.0"
+version = "2.0.0"
 description = "Educational dynamic credit-line optimization platform"
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.11,<3.14"
 license = { file = "LICENSE" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q --strict-markers --cov-fail-under=65"
 
+[tool.coverage.run]
+# Full-data offline CLIs are verified by artifact/provenance tests and explicit rebuild runs.
+omit = ["limitiq/external.py", "limitiq/multisource.py"]
+
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py311"
 exclude = [".deps", ".pytest_cache", ".ruff_cache", "data", "reports"]
 
 [tool.ruff.lint]

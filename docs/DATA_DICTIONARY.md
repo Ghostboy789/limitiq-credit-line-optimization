@@ -1,55 +1,50 @@
 # Data dictionary
 
-## Observed UCI fields
+## Local v2 model inputs
 
-- `ID`: source row identifier; excluded and never published.
-- `LIMIT_BAL`: existing credit limit, converted from source TWD to INR at 2.97.
-- `PAY_0`, `PAY_2` … `PAY_6`: recent-to-old repayment status. Positive values
-  denote months delayed; -1 means paid duly and -2/0 are no-use/revolving states
-  documented in common source coding.
-- `BILL_AMT1` … `BILL_AMT6`: recent-to-old statement amounts, converted to INR.
-- `PAY_AMT1` … `PAY_AMT6`: recent-to-old prior payment amounts, converted to INR.
-- `SEX`, `EDUCATION`, `MARRIAGE`, `AGE`: source demographics; excluded from
-  decisioning. Sex and age are used only for offline audit diagnostics.
-- `default_next_month`: binary model target; never an input.
+| Field | Type / range | Interpretation and caveat |
+|---|---|---|
+| `delinquency_count` | numeric, ≥0, nullable | Source-specific recent late months, events, derogatory trades or historical-credit proxy |
+| `utilization` | numeric, ≥0, nullable | Revolving/statement utilization proxy; values above 1 may occur |
+| `debt_to_income` | numeric, normally 0–1, nullable | Total DTI, installment burden or annuity-to-income proxy depending on source |
+| `credit_lines` | numeric, ≥0, nullable | Open accounts, total trades or ordinal existing-credit proxy |
+| `income_inr` | numeric, ≥0, nullable | Annual income only where source currency is disclosed and converted to INR |
+| `credit_age_months` | numeric, ≥0, nullable | Age of oldest credit history where reported |
+| `region` | category | `asia`, `europe`, `north_america` or `undisclosed`; one-hot encoded |
 
-## Engineered model fields
+`source_dataset` exists in the synthetic demo for display and source-level
+diagnostics but is not a model predictor. Structural missingness and region may
+still identify source.
 
-- `limit_bal`: current line.
-- `current_utilization`, `average_utilization`, `maximum_utilization`: positive
-  bill divided by line.
-- `utilization_trend`: recent less oldest utilization.
-- `recent_payment_ratio`, `average_payment_ratio`: payment divided by positive bill.
-- `payment_consistency`: share of months with positive payments.
-- `delinquent_month_count`, `maximum_delinquency_severity`: delay history.
-- `recent_payment_deterioration`: recent status less older-status mean.
-- `revolving_balance_proxy`: positive recent bill less recent payment, divided by line.
-- `limit_headroom`: positive line less recent bill, divided by line.
-- `balance_volatility`, `payment_volatility`: six-month standard deviation over line.
-- `recent_balance_growth`: recent less three-month-prior bill over line.
-- `inactive_month_count`: months with zero bill.
+## Local v2 synthetic decision fields
 
-## Model-estimated fields
+| Field | Meaning |
+|---|---|
+| `account_id` | Deterministic synthetic identifier `LIQ-*`; never a source ID |
+| `current_limit_inr` | Synthetic current credit line in INR |
+| `current_balance_inr` | Synthetic current drawn balance in INR |
+| `pd` | Legacy UI field name; source-specific adverse-outcome probability, not common-horizon PD |
+| `risk_band` | Low, Moderate, High or Very high educational band |
+| `action` | Increase 30%, No change, Manual review or Freeze automatic increases in the base scenario |
+| `proposed_limit` | Synthetic proposed INR limit after governed action |
+| `current_ead`, `proposed_ead` | Synthetic exposure-at-default proxy |
+| `current_expected_loss`, `proposed_expected_loss` | Educational probability×LGD×EAD proxy; not IFRS 9 ECL |
+| `incremental_contribution` | Simulated revenue less expected-loss/funding/capital/servicing costs |
+| `reason_codes` | Educational behavioral and policy explanations; not consumer notices |
+| `policy_checks` | Deterministic constraint results |
+| `missing_model_fields` | Structurally or individually absent harmonized inputs |
 
-- `pd`: calibrated subsequent-month probability of default, [0, 1].
-- `risk_band`: Low (<5%), Moderate (5–15%), High (15–30%), Very high (≥30%).
+## Batch input
 
-## Synthetic and simulated fields
+Batch CSV uses the seven v2 model-input fields plus synthetic
+`current_limit_inr` and `current_balance_inr`. Inputs are strictly validated,
+processed transiently and not retained. Values for undisclosed source currencies
+must not be relabeled as INR; users provide already-localized synthetic scenario
+amounts.
 
-- `account_id`: deterministic `LIQ-` synthetic identifier; not reversible to ID.
-- `action`: selected increase/no-change/review/freeze label.
-- `increase_pct`, `proposed_limit`: simulated policy result.
-- `current_ead`, `proposed_ead`: drawn + CCF × positive undrawn line.
-- `current_expected_loss`, `proposed_expected_loss`: PD × LGD × EAD.
-- `incremental_contribution`: simulated revenue less loss/funding/capital/servicing.
-- `risk_adjusted_return`: contribution divided by incremental EAD.
-- `reason_codes`: pipe-separated actual policy/behavior reasons.
-- `policy_checks`: JSON booleans for the selected candidate.
+## V1 source reference
 
-## Batch schema
-
-Exactly `ACCOUNT_ID`, `LIMIT_BAL`, six `PAY_*`, six `BILL_AMT*` and six
-`PAY_AMT*` columns. IDs must be unique 3–40 character letters, numbers,
-underscores or hyphens. Numeric blanks, non-positive/excessive limits, payment
-statuses outside -2…9 and negative payment amounts are rejected. All monetary
-batch fields must be supplied in INR.
+The verified public v1 pipeline uses `LIMIT_BAL`, `PAY_0`, `PAY_2`–`PAY_6`,
+`BILL_AMT1`–`BILL_AMT6` and `PAY_AMT1`–`PAY_AMT6`. Monetary fields are converted
+from TWD to INR at 2.97. `ID`, target and demographics are excluded from model
+input; sex and age exist only in offline v1 diagnostics.

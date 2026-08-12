@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 from limitiq.config import MODEL_DIR, PROCESSED_DIR, REPORT_DIR, ROOT, SEED
-from limitiq.features import MODEL_INPUT_COLUMNS
+from limitiq.features import EXPOSURE_COLUMNS, MODEL_INPUT_COLUMNS, TAIWAN_MODEL_INPUT_COLUMNS
 from limitiq.pipeline import _model_candidates, _save_model_ready_splits, synthetic_account_id
 from limitiq.reporting import build_reports
 
@@ -34,12 +34,21 @@ def test_model_checksum_and_versions_are_bound() -> None:
     assert metadata["split"] == {"train": 18_000, "validation": 6_000, "test": 6_000}
 
 
-def test_inference_probability_bounds_and_schema() -> None:
+def test_legacy_inference_probability_bounds_and_schema() -> None:
     model = joblib.load(MODEL_DIR / "champion.joblib")
     demo = pd.read_csv(PROCESSED_DIR / "demo_portfolio.csv", nrows=25)
+    probability = model.predict_proba(demo[TAIWAN_MODEL_INPUT_COLUMNS])[:, 1]
+    assert probability.shape == (25,)
+    assert np.all((probability >= 0) & (probability <= 1))
+
+
+def test_global_inference_probability_bounds_and_schema() -> None:
+    model = joblib.load(MODEL_DIR / "global_champion.joblib")
+    demo = pd.read_csv(PROCESSED_DIR / "global_demo_portfolio.csv", nrows=25)
     probability = model.predict_proba(demo[MODEL_INPUT_COLUMNS])[:, 1]
     assert probability.shape == (25,)
     assert np.all((probability >= 0) & (probability <= 1))
+    assert set(EXPOSURE_COLUMNS) <= set(demo)
 
 
 def test_synthetic_ids_are_deterministic_and_not_source_ids() -> None:
@@ -56,10 +65,23 @@ def test_committed_demo_has_no_demographics_or_source_ids() -> None:
     )
     assert demo["account_id"].str.match(r"^LIQ-[A-F0-9]{10}$").all()
 
+    global_demo = pd.read_csv(PROCESSED_DIR / "global_demo_portfolio.csv")
+    assert not {
+        "ID",
+        "SEX",
+        "EDUCATION",
+        "MARRIAGE",
+        "AGE",
+        "default",
+        "default_next_month",
+    } & set(global_demo)
+    assert global_demo["account_id"].is_unique
+    assert global_demo["account_id"].str.match(r"^LIQ-[0-9]{6}$").all()
+
 
 def test_real_candidate_pipelines_train_reproducibly() -> None:
     demo = pd.read_csv(PROCESSED_DIR / "demo_portfolio.csv", nrows=240)
-    x = demo[MODEL_INPUT_COLUMNS]
+    x = demo[TAIWAN_MODEL_INPUT_COLUMNS]
     y = pd.Series(np.tile([0, 0, 1], 80), index=x.index)
     for name in _model_candidates():
         first_model = _model_candidates()[name].fit(x, y)
@@ -74,9 +96,9 @@ def test_model_ready_splits_are_saved_with_metadata(tmp_path) -> None:
     target = pd.Series(np.tile([0, 1, 0], 3))
     metadata = _save_model_ready_splits(
         {
-            "train": (demo[MODEL_INPUT_COLUMNS].iloc[:5], target.iloc[:5]),
-            "validation": (demo[MODEL_INPUT_COLUMNS].iloc[5:7], target.iloc[5:7]),
-            "test": (demo[MODEL_INPUT_COLUMNS].iloc[7:], target.iloc[7:]),
+            "train": (demo[TAIWAN_MODEL_INPUT_COLUMNS].iloc[:5], target.iloc[:5]),
+            "validation": (demo[TAIWAN_MODEL_INPUT_COLUMNS].iloc[5:7], target.iloc[5:7]),
+            "test": (demo[TAIWAN_MODEL_INPUT_COLUMNS].iloc[7:], target.iloc[7:]),
         },
         "test-dataset",
         tmp_path,
@@ -84,7 +106,7 @@ def test_model_ready_splits_are_saved_with_metadata(tmp_path) -> None:
     assert metadata["random_seed"] == SEED
     assert metadata["files"]["train"]["rows"] == 5
     assert list(pd.read_csv(tmp_path / "train.csv").columns) == [
-        *MODEL_INPUT_COLUMNS,
+        *TAIWAN_MODEL_INPUT_COLUMNS,
         "default_next_month",
     ]
 
@@ -126,6 +148,65 @@ def test_external_validation_evidence_is_present_and_sane() -> None:
         assert 0.0 <= item["brier_score"] < 0.5
         assert item["rows"] > 0
     assert (REPORT_DIR / "external_validation_report.html").stat().st_size > 1_000
+
+
+def test_global_model_evidence_is_present_checksum_bound_and_sane() -> None:
+    metadata_path = MODEL_DIR / "global_metadata.json"
+    report_path = REPORT_DIR / "global_model.json"
+    model_path = MODEL_DIR / "global_champion.joblib"
+    html_path = REPORT_DIR / "global_model_report.html"
+    for path in (metadata_path, report_path, model_path, html_path):
+        assert path.exists() and path.stat().st_size > 1_000
+
+    evidence = json.loads(metadata_path.read_text(encoding="utf-8"))
+    assert evidence == json.loads(report_path.read_text(encoding="utf-8"))
+    assert hashlib.sha256(model_path.read_bytes()).hexdigest() == evidence["model_checksum"]
+    assert evidence["random_seed"] == SEED
+    assert evidence["rows"] >= 1_500_000
+    assert evidence["row_budget"]["minimum_satisfied"] is True
+    assert len(evidence["row_budget"]["datasets_above_200k"]) >= 2
+    assert len(evidence["datasets"]) == 7
+    assert len(evidence["training_sources"]) == 6
+    assert len(evidence["reference_sources"]) == 1
+    assert set(evidence["training_sources"]) == set(evidence["per_market_test_metrics"])
+    assert all(
+        evidence["datasets"][key]["role"] == "training" for key in evidence["training_sources"]
+    )
+    assert all(
+        evidence["datasets"][key]["role"] == "reference_only"
+        for key in evidence["reference_sources"]
+    )
+    assert sum(evidence["split"].values()) == evidence["rows"]
+
+    for metrics in [evidence["test_metrics"], *evidence["per_market_test_metrics"].values()]:
+        assert 0 < metrics["roc_auc"] <= 1
+        assert 0 < metrics["pr_auc"] <= 1
+        assert 0 <= metrics["brier_score"] < 0.5
+        roc = metrics["roc_points"]
+        assert 2 <= len(roc["fpr"]) == len(roc["tpr"]) <= 250
+        assert all(0 <= value <= 1 for value in [*roc["fpr"], *roc["tpr"]])
+        calibration = metrics["calibration_points"]
+        assert calibration and all(
+            0 <= point["mean_predicted"] <= 1 and 0 <= point["observed_rate"] <= 1
+            for point in calibration
+        )
+
+    macro = evidence["macro_test_metrics"]
+    assert {"roc_auc", "pr_auc", "brier_score", "log_loss"} <= set(macro)
+    assert (
+        sum(item["accounts"] for item in evidence["per_market_test_metrics"].values())
+        == evidence["split"]["test"]
+    )
+
+    unresolved = {
+        key
+        for key, item in evidence["datasets"].items()
+        if str(item["license_status"]).startswith("unresolved")
+    }
+    gate = evidence["publication_gate"]
+    assert gate["status"] == ("blocked" if unresolved else "cleared")
+    assert set(gate.get("sources", [])) == unresolved
+    assert gate.get("reason")
 
 
 def test_no_unresolved_placeholder_tokens_in_user_artifacts() -> None:

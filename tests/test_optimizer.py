@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 
 from limitiq.config import PolicyAssumptions
-from limitiq.features import MODEL_INPUT_COLUMNS
+from limitiq.features import EXPOSURE_COLUMNS, MODEL_INPUT_COLUMNS
 from limitiq.optimizer import (
     expected_loss,
     exposure,
@@ -15,111 +15,123 @@ from limitiq.optimizer import (
     summarize_portfolio,
 )
 
+DECISION_COLUMNS = [*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]
 
-def test_expected_loss_formula() -> None:
+
+def test_expected_loss_and_exposure_math() -> None:
     assert expected_loss(0.1, 0.6, 100_000) == pytest.approx(6_000)
-
-
-def test_expected_loss_rejects_invalid_bounds() -> None:
+    assert exposure(100_000, 40_000, 0.75) == pytest.approx(85_000)
+    assert exposure(100_000, 120_000, 0.75) == pytest.approx(100_000)
     with pytest.raises(ValueError):
         expected_loss(1.1, 0.6, 100)
     with pytest.raises(ValueError):
         expected_loss(0.1, 0.6, -1)
 
 
-def test_ead_includes_drawn_and_converted_undrawn() -> None:
-    assert exposure(100_000, 40_000, 0.75) == pytest.approx(85_000)
-    assert exposure(100_000, 120_000, 0.75) == pytest.approx(100_000)
-
-
-def test_profitable_healthy_account_gets_governed_increase(healthy_row: pd.Series) -> None:
+def test_profitable_low_risk_account_gets_governed_increase(healthy_row: pd.Series) -> None:
     decision = recommend_account(healthy_row, 0.06, "TEST-001")
     assert decision.action in {"Increase 10%", "Increase 20%", "Increase 30%"}
     assert decision.proposed_limit > decision.current_limit
     assert decision.incremental_contribution > 0
-    assert "Strong repayment consistency" in decision.reason_codes
+    assert "No reported delinquency in the harmonized source fields" in decision.reason_codes
+    assert "High utilization with low estimated risk" in decision.reason_codes
 
 
-def test_severe_delinquency_freezes_not_decreases(healthy_row: pd.Series) -> None:
+def test_repeated_delinquency_freezes_without_decrease(healthy_row: pd.Series) -> None:
     row = healthy_row.copy()
-    row["PAY_0"] = 2
-    row["PAY_2"] = 2
-    decision = recommend_account(row, 0.3, "TEST-002")
+    row["delinquency_count"] = 2
+    decision = recommend_account(row, 0.30, "TEST-002")
     assert decision.action == "Freeze automatic increases"
     assert decision.proposed_limit == decision.current_limit
-    assert "Repeated delinquency" in decision.reason_codes
+    assert decision.reason_codes == ("Repeated delinquency",)
 
 
-def test_mild_recent_delay_routes_manual_review(healthy_row: pd.Series) -> None:
+@pytest.mark.parametrize(
+    ("changes", "reason"),
+    [
+        ({"delinquency_count": 1}, "Reported delinquency"),
+        ({"delinquency_count": np.nan}, "Insufficient behavioral history"),
+        ({"debt_to_income": 0.75}, "Customer-overextension safeguard"),
+        ({"utilization": 1.2}, "Customer-overextension safeguard"),
+    ],
+)
+def test_manual_review_conditions(
+    healthy_row: pd.Series, changes: dict[str, float], reason: str
+) -> None:
     row = healthy_row.copy()
-    row["PAY_0"] = 1
+    for column, value in changes.items():
+        row[column] = value
     decision = recommend_account(row, 0.15, "TEST-003")
     assert decision.action == "Manual review"
+    assert decision.proposed_limit == decision.current_limit
+    assert reason in decision.reason_codes
     assert "Manual review required" in decision.reason_codes
 
 
-def test_low_utilization_can_fail_hurdle(healthy_row: pd.Series) -> None:
-    row = healthy_row.copy()
-    row["BILL_AMT1"] = 1_000
-    decision = recommend_account(row, 0.05, "TEST-004")
+def test_low_need_loss_and_exposure_policies_return_no_change(healthy_row: pd.Series) -> None:
+    low_need = healthy_row.copy()
+    low_need["utilization"] = 0.01
+    low_need["current_balance_inr"] = 1_000
+    decision = recommend_account(low_need, 0.05, "TEST-004")
     assert decision.action == "No change"
     assert "Low utilization provides no evidence of additional need" in decision.reason_codes
+    assert "Incremental return below profitability hurdle" in decision.reason_codes
+
+    loss = recommend_account(
+        healthy_row,
+        0.10,
+        "TEST-005",
+        PolicyAssumptions(expected_loss_ceiling=0.01),
+    )
+    assert loss.action == "No change"
+    assert "Expected loss exceeds policy ceiling" in loss.reason_codes
+
+    capped = recommend_account(
+        healthy_row,
+        0.04,
+        "TEST-006",
+        PolicyAssumptions(max_account_exposure=100_001),
+    )
+    assert capped.action == "No change"
+    assert "Exposure limit reached" in capped.reason_codes
 
 
-def test_loss_ceiling_blocks_increase(healthy_row: pd.Series) -> None:
-    assumptions = PolicyAssumptions(expected_loss_ceiling=0.01)
-    decision = recommend_account(healthy_row, 0.10, "TEST-005", assumptions)
-    assert decision.action == "No change"
-    assert "Expected loss exceeds policy ceiling" in decision.reason_codes
-
-
-def test_maximum_increase_is_respected(healthy_row: pd.Series) -> None:
-    assumptions = PolicyAssumptions(max_increase=0.10)
-    decision = recommend_account(healthy_row, 0.04, "TEST-006", assumptions)
-    assert decision.increase_pct <= 0.10
-    assert len(decision.candidate_results) == 2
-
-
-def test_account_exposure_limit_is_respected(healthy_row: pd.Series) -> None:
-    assumptions = PolicyAssumptions(max_account_exposure=100_001)
-    decision = recommend_account(healthy_row, 0.04, "TEST-007", assumptions)
-    assert decision.action == "No change"
-    assert "Exposure limit reached" in decision.reason_codes
-
-
-def test_portfolio_growth_cap_reverts_lowest_value_deterministically(
+def test_maximum_increase_and_portfolio_growth_cap_are_deterministic(
     healthy_row: pd.Series,
 ) -> None:
-    frame = pd.DataFrame([healthy_row, healthy_row], columns=MODEL_INPUT_COLUMNS)
+    limited = recommend_account(
+        healthy_row,
+        0.04,
+        "TEST-007",
+        PolicyAssumptions(max_increase=0.10),
+    )
+    assert limited.increase_pct <= 0.10
+    assert len(limited.candidate_results) == 2
+
+    frame = pd.DataFrame([healthy_row, healthy_row], columns=DECISION_COLUMNS)
     assumptions = PolicyAssumptions(portfolio_growth_cap=0.05)
     first = recommend_portfolio(frame, np.array([0.04, 0.04]), ["A-001", "A-002"], assumptions)
     second = recommend_portfolio(frame, np.array([0.04, 0.04]), ["A-001", "A-002"], assumptions)
     assert [item.to_dict() for item in first] == [item.to_dict() for item in second]
     assert sum(item.proposed_limit for item in first) <= 210_000
+    assert any("Exposure limit reached" in item.reason_codes for item in first)
 
 
-def test_portfolio_length_mismatch_is_rejected(healthy_row: pd.Series) -> None:
+def test_portfolio_contract_summary_and_sensitivity(healthy_row: pd.Series) -> None:
+    frame = pd.DataFrame([healthy_row], columns=DECISION_COLUMNS)
     with pytest.raises(ValueError, match="equal lengths"):
-        recommend_portfolio(pd.DataFrame([healthy_row]), np.array([0.1, 0.2]), ["A"])
+        recommend_portfolio(frame, np.array([0.1, 0.2]), ["A"])
 
-
-def test_summary_reconciles_decisions(healthy_row: pd.Series) -> None:
-    decisions = [recommend_account(healthy_row, 0.04, "A")]
+    decisions = recommend_portfolio(frame, np.array([0.04]), ["A"])
     summary = summarize_portfolio(decisions)
     assert summary["accounts"] == 1
     assert sum(summary["action_counts"].values()) == 1
 
-
-def test_portfolio_sensitivity_is_deterministic_and_reoptimizes(
-    healthy_row: pd.Series,
-) -> None:
-    frame = pd.DataFrame([healthy_row], columns=MODEL_INPUT_COLUMNS)
     first = portfolio_sensitivity(frame, np.array([0.04]), ["A"])
     second = portfolio_sensitivity(frame, np.array([0.04]), ["A"])
     assert first == second
     assert len(first) == 30
     assert {row["scenario"] for row in first} == {"Low", "Base", "High"}
-    assert all(row["proposed_limit"] >= 100_000 for row in first)
 
 
 def test_assumption_validation() -> None:

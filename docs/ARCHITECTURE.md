@@ -1,58 +1,56 @@
 # Architecture
 
-## Shape
+## Runtime
 
-One Python 3.12 process serves FastAPI routes and Jinja templates, loads a
-checksum-verified sklearn pipeline and a prepared 6,000-row demonstration CSV at
-startup, and evaluates a pure deterministic policy optimizer. There is no SPA,
-database service, queue, feature store, LLM or external runtime API.
+One Python 3.11 process serves FastAPI routes and Jinja templates, loads a
+checksum-bound sklearn pipeline and prepared synthetic portfolio, and runs the
+deterministic optimizer. There is no SPA, database, queue, feature store, LLM or
+paid API. Charts are server-side SVG and compatible with the restrictive CSP.
+
+## Local v2 data and model flow
 
 ```mermaid
 flowchart LR
-  U[Official UCI ZIP] --> P[Offline data / train / report pipeline]
-  P --> M[Checksum-verified sklearn model]
-  P --> D[Prepared synthetic-ID demo portfolio]
-  P --> R[HTML / PDF reports]
-  B[Browser] --> W[FastAPI + Jinja single process]
-  W --> M
-  W --> D
-  W --> R
-  W --> O[Pure policy optimizer]
-  C[Transient CSV upload] --> V[Strict in-memory validation]
-  V --> M
-  M --> O
-  O --> X[Safe downloadable decision CSV]
+  R[Gitignored source files] --> H[Seven harmonizers]
+  H --> G[Six independent training cohorts]
+  H --> X[Legacy Statlog reference]
+  G --> S[Within-source 60/20/20 split]
+  S --> B[Calibrated logistic baseline]
+  S --> C[Calibrated histogram-GB challenger]
+  B --> V[Macro validation selection]
+  C --> V
+  V --> M[Checksum-bound champion]
+  M --> E[Pooled, macro and per-source evidence]
+  M --> D[1,200 synthetic profiles]
+  D --> O[Policy optimizer]
+  O --> W[FastAPI/Jinja/SVG application]
 ```
 
-## Offline pipeline
+The harmonizers share six narrow numeric proxies plus region context. Source
+identification can still occur through region and missingness. The split is
+random within source, so it does not test future vintages or unseen markets.
 
-`python -m limitiq.pipeline all` downloads the official ZIP with a size/safe-path
-guard, records checksum/licence/source, validates and cleans the XLS, engineers
-features inside sklearn, creates fixed stratified splits, calibrates/selects two
-models on train/validation, evaluates untouched test once, saves artifacts,
-creates the demo portfolio and builds reports.
+## Trust boundaries
 
-## Runtime
+- Raw datasets are local and gitignored.
+- Every source and model artifact is SHA-256 bound.
+- Statlog German is reference-only to prevent duplicate-population leakage.
+- Model loading verifies the expected checksum before trusted joblib loading.
+- Uploaded CSV is size/row/schema/range bounded, processed in memory and never
+  deserialized as an object or retained.
+- Sort/report/document paths are allowlisted.
+- Jinja autoescape and CSP/security headers are enabled; production debug is off.
+- Synthetic `LIQ-*` IDs and profiles prevent source-ID exposure.
 
-`uvicorn limitiq.web:app` verifies the trusted joblib checksum before loading it.
-The prepared portfolio contains no original ID or demographics. Explorer
-queries are pandas filters with regex escaping and allowlisted sorts. Simulator
-reuses stored PD and recomputes pure policy/economics—no retraining or hidden
-state. Batch uploads are size-capped, read once into memory, schema/range checked,
-scored and immediately returned with `no-store`.
+## Deployment boundary
 
-## Security boundary
+The public Render service is verified v1. Local v2 publication is blocked until
+terms review clears Give Me Some Credit, FICO/HELOC, Lending Club upstream and
+Home Credit. Architecture readiness is not publication authorization.
 
-The only deserialized model is repository-built and checksum-verified. Uploaded
-files are CSV, never joblib/pickle. Report/document paths use slug allowlists.
-Jinja autoescapes source values. Exports neutralize spreadsheet-formula prefixes.
-The app adds CSP, frame denial, nosniff, referrer, permissions and opener headers.
-It has no persistent mutation, session or authentication surface.
+## Failure behavior and rollback
 
-## Deployment
-
-The non-root Docker image runs one worker, limits numerical-library threads and
-ships only runtime code, trusted artifacts, demo data, docs and reports. A stdlib
-health check probes `/health`. Render configuration uses a free Docker web
-service and deploy-after-checks behavior. Production never downloads or trains.
-
+Missing or checksum-invalid model artifacts fail startup. Invalid uploads return
+bounded safe errors. Unknown/insufficient profiles route to manual review or
+freeze rather than automatic increase. Rollback restores the prior verified v1
+artifact or disables automatic increases.

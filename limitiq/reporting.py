@@ -38,6 +38,7 @@ body{{font:16px/1.55 Inter,Arial,sans-serif;color:#17324d;max-width:980px;margin
 h1{{font-size:38px;margin-bottom:4px}}h2{{border-bottom:2px solid #0f8b8d;padding-bottom:8px;margin-top:34px}}
 .label{{color:#087f80;font-weight:700;text-transform:uppercase;letter-spacing:.08em}}.notice{{background:#eef7f7;padding:16px;border-left:4px solid #0f8b8d}}
 table{{border-collapse:collapse;width:100%}}th,td{{border-bottom:1px solid #dce5eb;text-align:left;padding:10px}}th{{background:#f4f7f9}}
+.table-wrap{{max-width:100%;overflow-x:auto}}
 .metric{{display:inline-block;width:29%;padding:14px;margin:4px;background:#f4f7f9;vertical-align:top}}small{{color:#557083}}
 @media(max-width:700px){{.metric{{width:auto;display:block}}}}
 </style></head><body><div class="label">{html.escape(label)}</div><h1>{html.escape(title)}</h1>{body}
@@ -50,7 +51,7 @@ def _table(headers: list[str], rows: list[list[str]]) -> str:
         "<tr>" + "".join(f"<td>{html.escape(value)}</td>" for value in row) + "</tr>"
         for row in rows
     )
-    return f"<table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table>"
+    return f'<div class="table-wrap"><table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>'
 
 
 def _write_html(
@@ -164,6 +165,257 @@ def _executive_pdf(summary: dict[str, Any], model: dict[str, Any], directory: Pa
         Paragraph(DISCLAIMER, styles["BodyText"]),
     ]
     doc.build(story)
+
+
+def _global_executive_pdf(
+    simulation: dict[str, Any], model: dict[str, Any], directory: Path
+) -> None:
+    path = directory / "global_executive_report.pdf"
+    styles = getSampleStyleSheet()
+    styles.add(
+        ParagraphStyle(
+            name="GlobalTitle",
+            parent=styles["Title"],
+            alignment=TA_CENTER,
+            textColor=colors.HexColor("#17324d"),
+        )
+    )
+    styles.add(
+        ParagraphStyle(
+            name="GlobalTeal", parent=styles["Heading2"], textColor=colors.HexColor("#087f80")
+        )
+    )
+    doc = SimpleDocTemplate(
+        str(path),
+        pagesize=A4,
+        rightMargin=16 * mm,
+        leftMargin=16 * mm,
+        topMargin=15 * mm,
+        bottomMargin=15 * mm,
+    )
+    summary = simulation["summary"]
+    macro = model["macro_test_metrics"]
+    pooled = model["test_metrics"]
+    action_rows = [[name, f"{count:,}"] for name, count in summary["action_counts"].items()]
+    source_rows = [
+        [
+            model["datasets"][key]["name"],
+            f"{value['accounts']:,}",
+            f"{value['roc_auc']:.3f}",
+            f"{value['brier_score']:.3f}",
+        ]
+        for key, value in model["per_market_test_metrics"].items()
+    ]
+    table_style = [
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#17324d")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#dce5eb")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("FONTSIZE", (0, 0), (-1, -1), 8.5),
+        ("PADDING", (0, 0), (-1, -1), 6),
+    ]
+    story = [
+        Paragraph("LimitIQ v2", styles["GlobalTitle"]),
+        Paragraph("Multi-source credit-line governance benchmark", styles["Heading2"]),
+        Spacer(1, 4 * mm),
+        Paragraph("Executive evidence", styles["GlobalTeal"]),
+        Paragraph(
+            "One pooled model evaluates harmonized adverse-credit outcomes across six independent source cohorts. Source labels have different events and horizons, so the score is not a common-horizon regulatory probability of default.",
+            styles["BodyText"],
+        ),
+        Spacer(1, 3 * mm),
+        Table(
+            [
+                ["Evidence class", "Verified result"],
+                ["Training union", f"{model['rows']:,} rows; six independent cohorts"],
+                ["Champion", model["champion"]],
+                [
+                    "Macro untouched test",
+                    f"ROC-AUC {macro['roc_auc']:.4f}; Brier {macro['brier_score']:.4f}",
+                ],
+                [
+                    "Pooled untouched test",
+                    f"ROC-AUC {pooled['roc_auc']:.4f}; Brier {pooled['brier_score']:.4f}",
+                ],
+                [
+                    "Synthetic scenario",
+                    f"{summary['eligible_increases']:,} increases; {_money(summary['incremental_contribution'])} contribution",
+                ],
+            ],
+            colWidths=[46 * mm, 130 * mm],
+            style=table_style,
+        ),
+        Spacer(1, 4 * mm),
+        Paragraph("Synthetic portfolio decisioning", styles["GlobalTeal"]),
+        Table(
+            [["Action", "Accounts"], *action_rows], colWidths=[110 * mm, 45 * mm], style=table_style
+        ),
+        Spacer(1, 3 * mm),
+        Paragraph(
+            f"Current versus proposed exposure: {_money(summary['current_limit'])} to {_money(summary['proposed_limit'])}. Simulated expected-loss proxy: {_money(summary['current_expected_loss'])} to {_money(summary['proposed_expected_loss'])}. Simulated risk-adjusted return: {_pct(summary['risk_adjusted_return'])}. These are deterministic assumption-driven outputs, not causal or realized impact.",
+            styles["BodyText"],
+        ),
+        PageBreak(),
+        Paragraph("Untouched test by source cohort", styles["GlobalTeal"]),
+        Table(
+            [["Source cohort", "N", "ROC", "Brier"], *source_rows],
+            colWidths=[102 * mm, 24 * mm, 24 * mm, 24 * mm],
+            style=table_style,
+        ),
+        Spacer(1, 4 * mm),
+        Paragraph("Governance boundaries", styles["GlobalTeal"]),
+        Paragraph(
+            "The seeded random split measures within-source interpolation only. Lending Club dominates pooled rows, while macro metrics weight cohorts equally. Region is one-hot encoded; missingness can identify a source. The model does not establish unseen-country, out-of-time, Indian, IFRS 9, fair-lending, or production generalization.",
+            styles["BodyText"],
+        ),
+        Spacer(1, 3 * mm),
+        Paragraph(
+            "Publication gate: blocked pending manual review of upstream or competition redistribution and derived-artifact terms for Give Me Some Credit, FICO HELOC, Lending Club, and Home Credit. The live v1 Taiwan demonstration remains separate until that gate is resolved.",
+            styles["BodyText"],
+        ),
+        Spacer(1, 5 * mm),
+        Paragraph(DISCLAIMER, styles["BodyText"]),
+    ]
+
+    def footer(canvas: Any, document: Any) -> None:
+        canvas.saveState()
+        canvas.setFont("Helvetica", 8)
+        canvas.setFillColor(colors.HexColor("#557083"))
+        canvas.drawString(16 * mm, 8 * mm, model["model_version"])
+        canvas.drawRightString(A4[0] - 16 * mm, 8 * mm, f"Page {document.page}")
+        canvas.restoreState()
+
+    doc.build(story, onFirstPage=footer, onLaterPages=footer)
+
+
+def build_global_reports(report_dir: Path | None = None, model_dir: Path | None = None) -> None:
+    report_dir = report_dir or REPORT_DIR
+    model_dir = model_dir or MODEL_DIR
+    model = _load(model_dir / "global_metadata.json")
+    simulation = _load(report_dir / "global_policy_simulation.json")
+    summary = simulation["summary"]
+    macro = model["macro_test_metrics"]
+    pooled = model["test_metrics"]
+    metric_html = "".join(
+        f'<div class="metric"><small>{html.escape(label)}</small><br><strong>{value}</strong></div>'
+        for label, value in (
+            ("Macro ROC-AUC", f"{macro['roc_auc']:.4f}"),
+            ("Macro Brier", f"{macro['brier_score']:.4f}"),
+            ("Pooled ROC-AUC", f"{pooled['roc_auc']:.4f}"),
+            ("Synthetic current exposure", _money(summary["current_limit"])),
+            ("Synthetic proposed exposure", _money(summary["proposed_limit"])),
+            ("Synthetic contribution", _money(summary["incremental_contribution"])),
+        )
+    )
+    source_rows = [
+        [
+            model["datasets"][key]["name"],
+            f"{value['accounts']:,}",
+            f"{value['roc_auc']:.4f}",
+            f"{value['brier_score']:.4f}",
+            f"{value['mean_absolute_calibration_gap']:.4f}",
+        ]
+        for key, value in model["per_market_test_metrics"].items()
+    ]
+    _write_html(
+        report_dir,
+        "global_executive_report.html",
+        "LimitIQ v2 Executive Report",
+        "Observed source evidence, model estimates and synthetic economics",
+        [
+            ("Evidence snapshot", metric_html),
+            (
+                "Decision system",
+                "<p>The platform evaluates current, +10%, +20% and +30% line candidates and applies exposure, expected-loss-proxy, profitability, payment-history and overextension controls before selecting an action.</p>",
+            ),
+            (
+                "Untouched test by source cohort",
+                _table(["Source cohort", "N", "ROC-AUC", "Brier", "Calibration gap"], source_rows),
+            ),
+            (
+                "Synthetic action distribution",
+                _table(
+                    ["Action", "Accounts"],
+                    [[key, f"{value:,}"] for key, value in summary["action_counts"].items()],
+                ),
+            ),
+            (
+                "Governance boundary",
+                f"<p>{html.escape(model['target_note'])} {html.escape(model['evaluation_scope'])}</p><p><strong>Publication gate: {html.escape(model['publication_gate']['status'])}.</strong> {html.escape(model['publication_gate']['reason'])}</p>",
+            ),
+        ],
+    )
+    sensitivity_rows = [
+        [
+            item["assumption"].replace("_", " ").title(),
+            item["scenario"],
+            f"{item['value']:.4f}",
+            f"{item['eligible_increases']:,}",
+            _money(item["proposed_expected_loss"]),
+            _money(item["incremental_contribution"]),
+        ]
+        for item in simulation.get("sensitivity", [])
+    ]
+    _write_html(
+        report_dir,
+        "global_policy_simulation_report.html",
+        "LimitIQ v2 Policy Simulation Report",
+        "Deterministic synthetic scenario - fully re-optimized",
+        [
+            (
+                "Assumptions",
+                _table(
+                    ["Assumption", "Value"],
+                    [
+                        [name.replace("_", " ").title(), str(value)]
+                        for name, value in simulation["assumptions"].items()
+                    ],
+                ),
+            ),
+            (
+                "One-at-a-time sensitivity",
+                _table(
+                    [
+                        "Assumption",
+                        "Scenario",
+                        "Value",
+                        "Increases",
+                        "Loss proxy",
+                        "Contribution",
+                    ],
+                    sensitivity_rows,
+                )
+                + "<p>Every non-base row re-optimizes all 1,200 synthetic profiles while other assumptions stay fixed.</p>",
+            ),
+            (
+                "Limitations",
+                "<ul>"
+                + "".join(f"<li>{html.escape(item)}</li>" for item in simulation["limitations"])
+                + "</ul>",
+            ),
+        ],
+    )
+    _write_html(
+        report_dir,
+        "global_financial_impact_analysis.html",
+        "LimitIQ v2 Financial Impact Analysis",
+        "Synthetic economics - not observed impact",
+        [
+            (
+                "Equation",
+                "<p>Incremental interchange + incremental interest - incremental expected-loss proxy - funding cost - capital cost - servicing cost.</p>",
+            ),
+            (
+                "Base scenario",
+                f"<p>Current to proposed simulated limits: <strong>{_money(summary['current_limit'])} to {_money(summary['proposed_limit'])}</strong>. Simulated incremental contribution: <strong>{_money(summary['incremental_contribution'])}</strong>. Risk-adjusted return proxy: <strong>{_pct(summary['risk_adjusted_return'])}</strong>.</p>",
+            ),
+            (
+                "Interpretation boundary",
+                "<p>These values are deterministic outputs of visible INR assumptions. They are not causal estimates, forecasts, realized profit, regulatory capital, or IFRS 9 allowances.</p>",
+            ),
+        ],
+    )
+    _global_executive_pdf(simulation, model, report_dir)
 
 
 def build_reports(report_dir: Path | None = None, model_dir: Path | None = None) -> None:
@@ -437,3 +689,11 @@ def build_reports(report_dir: Path | None = None, model_dir: Path | None = None)
         ],
     )
     _executive_pdf(simulation, model, report_dir)
+    if (model_dir / "global_metadata.json").exists() and (
+        report_dir / "global_policy_simulation.json"
+    ).exists():
+        build_global_reports(report_dir, model_dir)
+
+
+if __name__ == "__main__":
+    build_reports()

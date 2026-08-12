@@ -1,5 +1,16 @@
 # Deployment
 
+## Status boundary
+
+The URLs below are the verified **v1 Taiwan-model deployment**. Local v2 model
+`limitiq-global-2.0.0-71063a49703a` is not deployed and must not be represented
+as live.
+
+V2 publication/deployment is **blocked** until a human terms review clears Give
+Me Some Credit, FICO/HELOC, Lending Club upstream and Home Credit. Do not commit,
+push, tag or deploy the v2 model or source-derived demonstration merely because
+local tests pass.
+
 Live application: https://limitiq-credit-line-optimization.onrender.com
 
 Health endpoint: https://limitiq-credit-line-optimization.onrender.com/health
@@ -18,6 +29,21 @@ curl http://localhost:8000/health
 The image runs a non-root user, one Uvicorn worker, no debug mode, capped numeric
 threads and a stdlib health check. Training and downloading never occur in the
 runtime image.
+
+## V2 release gate
+
+After terms are cleared, require all of the following before changing the live
+status in README/docs:
+
+1. Verify source decisions in `NOTICE.md` and no raw file is tracked.
+2. Run full tests, lint, formatting, Bandit, dependency and secret scans.
+3. Recompute and verify model/dataset/demo checksums.
+4. Build the Python 3.11 production image and pass container smoke/health tests.
+5. Perform local browser QA across overview, portfolio, account, simulator,
+   batch, governance and reports.
+6. Commit/push, wait for CI, then verify the exact remote commit.
+7. Verify Render `/health`, logs, key routes, CSV/PDF downloads and mobile view.
+8. Only then label the URL as v2 and record the deployed model version/commit.
 
 ## Render free web service
 

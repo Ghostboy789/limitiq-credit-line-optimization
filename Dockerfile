@@ -1,4 +1,4 @@
-FROM python:3.12.11-slim-bookworm
+FROM python:3.11.13-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt && \
 
 COPY limitiq ./limitiq
 COPY models ./models
-COPY data/processed/demo_portfolio.csv ./data/processed/demo_portfolio.csv
+COPY data/processed/global_demo_portfolio.csv ./data/processed/global_demo_portfolio.csv
 COPY reports ./reports
 COPY docs ./docs
 COPY LICENSE README.md ./
@@ -24,4 +24,3 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=3 \
   CMD python -c "import os,urllib.request; urllib.request.urlopen('http://127.0.0.1:'+os.getenv('PORT','8000')+'/health',timeout=3)"
 CMD ["sh", "-c", "uvicorn limitiq.web:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --no-access-log"]
-

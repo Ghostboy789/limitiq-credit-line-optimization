@@ -18,3 +18,20 @@ test-results/
 *.log
 .DS_Store
 Thumbs.db
+
+# Codex local configuration
+.codex/
+# Ruflo runtime databases, state and logs (project integration stays in .agents/.claude)
+.claude-flow/
+.swarm/
+ruvector.db
+# Local agent tooling configuration; not part of v2 deliverables.
+.agents/
+.claude/
+.secrets.json
+# Environment variables
+.env.local
+.env.*.local
+
+# Local continuation record; may contain machine-specific operational context.
+/HANDOVER.md

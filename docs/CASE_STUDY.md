@@ -2,70 +2,88 @@
 
 ## The problem
 
-Card portfolios face an asymmetric decision: unused capacity can suppress
-growth, but an increase can amplify loss, overextension and concentration.
-Typical model demos stop at default prediction; real product work must turn PD
-into governed, explainable candidate actions and show the financial trade-off.
+Credit-line growth is asymmetric: unused capacity may suppress growth, while an
+increase can amplify loss, overextension and concentration. A useful product
+must turn risk into governed candidate actions and expose the evidence,
+financial assumptions and human-review boundaries.
 
 ## Product decision
 
-LimitIQ evaluates current, +10%, +20% and +30% limits. It calculates EAD and
-expected loss, simulates transparent annual revenue/cost, applies delinquency,
-payment, overextension, loss, profitability and exposure controls, and chooses
-the best eligible contribution. Deterioration freezes automation or routes to an
-analyst—never an ungoverned punitive decrease.
+LimitIQ evaluates current, +10%, +20% and +30% limits, simulates EAD and an
+expected-loss proxy, applies delinquency, overextension, loss, profitability and
+exposure controls, and selects the best eligible simulated contribution.
+Deterioration freezes automation or routes to an analyst—never an ungoverned
+punitive decrease.
 
-## Data honesty
+## Model development
 
-The public UCI source supports PD but contains no observed customer response to
-a line increase. LimitIQ therefore separates observed data, model estimates and
-simulations in code, UI and reports. Baseline PD is held constant across
-candidates; all response/economics assumptions are adjustable. No uplift or
-profit is called causal or realized.
+The verified public v1 uses 30,000 Taiwan accounts. Local v2 harmonizes six
+independent training cohorts totaling 1,869,548 rows; a seventh legacy Statlog
+file is reference-only because it duplicates the corrected South German
+population.
 
-## Evidence
+V2 compares calibrated logistic and histogram-gradient-boosting pipelines. The
+champion records macro test ROC-AUC 0.6845, PR-AUC 0.4024, Brier 0.1390 and log
+loss 0.4334 across 373,910 untouched rows. Pooled metrics—ROC-AUC 0.6699 and
+Brier 0.1406—are secondary because Lending Club dominates row counts.
 
-The calibrated histogram-gradient-boosting champion was selected on validation
-and evaluated once on 6,000 untouched accounts: ROC-AUC 0.7811, PR-AUC 0.5679,
-Brier 0.1331, log loss 0.4264 and recall 0.7069 at the frozen 0.1739 threshold.
-With documented default assumptions, the 6,000-account scenario recommends
-1,904 increases, raises proposed lines from ₹3.005016B to ₹3.255868B and
-produces ₹41.343M simulated annual incremental contribution at 21.93%
-simulated contribution/incremental-EAD. These are scenario outputs only.
+The source labels have different events and horizons, so the output is a
+source-specific adverse-outcome probability—not a common-horizon or regulatory
+PD. Random within-source splitting does not prove future-vintage, unseen-market
+or Indian-population performance. Region and structural missingness may identify
+source.
+
+## Data honesty and publication control
+
+All source files are gitignored and checksum-bound. Corrected South German uses
+UCI 573 / DOI `10.24432/C5QG88`. Give Me Some Credit and Home Credit geography
+and currency are undisclosed. FICO/HELOC is a cleaned OpenML mirror. Lending
+Club mirror metadata declares CC0, but upstream rights are not independently
+verified.
+
+The v2 publication gate is blocked pending terms review for Give Me Some Credit,
+FICO/HELOC, Lending Club and Home Credit. A downloadable file is not automatically
+an open licence.
+
+## Synthetic business scenario
+
+The local demo uses 1,200 deterministic synthetic profiles and INR exposures.
+Its base scenario recommends 18 +10%, 18 +20% and 216 +30% increases, 283
+no-change actions, 619 manual reviews and 46 automatic-increase freezes. Credit
+limits move from ₹567.613M to ₹608.791M and the exposure proxy from ₹500.023M to
+₹530.935M; the expected-loss proxy moves from ₹75.984M to ₹77.625M. Simulated
+incremental contribution is ₹6.412M at 20.74% contribution / incremental
+exposure.
+
+No source observes a line-increase treatment. These values are synthetic,
+simulated, non-causal and not realized impact, IFRS 9 ECL or regulatory capital.
 
 ## Engineering and governance
 
-One Dockerized FastAPI/Jinja service loads checksum-verified artifacts, supports
-responsive portfolio/account/simulator/batch/governance/report workflows, uses
-strict transient upload validation, emits safe exports/security headers and has
-a health endpoint. The offline pipeline records data/model versions, fixed
-splits, candidate metrics, calibration, segment diagnostics and reports.
-
-Governance explicitly covers current SR 26-2/OCC 2026-13, Basel component
-interpretation, IFRS 9 non-equivalence, Regulation B reason accuracy and the
-critical Regulation Z ability-to-pay gap.
+One Python 3.11 FastAPI/Jinja service loads checksum-verified artifacts,
+supports portfolio/account/simulator/batch/governance/report workflows, renders
+CSP-safe server-side SVG, validates uploads transiently and exposes a health
+endpoint. The offline pipeline records source/model versions, fixed splits,
+candidate metrics, source calibration, provenance and limitations.
 
 ## Product judgment
 
-The biggest design choice was what not to claim. A more impressive-looking
-"optimal limit" regression would be scientifically false without treatment and
-response data. A constrained candidate optimizer is safer, more explainable and
-operationally testable. The production roadmap begins with ability-to-pay and
-causal experimentation—not more model complexity.
+The strongest choice was what not to claim. More rows do not make heterogeneous
+labels one PD, and a mirror does not clear upstream rights. Source-macro metrics,
+duplicate-population exclusion, human review and a blocked publication gate are
+more credible to a model-risk reviewer than an inflated “global accuracy” claim.
 
-## Three evidence-based résumé bullets
+## Résumé bullets
 
-- Built a Dockerized credit-line optimization product over 30,000 CC BY 4.0 UCI
-  accounts, translating calibrated PD into governed +10/+20/+30/no-change,
-  manual-review and early-warning freeze actions across seven working web areas.
-- Trained and calibrated logistic and gradient-boosting models with fixed
-  60/20/20 splits; selected the champion on validation and achieved 0.781 ROC-AUC,
-  0.568 PR-AUC and 0.133 Brier score on a 6,000-account untouched test set.
-- Designed a deterministic ECL/EAD and contribution optimizer with transparent
-  policy assumptions; the default scenario selected 1,904 increases and ₹41.34M
-  simulated—not causal or realized—annual incremental contribution.
+- Built a production-shaped credit-line platform and local 1.87M-row multi-source
+  benchmark with six independent cohorts, checksum-bound provenance and governed
+  increase/hold/refer/freeze actions.
+- Selected a calibrated histogram-gradient-boosting champion against logistic
+  baseline using source-macro validation; achieved 0.685 macro ROC-AUC, 0.402
+  macro PR-AUC and 0.139 macro Brier on 373,910 untouched test rows.
+- Designed deterministic INR exposure and contribution simulation; a 1,200-
+  profile scenario produced ₹6.41M simulated—not causal or realized—incremental
+  contribution with explicit terms, model-risk and human-review controls.
 
-For India-based applications, use the companion
-[career targeting guide](CAREER_TARGETING.md) to map this evidence to credit
-risk, model risk, risk analytics and risk-technology roles without presenting
-the Taiwan source population or simulated economics as Indian production data.
+See the [career targeting guide](CAREER_TARGETING.md) for J.P. Morgan, UBS,
+Morgan Stanley and State Street positioning without implying endorsement.

@@ -1,29 +1,25 @@
 {% extends "base.html" %}
+{% from "_charts.html" import horizontal_bars %}
 {% block content %}
 <section class="hero">
-  <div><p class="eyebrow">Portfolio decision intelligence</p><h1>Grow exposure with guardrails.</h1>
-  <p class="lede">LimitIQ evaluates governed limit candidates against calibrated default risk, expected loss, simulated economics and customer-protection controls.</p></div>
-  <div class="hero-callout"><span>Portfolio posture</span><strong>{{ summary.eligible_increases|number }}</strong><small>accounts eligible for a simulated increase</small></div>
+  <div class="hero-copy"><p class="eyebrow">Multi-source credit-risk research</p><h1>Credit growth.<br><span>Governed beautifully.</span></h1><p class="lede">LimitIQ combines a harmonized adverse-credit-outcome benchmark with transparent credit-line economics and customer-protection controls.</p><div class="hero-actions"><a class="button hero-primary" href="/portfolio">Explore the portfolio</a><a class="hero-link" href="/governance">Review model evidence <span aria-hidden="true">›</span></a></div><p class="hero-proof"><span aria-hidden="true"></span> Local v2 research benchmark · deterministic INR simulation</p></div>
+  <div class="hero-stage" aria-label="Portfolio posture: {{ summary.eligible_increases|number }} accounts eligible for a simulated increase"><div class="hero-orbit" aria-hidden="true"></div><div class="hero-callout"><span>Eligible for increase</span><strong>{{ summary.eligible_increases|number }}</strong><small>of {{ summary.accounts|number }} synthetic profiles</small><div class="hero-progress" aria-hidden="true"><i style="width: {{ summary.eligible_increases / summary.accounts * 100 if summary.accounts else 0 }}%"></i></div></div><p>Risk controls applied before value optimization</p></div>
 </section>
-<div class="notice" role="note"><strong>Evidence boundary:</strong> Source statistics are observed, PD is model-estimated, and every limit-response and financial outcome is simulated—not causal or realized. Source TWD amounts are shown in INR at the documented fixed 2.97 conversion; the Taiwan population is not Indian evidence.</div>
-<section aria-labelledby="portfolio-heading"><div class="section-heading"><div><p class="eyebrow">Executive overview</p><h2 id="portfolio-heading">Portfolio at a glance</h2></div><a class="button secondary" href="/downloads/reports/executive-report-pdf">Download executive PDF</a></div>
+<div class="notice" role="note"><strong>Evidence boundary:</strong> Public datasets provide heterogeneous outcomes, horizons and feature proxies. The model output is a source-conditioned adverse-outcome probability—not a common-horizon regulatory PD. Limit response, exposure, expected-loss and financial outcomes are deterministic simulations, not causal or realized results.</div>
+<section aria-labelledby="portfolio-heading"><div class="section-heading"><div><p class="eyebrow">Executive overview</p><h2 id="portfolio-heading">Demonstration portfolio</h2></div><a class="button secondary" href="/downloads/reports/global-executive-pdf">Download v2 executive PDF</a></div>
 <div class="metric-grid">
-  <article class="metric"><span>Current credit limits</span><strong>{{ summary.current_limit|money }}</strong><small>Observed contractual limits</small></article>
+  <article class="metric"><span>Current credit limits</span><strong>{{ summary.current_limit|money }}</strong><small>Synthetic portfolio inputs</small></article>
   <article class="metric"><span>Proposed credit limits</span><strong>{{ summary.proposed_limit|money }}</strong><small>Simulated policy outcome</small></article>
-  <article class="metric"><span>Current / proposed EAD</span><strong>{{ summary.current_ead|money }}</strong><small>{{ summary.proposed_ead|money }} proposed · simulated</small></article>
-  <article class="metric"><span>Current expected loss</span><strong>{{ summary.current_expected_loss|money }}</strong><small>Simulated management ECL</small></article>
-  <article class="metric"><span>Proposed expected loss</span><strong>{{ summary.proposed_expected_loss|money }}</strong><small>Simulated, up {{ ((summary.proposed_expected_loss / summary.current_expected_loss) - 1)|percent }}</small></article>
+  <article class="metric"><span>Current / proposed exposure proxy</span><strong>{{ summary.current_ead|money }}</strong><small>{{ summary.proposed_ead|money }} proposed · simulated</small></article>
+  <article class="metric"><span>Current loss proxy</span><strong>{{ summary.current_expected_loss|money }}</strong><small>Score × LGD × exposure proxy</small></article>
+  <article class="metric"><span>Proposed loss proxy</span><strong>{{ summary.proposed_expected_loss|money }}</strong><small>Simulated{% if summary.current_expected_loss %}, up {{ ((summary.proposed_expected_loss / summary.current_expected_loss) - 1)|percent }}{% endif %}</small></article>
   <article class="metric accent"><span>Incremental contribution</span><strong>{{ summary.incremental_contribution|money }}</strong><small>Simulated annualized economics</small></article>
-  <article class="metric"><span>Risk-adjusted return</span><strong>{{ summary.risk_adjusted_return|percent }}</strong><small>Contribution ÷ incremental EAD</small></article>
+  <article class="metric"><span>Risk-adjusted return proxy</span><strong>{{ summary.risk_adjusted_return|percent }}</strong><small>Contribution ÷ incremental exposure</small></article>
   <article class="metric warning"><span>Early-warning population</span><strong>{{ summary.early_warning|number }}</strong><small>Freeze or manual review</small></article>
 </div></section>
-<section class="two-column">
-  <article class="panel"><div class="panel-title"><div><p class="eyebrow">Simulated recommendations</p><h2>Action distribution</h2></div></div>
-    <div class="bars">{% for label, count in actions %}<div class="bar-row"><div><span>{{ label }}</span><strong>{{ count|number }}</strong></div><div class="bar-track"><span style="width: {{ (count / summary.accounts * 100)|round(1) }}%"></span></div></div>{% endfor %}</div>
-  </article>
-  <article class="panel"><div class="panel-title"><div><p class="eyebrow">Model-estimated PD</p><h2>Risk-band distribution</h2></div></div>
-    <div class="bars risk-bars">{% for label, count in risks %}<div class="bar-row"><div><span>{{ label }}</span><strong>{{ count|number }}</strong></div><div class="bar-track"><span class="risk-{{ label|lower|replace(' ', '-') }}" style="width: {{ (count / summary.accounts * 100)|round(1) }}%"></span></div></div>{% endfor %}</div>
-  </article>
+<section class="dashboard-grid portfolio-charts">
+  {{ horizontal_bars('portfolio-actions', 'Simulated recommendations', 'Account count by governed policy outcome.', actions) }}
+  {{ horizontal_bars('portfolio-score-bands', 'Model score bands', 'Account count by fixed descriptive adverse-outcome score band.', risks) }}
 </section>
 <section class="panel"><div class="panel-title"><div><p class="eyebrow">Committee controls</p><h2>Policy assumptions</h2></div><a href="/simulator">Stress assumptions →</a></div>
 <dl class="assumption-grid">{% for key, value in assumptions.items() %}<div><dt>{{ key|replace('_',' ')|title }}</dt><dd>{% if key in ['servicing_cost','max_account_exposure','profitability_hurdle'] %}{{ value|money }}{% elif value <= 1 %}{{ value|percent }}{% else %}{{ value|number }}{% endif %}</dd></div>{% endfor %}</dl></section>

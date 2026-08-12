@@ -3,15 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="LimitIQ educational credit-line optimization platform">
+  <meta name="description" content="LimitIQ educational multi-source credit-risk and credit-line optimization platform">
+  <meta name="theme-color" content="#f5f5f7">
   <title>{{ title }} · LimitIQ</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=1.0.0">
-  <script src="{{ url_for('static', path='/app.js') }}?v=1.0.0" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.1.0">
+  <script src="{{ url_for('static', path='/app.js') }}?v=2.1.0" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
   <header class="topbar">
-    <a class="brand" href="/" aria-label="LimitIQ home"><span class="brand-mark">LQ</span><span>LimitIQ</span></a>
+    <a class="brand" href="/" aria-label="LimitIQ home"><span class="brand-mark">LQ</span><span>LimitIQ</span><small>Decision intelligence</small></a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">Menu</button>
     <nav id="primary-nav" aria-label="Primary">
       <a href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Overview</a>

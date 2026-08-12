@@ -55,12 +55,14 @@ from limitiq.features import (
     DEMOGRAPHIC_COLUMNS,
     FEATURE_NAMES,
     ID_COLUMN,
-    MODEL_INPUT_COLUMNS,
     PAYMENT_COLUMNS,
     TARGET,
     FeatureBuilder,
     clean_source,
     engineer_features,
+)
+from limitiq.features import (
+    TAIWAN_MODEL_INPUT_COLUMNS as MODEL_INPUT_COLUMNS,
 )
 from limitiq.optimizer import portfolio_sensitivity, recommend_portfolio, summarize_portfolio
 
