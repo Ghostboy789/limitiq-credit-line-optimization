@@ -99,11 +99,11 @@ gradient boosting. Untouched-test ROC-AUC is 0.781138, PR-AUC 0.567889, Brier
 0.133149 and log loss 0.426351 at threshold 0.173874. Model SHA-256:
 `284f9a7c8ca22ea2f8091dfea814796357f81014cfdbabecf62b7aaa0de14275`.
 
-### Local v2 benchmark — not deployed
+### Deployed v2 benchmark
 
 The v2 champion is sigmoid-calibrated histogram gradient boosting, selected
 against a calibrated regularized-logistic baseline using source-macro validation
-evidence. Model version: `limitiq-global-2.0.0-71063a49703a`; threshold:
+evidence. Model version: `limitiq-global-2.0.0-37a14c45a811`; threshold:
 `0.16891891891891891`.
 
 | Metric | Source-macro test | Pooled row-weighted test |
@@ -207,8 +207,10 @@ ruff check . && ruff format --check .
 docker build -t limitiq . && docker run --rm -p 8000:8000 limitiq
 ```
 
-Raw sources, environments and caches are intentionally gitignored. The local v2
-model and source-derived demo must not be published until the terms gate passes.
+Raw sources, environments and caches are intentionally gitignored. V2 is
+published per the owner's 12 August 2026 terms decision recorded in
+[`NOTICE.md`](NOTICE.md); several upstream/competition source terms remain
+under review for future releases.
 
 ## Security and privacy
 
@@ -221,16 +223,16 @@ debug, source secrets, personal data or uploaded deserialization.
 ## Documentation and reports
 
 - [Executive PDF](reports/executive_report.pdf) and [HTML](reports/executive_report.html)
-- [Local v2 model evidence](reports/global_model_report.html)
-- [Local v2 executive PDF](reports/global_executive_report.pdf) and [HTML](reports/global_executive_report.html)
-- [Local v2 policy sensitivity](reports/global_policy_simulation_report.html)
-- [Local v2 financial-impact analysis](reports/global_financial_impact_analysis.html)
+- [v2 model evidence](reports/global_model_report.html)
+- [v2 executive PDF](reports/global_executive_report.pdf) and [HTML](reports/global_executive_report.html)
+- [v2 policy sensitivity](reports/global_policy_simulation_report.html)
+- [v2 financial-impact analysis](reports/global_financial_impact_analysis.html)
 - [Methodology](docs/METHODOLOGY.md), [PRD](docs/PRD.md), [architecture](docs/ARCHITECTURE.md)
 - [Data card](docs/DATA_CARD.md), [model card](docs/MODEL_CARD.md), [dictionary](docs/DATA_DICTIONARY.md)
 - [Assumptions](docs/ASSUMPTIONS.md), [case study](docs/CASE_STUDY.md), [five-minute walkthrough](docs/INTERVIEW_WALKTHROUGH.md)
 - [Career targeting guide](docs/CAREER_TARGETING.md) for India-based risk, analytics, model-governance and risk-technology roles
 - [Deployment runbook](docs/DEPLOYMENT.md), [dataset attribution and terms](NOTICE.md)
-- [Verified v1 and local v2 QA evidence](docs/QA_REPORT.md)
+- [Verified v1 and deployed v2 QA evidence](docs/QA_REPORT.md)
 
 ## Limitations and roadmap
 

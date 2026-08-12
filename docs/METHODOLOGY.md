@@ -27,9 +27,9 @@ South German replaces legacy Statlog German in training because both represent
 the same 1,000-credit population; Statlog is reference-only. Each raw file is
 checksummed, gitignored and linked to its origin and immediate mirror.
 
-The four non-UCI sources have unresolved upstream/competition terms, so public
-distribution of the local v2 artifact remains blocked. Full provenance is in
-[`NOTICE.md`](../NOTICE.md).
+The four non-UCI sources have unresolved upstream/competition terms; the owner
+reviewed the evidence on 12 August 2026 and directed publication (see
+[`NOTICE.md`](../NOTICE.md)). Full provenance is also there.
 
 ## Harmonization
 
@@ -64,7 +64,7 @@ cost with missed adverse outcomes weighted five times false positives. Model
 type and threshold are frozen before the untouched test read.
 
 The champion is calibrated histogram gradient boosting, version
-`limitiq-global-2.0.0-71063a49703a`, threshold 0.1689189189. Test evidence:
+`limitiq-global-2.0.0-37a14c45a811`, threshold 0.1689189189. Test evidence:
 
 | Metric | Source-macro | Pooled row-weighted |
 |---|---:|---:|

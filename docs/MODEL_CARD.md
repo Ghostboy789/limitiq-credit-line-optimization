@@ -2,19 +2,21 @@
 
 ## Version boundary
 
-The public Render deployment remains v1. The model described below is local v2
-and must not be described as deployed until the publication gate, CI, deployment
-and production QA pass.
+This card describes the **deployed v2 model**. V2 was committed as `7e4ca6e`,
+passed GitHub Actions CI (including Docker container health check), was tagged
+`v2.0.0` and deployed to Render on 12 August 2026. The live `/health` endpoint
+reports application `2.0.0`, model `limitiq-global-2.0.0-37a14c45a811` and
+dataset `global-7-94bb4c0ad0f1`.
 
 ## Model identity
 
 - Classification: multi-source adverse-credit-outcome benchmark
-- Version: `limitiq-global-2.0.0-71063a49703a`
+- Version: `limitiq-global-2.0.0-37a14c45a811`
 - Champion: sigmoid-calibrated histogram gradient boosting
 - Baseline: sigmoid-calibrated regularized logistic regression
 - Artifact SHA-256:
-  `71063a49703a91db3a7f0a242f524a7ea6c020e859b453a8a5f912a49edcff2f`
-- Dataset version: `global-7-c1119ea19c54`
+  `37a14c45a8118d8684e3e7bf7fdad45fe167844a4e7700b1833e15b78a25df72`
+- Dataset version: `global-7-94bb4c0ad0f1`
 - Seed: 42
 - Split: 1,121,728 train / 373,910 validation / 373,910 untouched test
 - Threshold: `0.16891891891891891`

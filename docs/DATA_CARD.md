@@ -4,10 +4,10 @@
 
 - **V1, verified public deployment:** UCI Default of Credit Card Clients only;
   dataset version `uci-350-30c6be3abd8d-inr297`.
-- **V2, local and not deployed:** six independent training cohorts plus one
+- **V2, deployed 12 August 2026:** six independent training cohorts plus one
   duplicate-population reference file; dataset version
-  `global-7-c1119ea19c54` and provenance checksum
-  `c1119ea19c54cec7ad1310c62213067b1814f058bc30cd65eb51ae6700482599`.
+  `global-7-94bb4c0ad0f1` and provenance checksum
+  `94bb4c0ad0f13d7677b9afe00a4943850ea890df5be3450592be69b1b14340dd`.
 
 V2 is a multi-source adverse-credit-outcome benchmark. It is not a
 common-horizon regulatory PD dataset.
@@ -97,10 +97,10 @@ and recommendations are deterministic scenario outputs.
 ## Terms and publication status
 
 UCI Taiwan, corrected South German and legacy Statlog German are CC BY 4.0.
-Give Me Some Credit, FICO/HELOC, Lending Club upstream and Home Credit require
-manual terms review. The local v2 publication gate is therefore **blocked**. See
-[`NOTICE.md`](../NOTICE.md) for origin, mirror, revision, checksum and terms
-details.
+Give Me Some Credit, FICO/HELOC, Lending Club upstream and Home Credit required
+manual terms review; the owner documented the evidence and directed publication
+on 12 August 2026. See [`NOTICE.md`](../NOTICE.md) for origin, mirror, revision,
+checksum, review log and decision details.
 
 ## Maintenance
 

@@ -3,10 +3,12 @@
 ## Version boundary
 
 This report separates verified **v1 production evidence** from verified **v2
-local evidence**. V2 has passed the local automated, security and real-browser
-checks below, but it has not passed Docker, CI or Render verification and must
-not be described as deployed. Publication remains blocked by the four-source
-terms gate documented in `NOTICE.md`.
+deployed evidence**. V2 passed the local automated, security and real-browser
+checks below, then passed Docker, GitHub Actions CI and Render verification on
+12 August 2026. V2 was committed as `7e4ca6e`, tagged `v2.0.0` and deployed;
+the live `/health` reports application `2.0.0`, model
+`limitiq-global-2.0.0-37a14c45a811` and dataset `global-7-94bb4c0ad0f1`.
+Publication proceeded per the owner's terms decision recorded in `NOTICE.md`.
 
 ## Local v2 evidence — 11 August 2026
 
@@ -19,8 +21,8 @@ terms gate documented in `NOTICE.md`.
   generated HTML, JSON and synthetic CSV artifacts.
 - Global artifact checks verify the model checksum, 1,869,548-row union, six
   independent training cohorts plus one reference-only source, two cohorts over
-  200,000 rows, macro/pooled/per-source metrics, chart points and the blocked
-  publication gate.
+  200,000 rows, and macro/pooled/per-source metrics, chart points and the
+  publication decision.
 
 The production-shaped local app was exercised at 1440 px desktop, 768 px
 tablet and 390 px mobile. There was no unexpected page-level horizontal
@@ -33,10 +35,24 @@ duplicate, upload-size and other negative batch paths are covered by passing
 integration tests. The two-page A4 executive PDF was separately rendered and
 visually checked for clipping and overlap.
 
-V2 remains **not deployed**. The local machine did not expose a Docker CLI, and
-the terms gate prohibits committing/pushing source-derived v2 artifacts or
-triggering a public Render redeploy. Those are explicit blockers, not passed
-checks.
+## Deployed v2 verification — 12 August 2026
+
+- Commit `7e4ca6e` pushed to `main`; GitHub Actions run
+  [31568971402](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/31568971402)
+  passed every job including ruff, pytest (71 tests, 75.99% coverage), Bandit,
+  pip-audit, the secret scan, the Docker image build and the container `/health`
+  smoke test.
+- Tag `v2.0.0` pushed. Render deployed the tagged commit.
+- Public `/health` verified over HTTPS: application `2.0.0`, model
+  `limitiq-global-2.0.0-37a14c45a811`, dataset `global-7-94bb4c0ad0f1`.
+- Public routes verified 200 over HTTPS: overview, portfolio, account detail,
+  simulator, batch, governance, reports, `/sample-input.csv`,
+  `/portfolio.csv`, and downloads `global-executive-pdf`,
+  `global-executive-html`, `global-model`, `global-policy-simulation`,
+  `global-financial-impact` and `executive-report-pdf`.
+- V1 remains available via Git history/tag `v1.0.0`; the live service now
+  serves v2.
+
 
 Verified 7 August 2026 against model version
 `limitiq-1.0.0-284f9a7c8ca2` and dataset version

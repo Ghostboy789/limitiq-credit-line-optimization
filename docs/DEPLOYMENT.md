@@ -2,14 +2,15 @@
 
 ## Status boundary
 
-The URLs below are the verified **v1 Taiwan-model deployment**. Local v2 model
-`limitiq-global-2.0.0-71063a49703a` is not deployed and must not be represented
-as live.
+The URLs below are the **deployed v2 global benchmark** (`main` commit `7e4ca6e`,
+tag `v2.0.0`, deployed 12 August 2026). The live `/health` endpoint reports
+application `2.0.0`, model `limitiq-global-2.0.0-37a14c45a811` and dataset
+`global-7-94bb4c0ad0f1`.
 
-V2 publication/deployment is **blocked** until a human terms review clears Give
-Me Some Credit, FICO/HELOC, Lending Club upstream and Home Credit. Do not commit,
-push, tag or deploy the v2 model or source-derived demonstration merely because
-local tests pass.
+V2 publication proceeded per the repository owner's 12 August 2026 terms-review
+decision documented in [`NOTICE.md`](../NOTICE.md). Four upstream sources (Give
+Me Some Credit, FICO/HELOC, Lending Club upstream, Home Credit) remain under
+review; see NOTICE for the recorded evidence and decision.
 
 Live application: https://limitiq-credit-line-optimization.onrender.com
 
@@ -30,20 +31,22 @@ The image runs a non-root user, one Uvicorn worker, no debug mode, capped numeri
 threads and a stdlib health check. Training and downloading never occur in the
 runtime image.
 
-## V2 release gate
+## V2 release gate — completed 12 August 2026
 
-After terms are cleared, require all of the following before changing the live
-status in README/docs:
+All release-gate steps passed for commit `7e4ca6e`:
 
-1. Verify source decisions in `NOTICE.md` and no raw file is tracked.
-2. Run full tests, lint, formatting, Bandit, dependency and secret scans.
-3. Recompute and verify model/dataset/demo checksums.
-4. Build the Python 3.11 production image and pass container smoke/health tests.
-5. Perform local browser QA across overview, portfolio, account, simulator,
-   batch, governance and reports.
-6. Commit/push, wait for CI, then verify the exact remote commit.
-7. Verify Render `/health`, logs, key routes, CSV/PDF downloads and mobile view.
-8. Only then label the URL as v2 and record the deployed model version/commit.
+1. Source decisions recorded in `NOTICE.md`; no raw file is tracked.
+2. Full tests (71 passed, 75.99% coverage), lint, formatting, Bandit,
+   dependency and secret scans passed locally.
+3. Model/dataset/demo checksums recomputed and verified.
+4. Python 3.11 production image built in GitHub Actions and passed container
+   smoke/health tests (`actions/run 31568971402`).
+5. Browser QA passed across overview, portfolio, account, simulator, batch,
+   governance and reports at 1440/768/390 px.
+6. Commit `7e4ca6e` pushed to `main`; CI passed; tagged `v2.0.0`.
+7. Render `/health`, key routes, CSV/PDF downloads verified over public HTTPS
+   on 12 August 2026.
+8. README/docs labelled the deployed v2 and recorded the model version/commit.
 
 ## Render free web service
 
