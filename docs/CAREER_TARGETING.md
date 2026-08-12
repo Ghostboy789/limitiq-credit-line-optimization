@@ -74,7 +74,8 @@ Use these bullets:
 - Implemented a deterministic INR exposure optimizer with loss, profitability,
   overextension, early-warning and human-review controls; the 1,200-profile
   synthetic scenario produced ₹6.41M simulated—not causal or realized—
-  incremental contribution.
+  incremental contribution, with a USD/INR/EUR display toggle over the
+  INR-canonical portfolio.
 
 If the role values deployment more than multi-source modelling, substitute:
 

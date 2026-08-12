@@ -253,7 +253,7 @@ def test_static_assets_and_navigation_are_real() -> None:
     assert css.status_code == js.status_code == 200
     overview = client.get("/").text
     assert "Current loss proxy" in overview
-    assert "INR" in overview
+    assert "USD" in overview
     assert "heterogeneous outcomes" in overview
     for path in ("/portfolio", "/simulator", "/batch", "/governance", "/reports"):
         assert f'href="{path}"' in overview
@@ -265,3 +265,16 @@ def test_static_assets_and_navigation_are_real() -> None:
     assert "Calibration by source cohort" in governance
     assert "Source-cohort comparison" in governance
     assert "<svg" in governance
+
+
+def test_display_currency_toggle_converts_and_validates() -> None:
+    default = client.get("/")
+    assert "USD" in default.text
+    inr = client.get("/", params={"ccy": "INR"})
+    assert "INR" in inr.text
+    eur = client.get("/portfolio", params={"ccy": "EUR"})
+    assert "EUR" in eur.text
+    fallback = client.get("/", params={"ccy": "GBP"})
+    assert "GBP" not in fallback.text
+    assert "USD" in fallback.text
+    assert "Display currency" in default.text

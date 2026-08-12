@@ -12,13 +12,17 @@ banking product.
 
 ## Release status
 
-- **Verified public deployment — v1:** Taiwan-only calibrated histogram-
-  gradient-boosting model and synthetic INR decision layer.
-- **Local development — v2:** 1,869,548-row, six-cohort multi-source
-  adverse-credit-outcome benchmark. Its publication gate is **blocked** pending
-  upstream/competition terms review for Give Me Some Credit, FICO/HELOC,
-  Lending Club and Home Credit. The public URL below must not be represented as
-  v2 until that gate, CI, deployment and production QA all pass.
+- **Live public deployment — v2.0.0** (12 August 2026): multi-source global
+  benchmark trained on 1,869,548 harmonized rows across six independent cohorts,
+  deployed via tag `v2.0.0` from commit `7e4ca6e` after green GitHub Actions CI
+  (including Docker container health check). The public URL and `/health`
+  endpoint below serve this version.
+- **Superseded v1:** Taiwan-only 30,000-row model, still verifiable via tag
+  `v1.0.0` and Git history. V1 evidence is intentionally kept separate from v2.
+- **Source terms:** the four non-UCI upstream platforms (Give Me Some Credit,
+  FICO/HELOC, Lending Club, Home Credit) remain under license review for future
+  releases; the owner's 12 August 2026 review and decision are recorded in
+  [`NOTICE.md`](NOTICE.md).
 
 ## Product evidence
 
@@ -26,9 +30,11 @@ banking product.
 
 ![LimitIQ account decision](docs/assets/account-decision.png)
 
-**Verified v1 live demo:** https://limitiq-credit-line-optimization.onrender.com
+**Live v2.0.0 demo:** https://limitiq-credit-line-optimization.onrender.com
 
-**Verified v1 health:** https://limitiq-credit-line-optimization.onrender.com/health
+**Live v2.0.0 health:** https://limitiq-credit-line-optimization.onrender.com/health
+(reports application `2.0.0`, model `limitiq-global-2.0.0-37a14c45a811`,
+dataset `global-7-94bb4c0ad0f1`)
 
 The free Render service may need about 50 seconds to wake after inactivity.
 
@@ -41,6 +47,8 @@ The free Render service may need about 50 seconds to wake after inactivity.
 - Strict transient CSV batch scoring and downloadable decisions
 - Baseline/champion, calibration, confusion, feature, band and governance evidence
 - Executive HTML/PDF plus quality, model, policy and financial reports
+- Multi-currency display toggle (USD default, INR, EUR) with documented fixed
+  presentation rates; INR remains the canonical internal currency
 
 ## Evidence boundary
 
@@ -58,6 +66,11 @@ For India-focused presentation, only source-disclosed currencies are converted
 to INR at documented fixed rates. FX localization does not make a historical
 population Indian or make cross-source amounts economically equivalent.
 
+The live app can present the canonical INR portfolio in USD (default), INR or
+EUR via a display toggle; these are fixed presentation rates (reference date
+31 July 2026, 95.4 INR/USD, 110 INR/EUR) and never alter model scores, loss
+proxies or the batch schema, which stay INR-canonical.
+
 ## Data
 
 ### Verified deployed v1
@@ -71,7 +84,7 @@ Source TWD limits, bills and payments are converted before modelling to INR at a
 fixed ₹2.97 per TWD, derived from documented July 2026 USD reference rates. This
 is a deterministic presentation transform, not Indian borrower evidence.
 
-### Local v2 benchmark — not deployed
+### Deployed v2 benchmark
 
 V2 trains on six independent cohorts: Taiwan Credit, corrected South German
 Credit, Give Me Some Credit, cleaned FICO/HELOC, Lending Club accepted loans and

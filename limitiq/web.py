@@ -21,8 +21,10 @@ from fastapi.templating import Jinja2Templates
 
 from limitiq import __version__
 from limitiq.config import (
+    DEFAULT_DISPLAY_CURRENCY,
     DISCLAIMER,
     DISPLAY_CURRENCY,
+    DISPLAY_RATES,
     DOCS_DIR,
     MODEL_DIR,
     PROCESSED_DIR,
@@ -42,6 +44,7 @@ from limitiq.optimizer import Decision, recommend_portfolio, summarize_portfolio
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(5 * 1024 * 1024)))
 MAX_UPLOAD_ROWS = 5_000
 ACCOUNT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{2,39}$")
+MONETARY_KEYS = ("servicing_cost", "max_account_exposure", "profitability_hurdle")
 REPORT_FILES = {
     "global-executive-html": "global_executive_report.html",
     "global-executive-pdf": "global_executive_report.pdf",
@@ -138,13 +141,20 @@ def _governance_charts(metadata: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _money(value: float) -> str:
-    magnitude = abs(value)
+def _money(value: float, ccy: str = DISPLAY_CURRENCY) -> str:
+    converted = value * DISPLAY_RATES.get(ccy, 1.0)
+    magnitude = abs(converted)
     if magnitude >= 1_000_000_000:
-        return f"{DISPLAY_CURRENCY} {value / 1_000_000_000:,.2f}B"
+        return f"{ccy} {converted / 1_000_000_000:,.2f}B"
     if magnitude >= 1_000_000:
-        return f"{DISPLAY_CURRENCY} {value / 1_000_000:,.2f}M"
-    return f"{DISPLAY_CURRENCY} {value:,.0f}"
+        return f"{ccy} {converted / 1_000_000:,.2f}M"
+    return f"{ccy} {converted:,.0f}"
+
+
+def _resolve_ccy(value: str | None) -> str:
+    if value and str(value).upper() in DISPLAY_RATES:
+        return str(value).upper()
+    return DEFAULT_DISPLAY_CURRENCY
 
 
 def _percent(value: float, digits: int = 1) -> str:
@@ -282,6 +292,7 @@ def create_app() -> FastAPI:
             "dataset_version": metadata["dataset_version"],
             "benchmark_classification": metadata["classification"],
             "target_note": metadata["target_note"],
+            "ccy": _resolve_ccy(request.query_params.get("ccy")),
             **values,
         }
 
@@ -498,10 +509,16 @@ def create_app() -> FastAPI:
         error = None
         baseline = simulation["summary"]
         source = portfolio.rename(columns={"account_id": "ACCOUNT_ID"})
+        ccy = _resolve_ccy(request.query_params.get("ccy"))
         if request.method == "POST":
             form = await request.form()
+            ccy = _resolve_ccy(form.get("ccy"))
+            values = dict(form)
+            for key in MONETARY_KEYS:
+                if values.get(key) not in (None, ""):
+                    values[key] = float(values[key]) / DISPLAY_RATES[ccy]
             try:
-                assumptions = PolicyAssumptions.from_mapping(dict(form))
+                assumptions = PolicyAssumptions.from_mapping(values)
             except (TypeError, ValueError) as exc:
                 error = str(exc)
         if request.method == "GET" or error:
@@ -546,13 +563,17 @@ def create_app() -> FastAPI:
             )
         }
         actions = sorted(summary["action_counts"].items(), key=lambda item: (-item[1], item[0]))
+        form_values = {
+            key: value * DISPLAY_RATES[ccy] if key in MONETARY_KEYS else value
+            for key, value in assumptions.to_dict().items()
+        }
         return templates.TemplateResponse(
             request,
             "simulator.html",
             context(
                 request,
                 title="Policy simulator",
-                assumptions=assumptions.to_dict(),
+                assumptions=form_values,
                 summary=summary,
                 baseline=baseline,
                 changes=changes,

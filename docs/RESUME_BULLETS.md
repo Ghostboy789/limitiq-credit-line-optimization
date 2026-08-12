@@ -1,9 +1,9 @@
 # Evidence-based résumé bullets
 
-- Built a production-shaped credit-line decision-support platform and local
-  1.87M-row multi-source adverse-credit-outcome benchmark, harmonizing six independent
-  cohorts with checksum-bound provenance and governed increase/hold/refer/freeze
-  actions.
+- Built and deployed (v2.0.0, live on Render, 12 Aug 2026) a production-shaped
+  credit-line decision-support platform over a 1.87M-row multi-source
+  adverse-credit-outcome benchmark, harmonizing six independent cohorts with
+  checksum-bound provenance and governed increase/hold/refer/freeze actions.
 - Compared calibrated logistic and histogram-gradient-boosting pipelines using
   source-macro validation; the champion achieved 0.685 macro ROC-AUC, 0.402
   macro PR-AUC and 0.139 macro Brier on 373,910 untouched test rows.
@@ -13,10 +13,14 @@
 
 Deployment-focused alternative:
 
-- Deployed a Dockerized v1 FastAPI/Jinja credit-line product over 30,000 CC BY
-  4.0 UCI accounts with portfolio, account, simulator, batch, governance and
-  report workflows; v1 test ROC-AUC 0.781 and Brier 0.133.
+- Released v2.0.0 as a tagged, checksum-verified build through GitHub Actions CI
+  (71 tests at 75.99% coverage, Ruff, Bandit, pip-audit, detect-secrets, Docker
+  image build and container `/health` smoke test) to Render, then verified every
+  route, CSV/PDF download and the live `/health` endpoint over public HTTPS.
+  Earlier v1 (0.781 test ROC-AUC, Brier 0.133) remains verifiable via tag
+  `v1.0.0`.
 
 Use “multi-source adverse-credit-outcome benchmark,” not common-horizon/global
-regulatory PD. Label the public URL as verified v1; v2 remains local and blocked
-from publication pending source-terms review.
+regulatory PD. The live URL serves v2.0.0. The four non-UCI upstream platforms
+remain under license review for future releases; your 12 August 2026 terms
+decision is recorded in NOTICE.md — always mention review status when asked.

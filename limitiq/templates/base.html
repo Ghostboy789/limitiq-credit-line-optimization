@@ -6,8 +6,8 @@
   <meta name="description" content="LimitIQ educational multi-source credit-risk and credit-line optimization platform">
   <meta name="theme-color" content="#f5f5f7">
   <title>{{ title }} · LimitIQ</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.1.0">
-  <script src="{{ url_for('static', path='/app.js') }}?v=2.1.0" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=2.2.0">
+  <script src="{{ url_for('static', path='/app.js') }}?v=2.2.0" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -22,6 +22,13 @@
       <a href="/governance" {% if request.url.path == '/governance' %}aria-current="page"{% endif %}>Governance</a>
       <a href="/reports" {% if request.url.path == '/reports' %}aria-current="page"{% endif %}>Reports</a>
     </nav>
+    <form class="ccy-form" method="get" action="{{ request.url.path }}">
+      <label for="ccy-select">Display currency</label>
+      <select id="ccy-select" name="ccy" data-ccy-select>
+        {% for code in ["USD", "INR", "EUR"] %}<option value="{{ code }}" {% if code == ccy %}selected{% endif %}>{{ code }}</option>{% endfor %}
+      </select>
+      <noscript><button type="submit">Apply</button></noscript>
+    </form>
   </header>
   <main id="main" tabindex="-1">
     {% block content %}{% endblock %}

@@ -49,6 +49,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .topbar nav a:hover::after, .topbar nav a[aria-current="page"]::after { opacity: 1; transform: scaleX(1); }
 .nav-toggle { display: none; min-height: 38px; padding: 0 15px; color: var(--navy-900); border-color: #aab8be; background: rgb(255 255 255 / 72%); box-shadow: none; }
 
+.ccy-form { display: flex; gap: 8px; align-items: center; margin-left: 14px; color: var(--muted); font-size: 12px; font-weight: 650; }
+.ccy-form select { min-width: 84px; padding: 7px 10px; color: var(--navy-900); border: 1px solid #b9c7cd; border-radius: 10px; background: rgb(255 255 255 / 80%); font: inherit; font-weight: 700; }
+.ccy-form select:focus-visible { outline: 2px solid var(--teal-600); outline-offset: 2px; }
+.ccy-form button { min-height: 34px; padding: 0 12px; box-shadow: none; }
+@media (max-width: 900px) { .ccy-form { margin: 10px 0 0; } .ccy-form label { display: none; } }
+
 main { width: min(1500px, 100%); min-height: calc(100vh - 180px); margin: 0 auto; padding: 48px clamp(20px, 4vw, 72px) 96px; }
 footer { display: flex; justify-content: space-between; gap: 24px; padding: 34px clamp(20px, 4vw, 72px); color: #b9c7cd; background: var(--navy-950); font-size: 13px; }
 footer p { max-width: 900px; margin: 0; }

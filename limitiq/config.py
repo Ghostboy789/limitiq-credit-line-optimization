@@ -39,6 +39,19 @@ CURRENCY_RATES = {
     "INR": 1.0,
 }
 
+# Presentation-only display rates (INR per display unit). These are fixed
+# reference rates for converting the canonical INR portfolio at render time and
+# are intentionally separate from the modelling-time transform rates above,
+# which stay locked to keep versioned model evidence reproducible.
+DEFAULT_DISPLAY_CURRENCY = "USD"
+DISPLAY_RATES = {
+    "INR": 1.0,
+    "USD": 1.0 / 95.4,
+    "EUR": 1.0 / 110.0,
+}
+DISPLAY_RATE_DATE = "2026-07-31"
+DISPLAY_RATE_SOURCES = ("https://www.exchange-rates.org/exchange-rate-history/usd-inr-2026-07-31",)
+
 DISCLAIMER = (
     "LimitIQ is an educational portfolio demonstration using public and synthetic data. "
     "It is not a production credit-decision system and must not be used to make real "

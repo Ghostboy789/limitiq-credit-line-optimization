@@ -9,6 +9,14 @@ if (toggle && nav) {
   });
 }
 
+document.querySelectorAll("[data-ccy-select]").forEach((select) => {
+  select.addEventListener("change", () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("ccy", select.value);
+    window.location.href = url.toString();
+  });
+});
+
 document.querySelectorAll('input[type="file"]').forEach((input) => {
   input.addEventListener("change", () => {
     const label = input.closest("label")?.querySelector("span");
