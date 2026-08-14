@@ -1,0 +1,295 @@
+{
+  "classification": "Monitoring readiness baseline; LimitIQ is a research application and runs no live production scoring feed, shadow mode or monitoring job",
+  "model_version": "limitiq-global-2.0.0-37a14c45a811",
+  "dataset_version": "global-7-94bb4c0ad0f1",
+  "generated_at": "2026-08-14T10:58:08.223460+00:00",
+  "snapshot": {
+    "test_rows": 373910,
+    "sources": 6,
+    "pooled_roc_auc": 0.6698913281411799,
+    "macro_roc_auc": 0.6845295228019642,
+    "pooled_calibration_gap": 0.0011610477452345205,
+    "macro_calibration_gap": 0.02696782700002943
+  },
+  "source_mix": [
+    {
+      "source": "fico_heloc",
+      "accounts": 1974,
+      "risk_rate": 0.5202634245187436,
+      "mean_score": 0.5191320563061577
+    },
+    {
+      "source": "give_me_some_credit",
+      "accounts": 30000,
+      "risk_rate": 0.06683333333333333,
+      "mean_score": 0.06648909994219557
+    },
+    {
+      "source": "home_credit",
+      "accounts": 61502,
+      "risk_rate": 0.08072908198107379,
+      "mean_score": 0.07894283322994307
+    },
+    {
+      "source": "lending_club_full",
+      "accounts": 274234,
+      "risk_rate": 0.21471808747274226,
+      "mean_score": 0.21501718808995074
+    },
+    {
+      "source": "south_german_credit",
+      "accounts": 200,
+      "risk_rate": 0.3,
+      "mean_score": 0.274093100468301
+    },
+    {
+      "source": "taiwan_credit",
+      "accounts": 6000,
+      "risk_rate": 0.22116666666666668,
+      "mean_score": 0.22107432622646703
+    }
+  ],
+  "missingness": [
+    {
+      "source": "fico_heloc",
+      "delinquency_count": 0.0,
+      "utilization": 0.01773049645390071,
+      "debt_to_income": 1.0,
+      "credit_lines": 0.0,
+      "income_inr": 1.0,
+      "credit_age_months": 0.02735562310030395
+    },
+    {
+      "source": "give_me_some_credit",
+      "delinquency_count": 0.0018666666666666666,
+      "utilization": 0.0,
+      "debt_to_income": 0.0,
+      "credit_lines": 0.0,
+      "income_inr": 1.0,
+      "credit_age_months": 1.0
+    },
+    {
+      "source": "home_credit",
+      "delinquency_count": 1.0,
+      "utilization": 1.0,
+      "debt_to_income": 4.877890149913824e-05,
+      "credit_lines": 1.0,
+      "income_inr": 1.0,
+      "credit_age_months": 1.0
+    },
+    {
+      "source": "lending_club_full",
+      "delinquency_count": 0.0,
+      "utilization": 0.0006381411495292342,
+      "debt_to_income": 0.0002953681892106741,
+      "credit_lines": 0.0,
+      "income_inr": 0.0,
+      "credit_age_months": 0.0
+    },
+    {
+      "source": "south_german_credit",
+      "delinquency_count": 0.0,
+      "utilization": 1.0,
+      "debt_to_income": 0.0,
+      "credit_lines": 0.0,
+      "income_inr": 1.0,
+      "credit_age_months": 1.0
+    },
+    {
+      "source": "taiwan_credit",
+      "delinquency_count": 0.0,
+      "utilization": 0.0,
+      "debt_to_income": 1.0,
+      "credit_lines": 1.0,
+      "income_inr": 1.0,
+      "credit_age_months": 1.0
+    }
+  ],
+  "score_distribution": [
+    {
+      "lower": 0.0,
+      "upper": 0.05,
+      "count": 19523
+    },
+    {
+      "lower": 0.05,
+      "upper": 0.1,
+      "count": 71901
+    },
+    {
+      "lower": 0.1,
+      "upper": 0.15000000000000002,
+      "count": 37184
+    },
+    {
+      "lower": 0.15000000000000002,
+      "upper": 0.2,
+      "count": 83662
+    },
+    {
+      "lower": 0.2,
+      "upper": 0.25,
+      "count": 81084
+    },
+    {
+      "lower": 0.25,
+      "upper": 0.30000000000000004,
+      "count": 50666
+    },
+    {
+      "lower": 0.30000000000000004,
+      "upper": 0.35000000000000003,
+      "count": 21466
+    },
+    {
+      "lower": 0.35000000000000003,
+      "upper": 0.4,
+      "count": 4872
+    },
+    {
+      "lower": 0.4,
+      "upper": 0.45,
+      "count": 701
+    },
+    {
+      "lower": 0.45,
+      "upper": 0.5,
+      "count": 539
+    },
+    {
+      "lower": 0.5,
+      "upper": 0.55,
+      "count": 522
+    },
+    {
+      "lower": 0.55,
+      "upper": 0.6000000000000001,
+      "count": 443
+    },
+    {
+      "lower": 0.6000000000000001,
+      "upper": 0.65,
+      "count": 346
+    },
+    {
+      "lower": 0.65,
+      "upper": 0.7000000000000001,
+      "count": 470
+    },
+    {
+      "lower": 0.7000000000000001,
+      "upper": 0.75,
+      "count": 254
+    },
+    {
+      "lower": 0.75,
+      "upper": 0.8,
+      "count": 181
+    },
+    {
+      "lower": 0.8,
+      "upper": 0.8500000000000001,
+      "count": 79
+    },
+    {
+      "lower": 0.8500000000000001,
+      "upper": 0.9,
+      "count": 17
+    },
+    {
+      "lower": 0.9,
+      "upper": 0.9500000000000001,
+      "count": 0
+    },
+    {
+      "lower": 0.9500000000000001,
+      "upper": 1.0,
+      "count": 0
+    }
+  ],
+  "risk_bands": {
+    "Low": 19523,
+    "Moderate": 109085,
+    "High": 215412,
+    "Very high": 29890
+  },
+  "per_source_signals": [
+    {
+      "source": "fico_heloc",
+      "accounts": 1974,
+      "risk_rate": 0.5202634245187436,
+      "mean_score": 0.5191320563061577,
+      "roc_auc": 0.7655302605779127,
+      "gini": 0.5310605211558255,
+      "ks": 0.41037602473449186,
+      "calibration_gap": 0.04901433892153832
+    },
+    {
+      "source": "give_me_some_credit",
+      "accounts": 30000,
+      "risk_rate": 0.06683333333333333,
+      "mean_score": 0.06648909994219557,
+      "roc_auc": 0.852893672231281,
+      "gini": 0.705787344462562,
+      "ks": 0.556779777649999,
+      "calibration_gap": 0.004288656140799446
+    },
+    {
+      "source": "home_credit",
+      "accounts": 61502,
+      "risk_rate": 0.08072908198107379,
+      "mean_score": 0.07894283322994307,
+      "roc_auc": 0.5174990823590808,
+      "gini": 0.03499816471816164,
+      "ks": 0.035851569437162945,
+      "calibration_gap": 0.00347252081412769
+    },
+    {
+      "source": "lending_club_full",
+      "accounts": 274234,
+      "risk_rate": 0.21471808747274226,
+      "mean_score": 0.21501718808995074,
+      "roc_auc": 0.6015172932910253,
+      "gini": 0.20303458658205065,
+      "ks": 0.14591342517264083,
+      "calibration_gap": 0.0011759372999331705
+    },
+    {
+      "source": "south_german_credit",
+      "accounts": 200,
+      "risk_rate": 0.3,
+      "mean_score": 0.274093100468301,
+      "roc_auc": 0.6132142857142857,
+      "gini": 0.22642857142857142,
+      "ks": 0.23571428571428577,
+      "calibration_gap": 0.0893369786123519
+    },
+    {
+      "source": "taiwan_credit",
+      "accounts": 6000,
+      "risk_rate": 0.22116666666666668,
+      "mean_score": 0.22107432622646703,
+      "roc_auc": 0.7565225426381992,
+      "gini": 0.5130450852763984,
+      "ks": 0.4106276157779841,
+      "calibration_gap": 0.014518530211426045
+    }
+  ],
+  "thresholds": {
+    "score_psi_warning": 0.1,
+    "score_psi_action": 0.25,
+    "calibration_gap_warning": 0.05,
+    "risk_rate_relative_shift_warning": 0.2,
+    "missingness_relative_shift_warning": 0.2,
+    "source_mix_share_shift_warning": 0.05
+  },
+  "protocol": [
+    "Compare each scored population against this baseline score distribution monthly; a population-stability PSI at or above 0.10 warns and 0.25 requires model review.",
+    "Track per-source mean score and risk rate; a relative shift beyond 20% against this snapshot triggers investigation before any automated use.",
+    "Recompute calibration bins monthly; a mean absolute gap beyond 0.05 or monotone drift across three consecutive bins requires a recalibration assessment.",
+    "Monitor per-source feature missingness; a relative change beyond 20% signals a schema or data-provider change and re-opens source equivalency.",
+    "Track source-mix shares; a shift beyond 5 percentage points changes the pooled population and requires re-reading macro versus pooled evidence.",
+    "On material deterioration, disable automatic increases and retain no-change, freeze and manual-review routing until the model is re-validated (rollback control)."
+  ],
+  "evidence_boundary": "Baseline snapshot from the seeded test split. Thresholds are illustrative governance proposals, not validated limits or live alerts; no production monitoring exists in this educational application. Relative-change checks must use an absolute-delta fallback when the baseline is zero."
+}

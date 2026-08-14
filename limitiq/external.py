@@ -352,7 +352,7 @@ def _write_report(payload: dict[str, Any]) -> None:
         OUTPUT_DIR,
         "external_validation_report.html",
         "External model validation",
-        "Evidence &bull; LimitIQ",
+        "Evidence · LimitIQ",
         sections,
     )
 

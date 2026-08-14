@@ -92,15 +92,17 @@ and recommendations are deterministic scenario outputs.
 - unseen-market or Indian-population performance claims;
 - causal response, realized profit or production-impact claims;
 - cross-jurisdiction fairness or legal-compliance conclusions;
-- public redistribution of blocked v2 artifacts before terms review.
+- redistribution outside the repository owner's documented 14 August 2026
+  publication-rights resolution attestation.
 
 ## Terms and publication status
 
 UCI Taiwan, corrected South German and legacy Statlog German are CC BY 4.0.
-Give Me Some Credit, FICO/HELOC, Lending Club upstream and Home Credit required
-manual terms review; the owner documented the evidence and directed publication
-on 12 August 2026. See [`NOTICE.md`](../NOTICE.md) for origin, mirror, revision,
-checksum, review log and decision details.
+Give Me Some Credit, FICO/HELOC, Lending Club upstream and Home Credit were the
+subjects of the historical manual review. The owner attested on 14 August 2026
+that the issue was resolved and cleared the project gate; this is not an
+independent legal opinion. See [`NOTICE.md`](../NOTICE.md) for origin, mirror,
+revision, checksum, review log and decision details.
 
 ## Maintenance
 

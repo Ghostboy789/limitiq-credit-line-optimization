@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "_charts.html" import histogram, horizontal_bars %}
+{% block content %}
+<section class="page-heading"><p class="eyebrow">Ongoing oversight</p><h1>Monitoring readiness</h1><p>Baseline population signals that a production monitoring feed would compare against, with documented alert thresholds and a response protocol. LimitIQ is a research application: no live scoring feed or shadow mode runs here.</p></section>
+{% if monitoring %}
+<div class="notice" role="note"><strong>Baseline snapshot.</strong> {{ monitoring.classification }}. Values come from the seeded test split of the deployed benchmark; thresholds are illustrative governance proposals, not validated limits or live alerts.</div>
+{% if not automatic_increases_enabled %}<div class="notice warning" role="alert"><strong>Rollback control active.</strong> Automatic increases are disabled and otherwise eligible accounts are routed to manual review.</div>{% endif %}
+<section class="metric-grid four">
+  <article class="metric"><span>Pooled ROC-AUC</span><strong>{{ monitoring.snapshot.pooled_roc_auc|round(3) }}</strong><small>Baseline discrimination</small></article>
+  <article class="metric"><span>Macro ROC-AUC</span><strong>{{ monitoring.snapshot.macro_roc_auc|round(3) }}</strong><small>Unweighted source-cohort mean</small></article>
+  <article class="metric"><span>Pooled calibration gap</span><strong>{{ monitoring.snapshot.pooled_calibration_gap|round(3) }}</strong><small>Mean absolute bin gap</small></article>
+  <article class="metric"><span>Baseline test rows</span><strong>{{ monitoring.snapshot.test_rows|number }}</strong><small>{{ monitoring.snapshot.sources }} source cohorts</small></article>
+</section>
+<section class="dashboard-grid">
+  {{ horizontal_bars('source-mix', 'Baseline source mix', 'Untouched-test account counts per source cohort; a population-share shift beyond the documented threshold changes the pooled meaning.', source_mix_rows) }}
+  {{ histogram('baseline-score-distribution', 'Baseline score distribution', 'Calibrated adverse-outcome probabilities on the untouched test. PSI compares future scored populations against this shape.', monitoring.score_distribution) }}
+</section>
+<section class="panel"><p class="eyebrow">Schema and coverage</p><h2>Baseline feature missingness</h2><p>Structural missingness is cohort-specific and can identify a source. A relative shift beyond {{ monitoring.thresholds.missingness_relative_shift_warning|percent }} is an investigation trigger; when baseline missingness is zero, use an absolute percentage-point change instead.</p>
+  <div class="table-wrap" tabindex="0" aria-label="Scrollable feature missingness table"><table><thead><tr><th>Source cohort</th>{% for column in feature_columns %}<th>{{ column|replace('_',' ')|title }}</th>{% endfor %}</tr></thead><tbody>{% for row in missingness_rows %}<tr><td><strong>{{ row[0] }}</strong></td>{% for cell in row[1:] %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div></section>
+<section class="panel"><p class="eyebrow">Population signals</p><h2>Baseline per-source signals</h2><p>Mean score, risk rate, calibration gap and Gini per cohort on the untouched test. Monitoring compares monthly scored populations against these references.</p>
+  <div class="table-wrap" tabindex="0" aria-label="Scrollable per-source signal table"><table><thead><tr><th>Source cohort</th><th>Baseline rows</th><th>Risk rate</th><th>Mean score</th><th>Calibration gap</th><th>Gini</th></tr></thead><tbody>{% for row in signal_rows %}<tr><td><strong>{{ row[0] }}</strong></td><td>{{ row[1] }}</td><td>{{ row[2] }}</td><td>{{ row[3] }}</td><td>{{ row[4] }}</td><td>{{ row[5] }}</td></tr>{% endfor %}</tbody></table></div></section>
+<section class="two-column"><article class="panel"><p class="eyebrow">Proposed thresholds</p><h2>Illustrative investigation triggers</h2><div class="table-wrap" tabindex="0" aria-label="Proposed monitoring threshold table"><table><thead><tr><th>Signal</th><th>Threshold</th></tr></thead><tbody>{% for row in threshold_rows %}<tr><td>{{ row[0] }}</td><td>{{ row[1] }}</td></tr>{% endfor %}</tbody></table></div><p class="footnote">{{ monitoring.evidence_boundary }}</p></article>
+<article class="panel"><p class="eyebrow">Response protocol</p><h2>If a signal breaches</h2><ol class="rank-list">{% for action in monitoring.protocol %}<li><span>{{ action }}</span></li>{% endfor %}</ol><p><a href="/governance">Review model governance evidence →</a></p></article></section>
+{% else %}
+<div class="empty"><h2>Baseline not generated</h2><p>Run <code>python -m limitiq.evidence --feature-only</code> to produce the monitoring readiness baseline and report.</p><a class="button" href="/reports">View available reports</a></div>
+{% endif %}
+{% endblock %}

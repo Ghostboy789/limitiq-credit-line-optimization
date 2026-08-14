@@ -139,3 +139,15 @@ def test_assumption_validation() -> None:
         PolicyAssumptions(lgd=1.2).validate()
     with pytest.raises(ValueError, match="positive"):
         PolicyAssumptions(max_account_exposure=0).validate()
+
+
+def test_governance_switch_disables_automatic_increases(healthy_row: pd.Series) -> None:
+    decision = recommend_account(
+        healthy_row,
+        0.03,
+        "SWITCH-1",
+        automatic_increases_enabled=False,
+    )
+    assert decision.action == "Manual review"
+    assert decision.increase_pct == 0
+    assert "Automatic increases disabled by governance control" in decision.reason_codes

@@ -46,7 +46,8 @@ among candidates within 0.02 macro ROC-AUC of the best. Validation evidence:
 
 The threshold is selected on validation with false negatives weighted five
 times false positives. The champion is then refit on train plus validation and
-the untouched test is read once.
+evaluated on the held-out test only after model and threshold selection. Later
+diagnostics use those frozen test rows post-selection and never alter model bytes.
 
 ## Untouched-test evidence
 
@@ -124,9 +125,18 @@ artifact or freezes automation.
 
 ## Publication gate
 
-Status: **blocked**. Give Me Some Credit, FICO/HELOC, Lending Club upstream and
-Home Credit terms require manual review before publishing the v2 model or
-source-derived demonstration. See [`NOTICE.md`](../NOTICE.md).
+Status: **cleared by repository-owner attestation on 14 August 2026**. The
+supporting documents are retained by the owner and are not independently
+validated by this project. Historical findings remain in [`NOTICE.md`](../NOTICE.md).
+
+## Additive robustness evidence
+
+The Lending Club vintage split produces ROC-AUC 0.6000 and Brier 0.2023 on the
+latest 20% of issues, versus 0.6015 and roughly 0.165 on the random reference.
+Because labels are status at extract with unequal seasoning, this is not a
+fixed-horizon PD backtest. Explicit-region ablation does not isolate structural
+missingness. Feature importance therefore uses source-preserving shuffles and
+effect curves use only cohorts reporting the field.
 
 ## Verified deployed v1 reference
 

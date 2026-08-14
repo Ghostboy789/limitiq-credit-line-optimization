@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 from typing import Any
@@ -43,14 +44,20 @@ CURRENCY_RATES = {
 # reference rates for converting the canonical INR portfolio at render time and
 # are intentionally separate from the modelling-time transform rates above,
 # which stay locked to keep versioned model evidence reproducible.
-DEFAULT_DISPLAY_CURRENCY = "USD"
+DEFAULT_DISPLAY_CURRENCY = "INR"
 DISPLAY_RATES = {
     "INR": 1.0,
     "USD": 1.0 / 95.4,
     "EUR": 1.0 / 110.0,
 }
 DISPLAY_RATE_DATE = "2026-07-31"
-DISPLAY_RATE_SOURCES = ("https://www.exchange-rates.org/exchange-rate-history/usd-inr-2026-07-31",)
+DISPLAY_RATE_SOURCES = CURRENCY_RATE_SOURCES
+
+AUTO_INCREASES_ENABLED = os.getenv("AUTO_INCREASES_ENABLED", "true").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+}
 
 DISCLAIMER = (
     "LimitIQ is an educational portfolio demonstration using public and synthetic data. "

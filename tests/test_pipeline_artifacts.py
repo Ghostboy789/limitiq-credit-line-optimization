@@ -198,15 +198,39 @@ def test_global_model_evidence_is_present_checksum_bound_and_sane() -> None:
         == evidence["split"]["test"]
     )
 
-    unresolved = {
+    owner_cleared = {
         key
         for key, item in evidence["datasets"].items()
-        if str(item["license_status"]).startswith("unresolved")
+        if str(item["license_status"]).startswith("owner-cleared")
     }
     gate = evidence["publication_gate"]
-    assert gate["status"] == ("blocked" if unresolved else "cleared")
-    assert set(gate.get("sources", [])) == unresolved
+    assert gate["status"] == "cleared"
+    assert set(gate.get("sources", [])) == owner_cleared
     assert gate.get("reason")
+    assert gate.get("resolution_basis")
+
+
+def test_global_diagnostic_evidence_is_provenance_bound_and_sane() -> None:
+    names = (
+        "global_oot_evidence.json",
+        "global_leakage_ablation.json",
+        "global_feature_evidence.json",
+        "global_monitoring_baseline.json",
+    )
+    payloads = {name: json.loads((REPORT_DIR / name).read_text(encoding="utf-8")) for name in names}
+    assert all((REPORT_DIR / name).stat().st_size > 1_000 for name in names)
+    assert "status-at-extract" in payloads[names[0]]["classification"]
+    assert payloads[names[0]]["provenance"]["random_seed"] == SEED
+    assert payloads[names[1]]["provenance"]["model_checksum"]
+    feature = payloads[names[2]]
+    assert feature["provenance"]["model_checksum"]
+    assert all("pooled_mean_roc_auc_drop" in item for item in feature["permutation_importance"])
+    assert all(item["sources"] and item["points"] for item in feature["partial_dependence"])
+    monitoring = payloads[names[3]]
+    assert monitoring["snapshot"]["sources"] == 6
+    assert len(monitoring["missingness"]) == 6
+    assert "german_credit" not in {item["source"] for item in monitoring["missingness"]}
+    assert "illustrative" in monitoring["evidence_boundary"].lower()
 
 
 def test_no_unresolved_placeholder_tokens_in_user_artifacts() -> None:

@@ -44,11 +44,15 @@ random within source, so it does not test future vintages or unseen markets.
 
 ## Deployment boundary
 
-The public Render service is verified v1. Local v2 publication is blocked until
-terms review clears Give Me Some Credit, FICO/HELOC, Lending Club upstream and
-Home Credit. Architecture readiness is not publication authorization.
+The public Render service serves v2. Publication proceeds under the repository
+owner's 14 August 2026 resolution attestation recorded in `NOTICE.md`; this
+architecture record is not an independent legal opinion.
 
 ## Failure behavior and rollback
+
+`AUTO_INCREASES_ENABLED=false` is the application-level rollback control. It
+routes otherwise eligible increases to manual review, updates the demonstration
+summary, applies to API/batch/simulator decisions and is visible in `/health`.
 
 Missing or checksum-invalid model artifacts fail startup. Invalid uploads return
 bounded safe errors. Unknown/insufficient profiles route to manual review or

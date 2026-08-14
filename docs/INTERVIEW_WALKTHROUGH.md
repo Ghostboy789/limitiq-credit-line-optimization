@@ -2,8 +2,9 @@
 
 ## 0:00–0:40 — Frame the decision and status
 
-State that the public link is verified v1 and the multi-source v2 is local with
-a blocked publication gate. Open Executive Overview and explain the governed
+State that v2 is the current multi-source adverse-credit-outcome benchmark and
+that its terms gate was cleared by a dated repository-owner attestation, not an
+independent legal opinion. Open Executive Overview and explain the governed
 increase/hold/refer/freeze decision. Point to the boundary: source facts
 observed, adverse-outcome probability modelled, economics simulated.
 
@@ -38,13 +39,14 @@ spreadsheet-formula-safe export.
 ## 3:30–4:20 — Defend governance
 
 Show calibration, per-source metrics, provenance checksums and limitations.
-Explain the terms gate: Give Me Some Credit, FICO/HELOC, Lending Club upstream
-and Home Credit require review before v2 publication. Comparable protected
-attributes are unavailable, so no global fairness claim is made.
+Explain the preserved terms-review history for Give Me Some Credit, FICO/HELOC,
+Lending Club upstream and Home Credit, and the owner attestation that cleared the
+gate. Comparable protected attributes are unavailable, so no global fairness
+claim is made.
 
 ## 4:20–5:00 — Close with roadmap and employer fit
 
-Roadmap: terms clearance, leave-one-source-out and out-of-time testing,
+Roadmap: independent terms validation, fixed-horizon/out-of-time validation,
 source-balanced sensitivity, India-specific affordability/bureau data, causal
 line experiments, independent validation, shadow mode and monitored pilot.
 

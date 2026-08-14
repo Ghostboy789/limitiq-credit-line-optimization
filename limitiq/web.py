@@ -21,6 +21,7 @@ from fastapi.templating import Jinja2Templates
 
 from limitiq import __version__
 from limitiq.config import (
+    AUTO_INCREASES_ENABLED,
     DEFAULT_DISPLAY_CURRENCY,
     DISCLAIMER,
     DISPLAY_CURRENCY,
@@ -45,11 +46,18 @@ MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(5 * 1024 * 1024)))
 MAX_UPLOAD_ROWS = 5_000
 ACCOUNT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{2,39}$")
 MONETARY_KEYS = ("servicing_cost", "max_account_exposure", "profitability_hurdle")
-REPORT_FILES = {
+CURRENT_REPORT_FILES = {
     "global-executive-html": "global_executive_report.html",
     "global-executive-pdf": "global_executive_report.pdf",
     "global-policy-simulation": "global_policy_simulation_report.html",
     "global-financial-impact": "global_financial_impact_analysis.html",
+    "global-model": "global_model_report.html",
+    "global-out-of-time": "global_oot_report.html",
+    "global-leakage-ablation": "global_leakage_report.html",
+    "global-feature-evidence": "global_feature_report.html",
+    "global-monitoring-baseline": "global_monitoring_report.html",
+}
+LEGACY_REPORT_FILES = {
     "executive-report-html": "executive_report.html",
     "executive-report-pdf": "executive_report.pdf",
     "data-quality": "data_quality_report.html",
@@ -58,8 +66,8 @@ REPORT_FILES = {
     "policy-simulation": "policy_simulation_report.html",
     "financial-impact": "financial_impact_analysis.html",
     "external-validation": "external_validation_report.html",
-    "global-model": "global_model_report.html",
 }
+REPORT_FILES = {**CURRENT_REPORT_FILES, **LEGACY_REPORT_FILES}
 DOCUMENT_FILES = {
     "methodology": "METHODOLOGY.md",
     "data-card": "DATA_CARD.md",
@@ -103,6 +111,45 @@ def _load_artifacts() -> tuple[Any, dict[str, Any], pd.DataFrame, dict[str, Any]
         portfolio["current_balance_inr"] / portfolio["current_limit_inr"]
     )
     simulation = json.loads(simulation_path.read_text(encoding="utf-8"))
+    if not AUTO_INCREASES_ENABLED:
+        increase = portfolio["increase_pct"].gt(0)
+        portfolio.loc[increase, "action"] = "Manual review"
+        portfolio.loc[increase, "increase_pct"] = 0.0
+        portfolio.loc[increase, "proposed_limit"] = portfolio.loc[increase, "current_limit_inr"]
+        portfolio.loc[increase, "proposed_ead"] = portfolio.loc[increase, "current_ead"]
+        portfolio.loc[increase, "proposed_expected_loss"] = portfolio.loc[
+            increase, "current_expected_loss"
+        ]
+        portfolio.loc[increase, ["incremental_contribution", "risk_adjusted_return"]] = 0.0
+        portfolio.loc[increase, "reason_codes"] = (
+            portfolio.loc[increase, "reason_codes"].fillna("")
+            + " | Automatic increases disabled by governance control"
+        ).str.strip(" |")
+        current_limit = float(portfolio["current_limit_inr"].sum())
+        proposed_limit = float(portfolio["proposed_limit"].sum())
+        current_ead = float(portfolio["current_ead"].sum())
+        proposed_ead = float(portfolio["proposed_ead"].sum())
+        contribution = float(portfolio["incremental_contribution"].sum())
+        simulation["summary"] = {
+            **simulation["summary"],
+            "current_limit": current_limit,
+            "proposed_limit": proposed_limit,
+            "current_ead": current_ead,
+            "proposed_ead": proposed_ead,
+            "current_expected_loss": float(portfolio["current_expected_loss"].sum()),
+            "proposed_expected_loss": float(portfolio["proposed_expected_loss"].sum()),
+            "incremental_contribution": contribution,
+            "incremental_exposure": proposed_ead - current_ead,
+            "risk_adjusted_return": contribution / (proposed_ead - current_ead)
+            if proposed_ead > current_ead
+            else 0.0,
+            "eligible_increases": int(portfolio["increase_pct"].gt(0).sum()),
+            "early_warning": int(
+                portfolio["action"].isin({"Freeze automatic increases", "Manual review"}).sum()
+            ),
+            "action_counts": portfolio["action"].value_counts().to_dict(),
+            "risk_counts": portfolio["risk_band"].value_counts().to_dict(),
+        }
     return model, metadata, portfolio, simulation
 
 
@@ -139,6 +186,39 @@ def _governance_charts(metadata: dict[str, Any]) -> dict[str, Any]:
             series(key, value, "mean_predicted", "observed_rate") for key, value in sources.items()
         ],
     }
+
+
+def _pdp_cards(pdps: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Map partial-dependence curves to self-scaled mini-chart point strings."""
+    cards: list[dict[str, Any]] = []
+    for pdp in pdps:
+        if not pdp["points"]:
+            continue
+        y_values = [point["y"] for point in pdp["points"]]
+        y_min, y_max = min(y_values), max(y_values)
+        y_range = y_max - y_min or 1.0
+        cards.append(
+            {
+                "title": pdp["feature"].replace("_", " ").title(),
+                "points": " ".join(
+                    f"{18 + point['x'] * 196:.2f},{82 - ((point['y'] - y_min) / y_range) * 60:.2f}"
+                    for point in pdp["points"]
+                ),
+                "y_min": f"{y_min:.1%}",
+                "y_max": f"{y_max:.1%}",
+                "caption": (
+                    f"Equal-source mean score ranges {y_min:.1%} to {y_max:.1%} across "
+                    f"the 1st to 99th percentile in {len(pdp.get('sources', [])) or 'available'} "
+                    "reporting cohorts."
+                ),
+            }
+        )
+    return cards
+
+
+def _lorenz_series(power: dict[str, Any]) -> dict[str, str]:
+    points = power["lorenz"]
+    return {"label": "Lorenz curve · pooled test", "points": _svg_points(points["x"], points["y"])}
 
 
 def _money(value: float, ccy: str = DISPLAY_CURRENCY) -> str:
@@ -267,6 +347,53 @@ def _markdownish(text: str) -> str:
     return "".join(output)
 
 
+PALETTE_RESULTS = 8
+PALETTE_PAGES = [
+    {
+        "type": "Page",
+        "label": "Executive overview",
+        "sublabel": "Portfolio summary and posture",
+        "href": "/",
+    },
+    {
+        "type": "Page",
+        "label": "Portfolio explorer",
+        "sublabel": "Search accounts and download decisions",
+        "href": "/portfolio",
+    },
+    {
+        "type": "Tool",
+        "label": "Policy simulator",
+        "sublabel": "Stress transparent economics assumptions",
+        "href": "/simulator",
+    },
+    {
+        "type": "Tool",
+        "label": "Batch decisioning",
+        "sublabel": "Score a transient CSV upload",
+        "href": "/batch",
+    },
+    {
+        "type": "Evidence",
+        "label": "Model governance",
+        "sublabel": "Champion, calibration and source-cohort evidence",
+        "href": "/governance",
+    },
+    {
+        "type": "Evidence",
+        "label": "Monitoring readiness",
+        "sublabel": "Baseline signals, proposed thresholds and response controls",
+        "href": "/monitoring",
+    },
+    {
+        "type": "Evidence",
+        "label": "Reports & methodology",
+        "sublabel": "Downloads and governance record",
+        "href": "/reports",
+    },
+]
+
+
 def create_app() -> FastAPI:
     model, metadata, portfolio, simulation = _load_artifacts()
     app = FastAPI(
@@ -292,7 +419,10 @@ def create_app() -> FastAPI:
             "dataset_version": metadata["dataset_version"],
             "benchmark_classification": metadata["classification"],
             "target_note": metadata["target_note"],
-            "ccy": _resolve_ccy(request.query_params.get("ccy")),
+            "ccy": _resolve_ccy(
+                request.query_params.get("ccy") or request.cookies.get("limitiq_ccy")
+            ),
+            "automatic_increases_enabled": AUTO_INCREASES_ENABLED,
             **values,
         }
 
@@ -301,7 +431,7 @@ def create_app() -> FastAPI:
         response = await call_next(request)
         response.headers.update(
             {
-                "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+                "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
                 "X-Content-Type-Options": "nosniff",
                 "X-Frame-Options": "DENY",
                 "Referrer-Policy": "strict-origin-when-cross-origin",
@@ -309,6 +439,16 @@ def create_app() -> FastAPI:
                 "Cross-Origin-Opener-Policy": "same-origin",
             }
         )
+        requested_currency = request.query_params.get("ccy")
+        if requested_currency and _resolve_ccy(requested_currency) == requested_currency.upper():
+            response.set_cookie(
+                "limitiq_ccy",
+                requested_currency.upper(),
+                max_age=31_536_000,
+                samesite="lax",
+                secure=request.url.scheme == "https",
+                httponly=True,
+            )
         return response
 
     @app.exception_handler(RequestValidationError)
@@ -342,13 +482,14 @@ def create_app() -> FastAPI:
         )
 
     @app.get("/health")
-    def health() -> dict[str, str]:
+    def health() -> dict[str, str | bool]:
         return {
             "status": "ok",
             "version": __version__,
             "model_version": metadata["model_version"],
             "dataset_version": metadata["dataset_version"],
             "benchmark": "multi-source-adverse-credit-outcome",
+            "automatic_increases_enabled": AUTO_INCREASES_ENABLED,
         }
 
     @app.get("/", response_class=HTMLResponse)
@@ -509,7 +650,7 @@ def create_app() -> FastAPI:
         error = None
         baseline = simulation["summary"]
         source = portfolio.rename(columns={"account_id": "ACCOUNT_ID"})
-        ccy = _resolve_ccy(request.query_params.get("ccy"))
+        ccy = _resolve_ccy(request.query_params.get("ccy") or request.cookies.get("limitiq_ccy"))
         if request.method == "POST":
             form = await request.form()
             ccy = _resolve_ccy(form.get("ccy"))
@@ -532,6 +673,7 @@ def create_app() -> FastAPI:
                 source["pd"].to_numpy(),
                 source["ACCOUNT_ID"].tolist(),
                 assumptions,
+                AUTO_INCREASES_ENABLED,
             )
             summary = summarize_portfolio(decisions)
             current_ead = np.asarray([item.current_ead for item in decisions])
@@ -583,6 +725,28 @@ def create_app() -> FastAPI:
             ),
         )
 
+    @app.get("/api/search")
+    def search_palette(q: str = Query("", max_length=40)) -> JSONResponse:
+        needle = q.strip().lower()
+        results = [item for item in PALETTE_PAGES if not needle or needle in item["label"].lower()]
+        if needle:
+            matches = portfolio[
+                portfolio["account_id"].str.contains(re.escape(needle), case=False, na=False)
+            ].head(PALETTE_RESULTS)
+            for _, row in matches.iterrows():
+                results.append(
+                    {
+                        "type": row["source_name"],
+                        "label": row["account_id"],
+                        "sublabel": f"{row['action']} · {row['risk_band']} · {row['pd']:.1%}",
+                        "href": f"/accounts/{row['account_id']}",
+                    }
+                )
+        return JSONResponse(
+            {"results": results[: PALETTE_RESULTS + 6]},
+            headers={"Cache-Control": "no-store"},
+        )
+
     @app.get("/batch", response_class=HTMLResponse)
     def batch_page(request: Request) -> HTMLResponse:
         return templates.TemplateResponse(
@@ -616,6 +780,7 @@ def create_app() -> FastAPI:
             clean[[*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]],
             probability,
             [account_id],
+            automatic_increases_enabled=AUTO_INCREASES_ENABLED,
         )[0]
         return JSONResponse(
             {
@@ -669,6 +834,7 @@ def create_app() -> FastAPI:
             clean[[*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]],
             probability,
             clean["ACCOUNT_ID"].tolist(),
+            automatic_increases_enabled=AUTO_INCREASES_ENABLED,
         )
         result = _decision_frame(decisions)
         return Response(
@@ -699,6 +865,22 @@ def create_app() -> FastAPI:
             }
             for key, value in metadata["per_market_test_metrics"].items()
         ]
+        charts = _governance_charts(metadata)
+        feature_path = REPORT_DIR / "global_feature_evidence.json"
+        feature_evidence = (
+            json.loads(feature_path.read_text(encoding="utf-8")) if feature_path.exists() else {}
+        )
+        importance_rows: list[tuple[str, float]] = []
+        pdp_cards: list[dict[str, Any]] = []
+        discriminatory: dict[str, Any] = {}
+        if feature_evidence:
+            charts["lorenz"] = [_lorenz_series(feature_evidence["discriminatory_power"])]
+            importance_rows = [
+                (item["feature"].replace("_", " ").title(), item["mean_roc_auc_drop"])
+                for item in feature_evidence["permutation_importance"]
+            ]
+            pdp_cards = _pdp_cards(feature_evidence["partial_dependence"])
+            discriminatory = feature_evidence["discriminatory_power"]
         return templates.TemplateResponse(
             request,
             "governance.html",
@@ -710,7 +892,59 @@ def create_app() -> FastAPI:
                 candidates=metadata["validation_models"],
                 macro=metadata["macro_test_metrics"],
                 cohorts=cohorts,
-                charts=_governance_charts(metadata),
+                charts=charts,
+                feature_evidence=feature_evidence,
+                importance_rows=importance_rows,
+                pdp_cards=pdp_cards,
+                discriminatory=discriminatory,
+                lift_rows=discriminatory.get("lift", []),
+                per_source=feature_evidence.get("per_source", []),
+            ),
+        )
+
+    @app.get("/monitoring", response_class=HTMLResponse)
+    def monitoring(request: Request) -> HTMLResponse:
+        path = REPORT_DIR / "global_monitoring_baseline.json"
+        baseline = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+        names = {key: value["name"] for key, value in metadata["datasets"].items()}
+        source_mix_rows = [
+            (names.get(item["source"], item["source"]), item["accounts"])
+            for item in baseline.get("source_mix", [])
+        ]
+        missingness_rows = [
+            [
+                names.get(row["source"], row["source"]),
+                *[f"{row[column]:.1%}" for column in metadata["harmonized_features"]],
+            ]
+            for row in baseline.get("missingness", [])
+        ]
+        signal_rows = [
+            [
+                names.get(item["source"], item["source"]),
+                f"{item['accounts']:,}",
+                f"{item['risk_rate']:.1%}",
+                f"{item['mean_score']:.1%}",
+                f"{item['calibration_gap']:.4f}",
+                f"{item['gini']:.4f}",
+            ]
+            for item in baseline.get("per_source_signals", [])
+        ]
+        threshold_rows = [
+            [name.replace("_", " ").title(), f"{value:g}"]
+            for name, value in baseline.get("thresholds", {}).items()
+        ]
+        return templates.TemplateResponse(
+            request,
+            "monitoring.html",
+            context(
+                request,
+                title="Monitoring readiness",
+                monitoring=baseline,
+                source_mix_rows=source_mix_rows,
+                missingness_rows=missingness_rows,
+                signal_rows=signal_rows,
+                threshold_rows=threshold_rows,
+                feature_columns=metadata["harmonized_features"],
             ),
         )
 
@@ -722,7 +956,8 @@ def create_app() -> FastAPI:
             context(
                 request,
                 title="Reports & methodology",
-                reports=REPORT_FILES,
+                current_reports=CURRENT_REPORT_FILES,
+                legacy_reports=LEGACY_REPORT_FILES,
                 documents=DOCUMENT_FILES,
             ),
         )

@@ -4,17 +4,26 @@ LimitIQ code is MIT licensed. That licence does not grant rights to third-party
 datasets or override upstream, competition or mirror terms. Raw datasets are
 gitignored and must never be committed.
 
-## Publication gate — owner review decision (12 Aug 2026)
+## Publication gate — owner resolution attestation (14 Aug 2026)
+
+On 14 August 2026 the repository owner explicitly confirmed that the publication
+rights issue identified below was resolved and directed the project to proceed.
+The supporting legal or contractual documents are retained by the owner and are
+not included here; this is an owner attestation, not an independent legal opinion
+by the project or its automated contributors.
+
+The source notes below preserve the earlier 11 August research findings for
+auditability. They describe what the project itself could establish from public
+pages before the owner supplied the resolution attestation.
+
+## Historical review decision (12 Aug 2026)
 
 The four sources below were documented as blocked pending a human terms review
-(see the log). The repository owner reviewed the log on 12 Aug 2026 and directed
-publication of v2 on their own authority, accepting the risk that upstream
-competition terms may not permit unrestricted redistribution of derived
-artifacts. This document does not assert that any upstream rights were cleared;
-it records the owner's decision and the evidence available at the time.
+(see the log). This section preserves that earlier evidence and decision trail;
+the later 14 August owner resolution attestation above is the current project
+gate status.
 
-Public distribution of the v2 model and source-derived demonstration proceeded
-per that owner decision despite unresolved terms review for:
+The earlier review did not independently establish terms for:
 
 1. Give Me Some Credit original Kaggle competition terms.
 2. FICO/HELOC custom challenge terms and the Kaggle-to-OpenML cleaning chain.
@@ -33,9 +42,10 @@ merely because the files are downloadable or the project is educational.
 | Lending Club | CodeSignal HF mirror CC0 declaration (`https://huggingface.co/datasets/codesignal/lending-club-loan-accepted`) | 11 Aug 2026 | Mirror declares CC0-1.0, but upstream Lending Club platform terms were not located to confirm they permit the mirror grant. | Not established — keep local |
 | Home Credit | Unofficial HF mirror (`https://huggingface.co/cantalapiedra/poc_scoring_fair`) | 11 Aug 2026 | Unofficial mirror, no compatible licence established; original competition terms require review. | Not established — keep local |
 
-The mirror declarations are recorded as platform metadata, not as evidence that
-clears upstream redistribution rights. A human/legal reviewer must confirm the
-upstream position for each source before any of them may be published.
+The mirror declarations are recorded as platform metadata, not as independent
+evidence that clears upstream redistribution rights. The project publication
+decision relies on the later owner attestation; an institution must perform its
+own source-terms review before using or redistributing these artifacts.
 
 ## V1 primary dataset
 
@@ -80,7 +90,7 @@ UCI describes corrected South German as a correction of this same underlying
 budgets to prevent duplicate-population leakage; it is not a seventh independent
 market.
 
-### Give Me Some Credit — local training, terms unresolved
+### Give Me Some Credit — historical terms concern
 
 - Origin: Kaggle Give Me Some Credit competition
 - Immediate mirror: OpenML dataset 45577 / file 22116561
@@ -97,7 +107,7 @@ market.
 No Give Me Some Credit monetary field is presented as INR because the source
 currency is not established.
 
-### FICO Explainable ML / HELOC — local training, terms unresolved
+### FICO Explainable ML / HELOC — historical terms concern
 
 - Origin: FICO Explainable Machine Learning Challenge
 - Origin notice:
@@ -113,7 +123,7 @@ currency is not established.
 - Raw SHA-256:
   `e2598f0b585e19a67eadc545ddfc659122b654be74c791e91c21a998404f0bcd`
 
-### Lending Club accepted loans — local training, terms unresolved
+### Lending Club accepted loans — historical terms concern
 
 - Immediate mirror:
   https://huggingface.co/datasets/codesignal/lending-club-loan-accepted
@@ -127,11 +137,12 @@ currency is not established.
   variable horizon; Current/In Grace and other statuses are excluded
 - Mirror declaration: CC0-1.0; upstream Lending Club rights were not
   independently verified, so the mirror claim is recorded separately and does
-  not clear publication
+  not independently clear publication. Release relies on the owner attestation
+  recorded above
 - Raw SHA-256:
   `3eae03c28fd9d2e8a076ebeb73507e8d4d0f44d90500decdb0936e0933d1f36a`
 
-### Home Credit application data — local training, terms unresolved
+### Home Credit application data — historical terms concern
 
 - Origin: Home Credit Default Risk competition
 - Immediate unofficial mirror:
@@ -142,8 +153,9 @@ currency is not established.
 - Label: payment difficulty; X-day delinquency within Y days, with X, Y and the
   resulting horizon undisclosed
 - Geography/currency/collection period: undisclosed
-- Licence: no compatible mirror licence was established; original competition
-  terms require review
+- Licence: the public-page review did not establish a compatible mirror licence
+  and flagged the original competition terms. Release relies on the owner
+  attestation recorded above
 - Raw SHA-256:
   `52e96b895b1112e1c853f670e58372719c8441c5ed1c57ac2f7fad559d784f5f`
 
@@ -163,8 +175,8 @@ default target. It is not part of the v2 training union.
 ## Derived-artifact boundary
 
 V2 versioned JSON/HTML evidence records source and model checksums, source and
-harmonized row counts, target definitions, risk rates and missingness. The local
-1,200-profile decision demo is deterministic and synthetic, but publication is
-still blocked because its fitted probabilities come from the unresolved model.
+harmonized row counts, target definitions, risk rates and missingness. The
+1,200-profile decision demo is deterministic and synthetic. Publication now
+proceeds under the repository owner's 14 August 2026 resolution attestation.
 No source row, identifier or claimed production customer is intentionally
 redistributed.

@@ -17,7 +17,7 @@ client = TestClient(app)
 
 @pytest.mark.parametrize(
     "path",
-    ["/", "/portfolio", "/simulator", "/batch", "/governance", "/reports"],
+    ["/", "/portfolio", "/simulator", "/batch", "/governance", "/monitoring", "/reports"],
 )
 def test_major_pages_render(path: str) -> None:
     response = client.get(path)
@@ -32,7 +32,9 @@ def test_health_contract_and_security_headers() -> None:
     assert response.json()["status"] == "ok"
     assert response.json()["model_version"].startswith("limitiq-global-2.0.0-")
     assert response.json()["dataset_version"].startswith("global-7-")
+    assert response.json()["automatic_increases_enabled"] is True
     assert "frame-ancestors 'none'" in response.headers["content-security-policy"]
+    assert "unsafe-inline" not in response.headers["content-security-policy"]
     assert response.headers["x-content-type-options"] == "nosniff"
     assert response.headers["x-frame-options"] == "DENY"
 
@@ -208,6 +210,35 @@ def test_batch_rejects_empty_wrong_media_and_invalid_identifier() -> None:
     assert "ACCOUNT_ID" in response.text
 
 
+def test_palette_search_endpoint() -> None:
+    pages = client.get("/api/search").json()["results"]
+    assert any(item["label"] == "Portfolio explorer" for item in pages)
+    assert any(item["label"] == "Monitoring readiness" for item in pages)
+    account_id = pd.read_csv(PROCESSED_DIR / "global_demo_portfolio.csv", nrows=1).loc[
+        0, "account_id"
+    ]
+    matches = client.get("/api/search", params={"q": account_id}).json()["results"]
+    assert any(
+        item["label"] == account_id and item["href"] == f"/accounts/{account_id}"
+        for item in matches
+    )
+    assert client.get("/api/search", params={"q": "x" * 41}).status_code == 422
+
+
+def test_governance_feature_and_monitoring_sections_render() -> None:
+    governance = client.get("/governance")
+    assert governance.status_code == 200
+    assert "Permutation importance" in governance.text
+    assert "Gini coefficient" in governance.text
+    assert "Decile lift" in governance.text
+    monitoring = client.get("/monitoring")
+    assert monitoring.status_code == 200
+    assert "Monitoring readiness" in monitoring.text
+    assert "Baseline feature missingness" in monitoring.text
+    assert "Proposed thresholds" in monitoring.text
+    assert "illustrative governance proposals" in monitoring.text
+
+
 def test_sample_and_filtered_csv_downloads_are_valid() -> None:
     sample = client.get("/sample-input.csv")
     filtered = client.get("/portfolio.csv", params={"risk": "Moderate"})
@@ -228,6 +259,8 @@ def test_sample_and_filtered_csv_downloads_are_valid() -> None:
         "/downloads/reports/global-executive-pdf",
         "/downloads/reports/global-policy-simulation",
         "/downloads/reports/global-financial-impact",
+        "/downloads/reports/global-feature-evidence",
+        "/downloads/reports/global-monitoring-baseline",
         "/documents/methodology",
         "/documents/model-card",
         "/documents/data-card",
@@ -253,9 +286,9 @@ def test_static_assets_and_navigation_are_real() -> None:
     assert css.status_code == js.status_code == 200
     overview = client.get("/").text
     assert "Current loss proxy" in overview
-    assert "USD" in overview
+    assert '<option value="INR" selected>' in overview
     assert "heterogeneous outcomes" in overview
-    for path in ("/portfolio", "/simulator", "/batch", "/governance", "/reports"):
+    for path in ("/portfolio", "/simulator", "/batch", "/governance", "/monitoring", "/reports"):
         assert f'href="{path}"' in overview
 
     governance = client.get("/governance").text
@@ -268,13 +301,32 @@ def test_static_assets_and_navigation_are_real() -> None:
 
 
 def test_display_currency_toggle_converts_and_validates() -> None:
-    default = client.get("/")
-    assert "USD" in default.text
-    inr = client.get("/", params={"ccy": "INR"})
-    assert "INR" in inr.text
-    eur = client.get("/portfolio", params={"ccy": "EUR"})
-    assert "EUR" in eur.text
-    fallback = client.get("/", params={"ccy": "GBP"})
-    assert "GBP" not in fallback.text
-    assert "USD" in fallback.text
-    assert "Display currency" in default.text
+    with TestClient(app) as isolated:
+        default = isolated.get("/")
+        assert '<option value="INR" selected>' in default.text
+        eur = isolated.get("/", params={"ccy": "EUR"})
+        assert '<option value="EUR" selected>' in eur.text
+        assert "limitiq_ccy=EUR" in eur.headers["set-cookie"]
+        persisted = isolated.get("/portfolio")
+        assert '<option value="EUR" selected>' in persisted.text
+        fallback = isolated.get("/", params={"ccy": "GBP"})
+        assert "GBP" not in fallback.text
+        assert '<option value="INR" selected>' in fallback.text
+        assert ">Currency</label>" in default.text
+
+
+def test_accessible_search_and_single_portfolio_row_tab_stop() -> None:
+    overview = client.get("/").text
+    assert "data-palette-close" in overview
+    assert 'aria-controls="palette-results"' in overview
+    portfolio = client.get("/portfolio").text
+    assert "tr data-href=" in portfolio
+    assert 'tr data-href="/accounts/' in portfolio
+    assert 'tabindex="0" aria-label="View' not in portfolio
+
+
+def test_reports_separate_current_and_superseded_evidence() -> None:
+    response = client.get("/reports")
+    assert response.status_code == 200
+    assert "V2 multi-source evidence" in response.text
+    assert "V1 Taiwan archive" in response.text

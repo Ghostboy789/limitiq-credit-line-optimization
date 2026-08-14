@@ -68,6 +68,43 @@
 </figure>
 {% endmacro %}
 
+{% macro value_bars(id, title, description, rows, digits=3) %}
+<figure class="chart-card" aria-labelledby="{{ id }}-heading">
+  <figcaption><h3 id="{{ id }}-heading">{{ title }}</h3><p>{{ description }}</p></figcaption>
+  {% if rows %}
+  {% set scale = namespace(maximum=1) %}{% for item in rows %}{% if item[1] > scale.maximum %}{% set scale.maximum = item[1] %}{% endif %}{% endfor %}
+  <div class="chart-frame">
+    <svg class="bar-chart" viewBox="0 0 640 {{ 44 + rows|length * 48 }}" role="img" aria-labelledby="{{ id }}-title {{ id }}-desc" preserveAspectRatio="xMidYMid meet">
+      <title id="{{ id }}-title">{{ title }}</title><desc id="{{ id }}-desc">{{ description }} Exact values are printed beside each bar.</desc>
+      {% for item in rows %}
+      <text class="bar-label" x="12" y="{{ 38 + loop.index0 * 48 }}">{{ item[0] }}</text>
+      <rect class="bar-track-svg" x="190" y="{{ 22 + loop.index0 * 48 }}" width="350" height="20" rx="5"></rect>
+      <rect class="bar-fill-svg chart-series-{{ loop.index0 }}" x="190" y="{{ 22 + loop.index0 * 48 }}" width="{{ item[1] / scale.maximum * 350 }}" height="20" rx="5"></rect>
+      <text class="bar-value" x="628" y="{{ 38 + loop.index0 * 48 }}" text-anchor="end">{{ item[1]|round(digits) }}</text>
+      {% endfor %}
+    </svg>
+  </div>
+  {% else %}<p class="chart-empty">No rows are available for this view.</p>{% endif %}
+</figure>
+{% endmacro %}
+
+{% macro pdp_card(id, title, points, caption, y_min, y_max) %}
+<figure class="chart-card pdp-card" aria-labelledby="{{ id }}-heading">
+  <figcaption><h3 id="{{ id }}-heading">{{ title }}</h3><p>{{ caption }}</p></figcaption>
+  <div class="chart-frame">
+    <svg class="pdp-chart" viewBox="0 0 220 104" role="img" aria-label="{{ title }} source-conditioned effect curve; score range {{ y_min }} to {{ y_max }}">
+      <line class="chart-grid" x1="18" y1="22" x2="214" y2="22"></line>
+      <line class="chart-grid" x1="18" y1="52" x2="214" y2="52"></line>
+      <line class="chart-grid" x1="18" y1="82" x2="214" y2="82"></line>
+      <polyline class="chart-line chart-series-0" points="{{ points }}" vector-effect="non-scaling-stroke"></polyline>
+      <text class="chart-tick" x="15" y="25" text-anchor="end">{{ y_max }}</text>
+      <text class="chart-tick" x="15" y="85" text-anchor="end">{{ y_min }}</text>
+      <text class="chart-tick" x="20" y="100">1st</text><text class="chart-tick" x="214" y="100" text-anchor="end">99th percentile</text>
+    </svg>
+  </div>
+</figure>
+{% endmacro %}
+
 {% macro cohort_comparison(id, title, description, rows) %}
 <figure class="chart-card" aria-labelledby="{{ id }}-heading">
   <figcaption><h3 id="{{ id }}-heading">{{ title }}</h3><p>{{ description }}</p></figcaption>

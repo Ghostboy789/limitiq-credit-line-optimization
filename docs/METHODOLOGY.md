@@ -27,9 +27,11 @@ South German replaces legacy Statlog German in training because both represent
 the same 1,000-credit population; Statlog is reference-only. Each raw file is
 checksummed, gitignored and linked to its origin and immediate mirror.
 
-The four non-UCI sources have unresolved upstream/competition terms; the owner
-reviewed the evidence on 12 August 2026 and directed publication (see
-[`NOTICE.md`](../NOTICE.md)). Full provenance is also there.
+The public-page review did not independently establish upstream/competition
+terms for four non-UCI sources. The owner supplied a resolution attestation on
+14 August 2026 and cleared the project publication gate (see
+[`NOTICE.md`](../NOTICE.md)). Full provenance and the historical review remain
+there; this is not an independent legal opinion.
 
 ## Harmonization
 
@@ -145,9 +147,15 @@ validators must approve any real use.
 
 ## Validation roadmap
 
-Required before portability claims: leave-one-source-out evaluation, Lending
-Club out-of-time testing, source-balanced sensitivity, confidence intervals for
+Required before portability claims: leave-one-source-out evaluation, fixed-
+horizon temporally seasoned validation, source-balanced sensitivity, confidence intervals for
 small cohorts, current terms-cleared populations and independent validation.
+
+The additive Lending Club vintage split is a status-at-extract robustness check,
+not fixed-horizon out-of-time PD validation. Source-context ablation removes only
+explicit region; structural missingness remains. Permutation importance shuffles
+within source cohorts, and fitted effect curves use deterministic, source-capped
+samples only where a field is observed.
 SBA loan data and Polish Companies Bankruptcy belong in separate product/domain
 validation studies. PAKDD and Freddie/Fannie are not accepted into this public
 union under current source/access/terms constraints.

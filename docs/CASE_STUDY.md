@@ -41,9 +41,9 @@ and currency are undisclosed. FICO/HELOC is a cleaned OpenML mirror. Lending
 Club mirror metadata declares CC0, but upstream rights are not independently
 verified.
 
-The v2 publication gate is blocked pending terms review for Give Me Some Credit,
-FICO/HELOC, Lending Club and Home Credit. A downloadable file is not automatically
-an open licence.
+The publication gate was cleared by repository-owner attestation on 14 August
+2026; the supporting documents are retained by the owner. The case study does
+not represent that attestation as an independent legal opinion.
 
 ## Synthetic business scenario
 
@@ -70,7 +70,7 @@ candidate metrics, source calibration, provenance and limitations.
 
 The strongest choice was what not to claim. More rows do not make heterogeneous
 labels one PD, and a mirror does not clear upstream rights. Source-macro metrics,
-duplicate-population exclusion, human review and a blocked publication gate are
+duplicate-population exclusion, human review and a documented publication gate are
 more credible to a model-risk reviewer than an inflated “global accuracy” claim.
 
 ## Résumé bullets

@@ -2,9 +2,11 @@
 
 ## Version status
 
-V1 is the verified public Taiwan-model demonstration. V2 is a local multi-source
+V1 is the verified Taiwan-model archive. V2 is the current multi-source
 adverse-credit-outcome benchmark over 1,869,548 rows; it is not a common-horizon
-regulatory PD and is blocked from publication pending source-terms review.
+regulatory PD. The repository owner attested on 14 August 2026 that the previously
+documented source-terms issue was resolved. That attestation is not a legal opinion;
+the dated history remains in `NOTICE.md`.
 
 ## Product
 

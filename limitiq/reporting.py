@@ -164,7 +164,13 @@ def _executive_pdf(summary: dict[str, Any], model: dict[str, Any], directory: Pa
         Spacer(1, 8 * mm),
         Paragraph(DISCLAIMER, styles["BodyText"]),
     ]
-    doc.build(story)
+
+    def metadata(canvas: Any, _document: Any) -> None:
+        canvas.setTitle("LimitIQ v1 executive decision brief")
+        canvas.setAuthor("LimitIQ")
+        canvas.setSubject("Educational credit-line optimization evidence and governance")
+
+    doc.build(story, onFirstPage=metadata, onLaterPages=metadata)
 
 
 def _global_executive_pdf(
@@ -270,7 +276,7 @@ def _global_executive_pdf(
         ),
         Spacer(1, 3 * mm),
         Paragraph(
-            "Publication gate: blocked pending manual review of upstream or competition redistribution and derived-artifact terms for Give Me Some Credit, FICO HELOC, Lending Club, and Home Credit. The live v1 Taiwan demonstration remains separate until that gate is resolved.",
+            "Publication gate: cleared by repository-owner attestation on 14 August 2026. NOTICE.md retains the review history for Give Me Some Credit, FICO HELOC, Lending Club, and Home Credit. This attestation is not an independent legal opinion; institutional use requires its own source-terms review.",
             styles["BodyText"],
         ),
         Spacer(1, 5 * mm),
@@ -279,6 +285,9 @@ def _global_executive_pdf(
 
     def footer(canvas: Any, document: Any) -> None:
         canvas.saveState()
+        canvas.setTitle("LimitIQ v2 multi-source executive evidence")
+        canvas.setAuthor("LimitIQ")
+        canvas.setSubject("Educational multi-source credit-risk benchmark and governance")
         canvas.setFont("Helvetica", 8)
         canvas.setFillColor(colors.HexColor("#557083"))
         canvas.drawString(16 * mm, 8 * mm, model["model_version"])

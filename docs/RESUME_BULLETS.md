@@ -21,6 +21,7 @@ Deployment-focused alternative:
   `v1.0.0`.
 
 Use “multi-source adverse-credit-outcome benchmark,” not common-horizon/global
-regulatory PD. The live URL serves v2.0.0. The four non-UCI upstream platforms
-remain under license review for future releases; your 12 August 2026 terms
-decision is recorded in NOTICE.md — always mention review status when asked.
+regulatory PD. The live URL serves v2.0.0 until the v2.1 release is verified.
+The four-source publication gate was cleared by the repository owner's dated
+14 August 2026 attestation, not by an independent legal opinion; the historical
+review and resolution basis are recorded in NOTICE.md.

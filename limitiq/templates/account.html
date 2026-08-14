@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/portfolio">Portfolio explorer</a><span aria-hidden="true">›</span><span>{{ account.account_id }}</span></nav>
+<nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/portfolio">Portfolio explorer</a><span aria-hidden="true">›</span><span>{{ account.account_id }}</span><button class="copy-id" type="button" data-copy="{{ account.account_id }}" data-copy-label="Copy ID">Copy ID</button></nav>
 <section class="account-hero">
   <div><p class="eyebrow">Synthetic account identifier</p><h1>{{ account.account_id }}</h1><div class="badge-row"><span class="badge action large">{{ account.action }}</span><span class="badge risk-{{ account.risk_band|lower|replace(' ', '-') }} large">{{ account.risk_band }} score band</span></div></div>
   <div class="decision-limit"><span>Simulated proposed limit</span><strong>{{ account.proposed_limit|money(ccy) }}</strong><small>from {{ account.current_limit_inr|money(ccy) }}</small></div>

@@ -1,5 +1,28 @@
 # QA report
 
+## V2.1 release-candidate verification — 14 August 2026
+
+- 85 tests passed with 69.05% statement coverage against the enforced 65%
+  threshold; the lower percentage than the earlier v2 run reflects the new
+  offline evidence module, whose long full-data paths are verified through
+  versioned artifact and provenance tests.
+- Ruff lint/format and Bandit passed. `pip-audit -r requirements.txt` reported
+  no known vulnerabilities. Detect-secrets scanned all 94 publishable tracked
+  and untracked text files with zero findings.
+- Desktop (1440), tablet (768) and mobile (390) browser checks found no
+  page-level horizontal overflow or console warnings/errors. Primary routes,
+  mobile navigation, accessible search/focus handling, account routing, INR/EUR
+  persistence, simulator extremes, valid batch download and missing-column
+  feedback passed.
+- Fifteen governance SVGs expose accessible titles/descriptions. Current-v2 and
+  archived-v1 reports are separated. CSP no longer permits inline styles.
+- Both two-page A4 executive PDFs were regenerated, rendered page by page and
+  inspected for clipping/overlap; descriptive PDF metadata is present.
+- The model bytes and checksum are unchanged. This is an application,
+  diagnostic-evidence and governance release candidate. GitHub Actions Docker
+  and Render production verification remain the release gate until recorded
+  below.
+
 ## Version boundary
 
 This report separates verified **v1 production evidence** from verified **v2

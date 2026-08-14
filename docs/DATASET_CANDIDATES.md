@@ -1,8 +1,10 @@
 # Public dataset review
 
-Research updated 11 August 2026. “Downloadable” is not treated as synonymous
-with “openly licensed.” V2 publication remains blocked wherever upstream,
-competition or derived-artifact rights are unresolved.
+Research updated 14 August 2026. “Downloadable” is not treated as synonymous
+with “openly licensed.” The original terms concerns are retained below. The
+repository owner attested on 14 August 2026 that the issue was resolved and
+cleared the project gate; supporting records are owner-held and this is not an
+independent legal opinion. See `NOTICE.md`.
 
 ## Training and reference sources
 
@@ -37,7 +39,7 @@ competition or derived-artifact rights are unresolved.
   representation of the same underlying population. Including both would create
   duplicate-population leakage and a false seventh independent cohort.
 
-### 4. Give Me Some Credit — local training; terms unresolved
+### 4. Give Me Some Credit — training; historical terms concern
 
 - Origin: Kaggle Give Me Some Credit competition
 - Immediate source: OpenML 45577 / file 22116561
@@ -48,9 +50,10 @@ competition or derived-artifact rights are unresolved.
 - Mirror licence field: `Public`, not a standard open licence; original
   competition terms apply
 - Strength: useful scale and delinquency/utilization/debt features
-- Limitation: geography/currency unknown, missing income and unresolved terms
+- Limitation: geography/currency unknown and income is missing; the historical
+  terms concern is covered only by the dated owner attestation
 
-### 5. FICO Explainable ML / HELOC — local training; terms unresolved
+### 5. FICO Explainable ML / HELOC — training; historical terms concern
 
 - Origin: FICO Explainable Machine Learning Challenge
 - Immediate source: cleaned OpenML 45554 / file 22116522
@@ -62,7 +65,7 @@ competition or derived-artifact rights are unresolved.
 - Strength: real HELOC credit-file behavior and explainability provenance
 - Limitation: small, cleaned through an intermediary and custom/unknown terms
 
-### 6. Lending Club accepted loans — local training; terms unresolved
+### 6. Lending Club accepted loans — training; historical terms concern
 
 - Immediate source:
   https://huggingface.co/datasets/codesignal/lending-club-loan-accepted
@@ -74,9 +77,10 @@ competition or derived-artifact rights are unresolved.
 - Mirror licence: CC0-1.0; upstream Lending Club rights not independently verified
 - Strength: largest cohort with utilization, DTI, income, credit lines and age
 - Limitations: row dominance, status/censoring selection, variable horizons,
-  vintage drift and unresolved upstream rights
+  vintage drift and historically unresolved upstream rights; release proceeds
+  under the dated owner attestation
 
-### 7. Home Credit application data — local training; terms unresolved
+### 7. Home Credit application data — training; historical terms concern
 
 - Origin: Home Credit Default Risk competition
 - Immediate unofficial mirror:
@@ -89,7 +93,8 @@ competition or derived-artifact rights are unresolved.
   require review
 - Strength: second cohort above 200,000 rows
 - Limitations: geography, currency and target parameters undisclosed; only narrow
-  application proxies harmonize; terms unresolved
+  application proxies harmonize; release proceeds under the dated owner
+  attestation rather than an independent legal opinion
 
 ## V1 external-validation sources
 
@@ -137,9 +142,10 @@ study after reviewing the then-current terms; do not add them to this public uni
 
 ## Selection decision
 
-The local research benchmark uses six independent cohorts totaling 1,869,548
+The research benchmark uses six independent cohorts totaling 1,869,548
 rows and retains legacy Statlog only as reference. This satisfies scale but not a
 common PD definition or global representativeness. Source-macro metrics are
-primary because Lending Club dominates raw rows. Public v2 distribution is
-blocked until all unresolved terms are cleared; if they cannot be cleared, the
-deployable model must be retrained on compatible sources.
+primary because Lending Club dominates raw rows. The repository-owner attestation
+clears the project publication gate. A future institutional use case still
+requires independent legal review and retraining on compatible sources if that
+review cannot substantiate the same conclusion.

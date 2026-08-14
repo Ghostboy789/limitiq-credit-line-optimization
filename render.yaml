@@ -10,4 +10,5 @@ services:
         value: 8000
       - key: MAX_UPLOAD_BYTES
         value: 5242880
-
+      - key: AUTO_INCREASES_ENABLED
+        value: true

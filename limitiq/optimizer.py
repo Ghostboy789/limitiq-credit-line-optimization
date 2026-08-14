@@ -112,6 +112,7 @@ def _candidate(
     pd_value: float,
     increase_pct: float,
     assumptions: PolicyAssumptions,
+    automatic_increases_enabled: bool,
 ) -> dict[str, Any]:
     limit = behavior["limit"]
     balance = behavior["balance"]
@@ -135,6 +136,7 @@ def _candidate(
     servicing = assumptions.servicing_cost if increase_pct else 0.0
     contribution = interchange + interest - incremental_ecl - funding - capital - servicing
     checks = {
+        "automatic_increases_enabled": automatic_increases_enabled,
         "within_maximum_increase": bool(increase_pct <= assumptions.max_increase + 1e-12),
         "within_account_exposure": bool(proposed_limit <= assumptions.max_account_exposure),
         "within_expected_loss_ceiling": bool(
@@ -166,6 +168,7 @@ def recommend_account(
     pd_value: float,
     account_id: str,
     assumptions: PolicyAssumptions | None = None,
+    automatic_increases_enabled: bool = True,
 ) -> Decision:
     assumptions = assumptions or PolicyAssumptions()
     assumptions.validate()
@@ -174,7 +177,10 @@ def recommend_account(
     behavior = _behavior(row)
     warning_action, warning_reasons = _warning_state(behavior)
     allowed = [pct for pct in (0.0, 0.1, 0.2, 0.3) if pct <= assumptions.max_increase + 1e-12]
-    candidates = tuple(_candidate(behavior, pd_value, pct, assumptions) for pct in allowed)
+    candidates = tuple(
+        _candidate(behavior, pd_value, pct, assumptions, automatic_increases_enabled)
+        for pct in allowed
+    )
     baseline = candidates[0]
     if warning_action:
         selected = baseline
@@ -182,6 +188,10 @@ def recommend_account(
             ["Manual review required"] if warning_action == "Manual review" else []
         )
         action = warning_action
+    elif not automatic_increases_enabled:
+        selected = baseline
+        action = "Manual review"
+        reasons = ["Automatic increases disabled by governance control", "Manual review required"]
     else:
         eligible = [item for item in candidates if item["eligible"]]
         selected = max(
@@ -199,6 +209,7 @@ def recommend_account(
         if selected["increase_pct"] == 0:
             failed = [name for name, ok in candidates[-1]["checks"].items() if not ok]
             mapping = {
+                "automatic_increases_enabled": "Automatic increases disabled by governance control",
                 "within_account_exposure": "Exposure limit reached",
                 "within_expected_loss_ceiling": "Expected loss exceeds policy ceiling",
                 "meets_profitability_hurdle": "Incremental return below profitability hurdle",
@@ -237,12 +248,19 @@ def recommend_portfolio(
     probabilities: np.ndarray,
     account_ids: list[str],
     assumptions: PolicyAssumptions | None = None,
+    automatic_increases_enabled: bool = True,
 ) -> list[Decision]:
     assumptions = assumptions or PolicyAssumptions()
     if len(frame) != len(probabilities) or len(frame) != len(account_ids):
         raise ValueError("Frame, probabilities, and account IDs must have equal lengths")
     decisions = [
-        recommend_account(row, float(probability), account_id, assumptions)
+        recommend_account(
+            row,
+            float(probability),
+            account_id,
+            assumptions,
+            automatic_increases_enabled,
+        )
         for (_, row), probability, account_id in zip(
             frame.iterrows(), probabilities, account_ids, strict=True
         )

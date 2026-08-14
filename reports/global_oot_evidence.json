@@ -1,0 +1,349 @@
+{
+  "classification": "Vintage-split status-at-extract evidence for Lending Club only",
+  "method": "Calibrated histogram gradient boosting (champion recipe) fitted on the earliest 60% of issues by date, threshold selected loss-weighted (5x FN) on the next 20%, and scored on the most recent 20%. Loan status is observed at extract, so vintages have unequal seasoning and this is not a fixed-horizon PD backtest.",
+  "source": "lending_club_full",
+  "undated_rows_dropped": 0,
+  "cutoffs": {
+    "in_time_validation_start": "2016-01-01",
+    "out_of_time_test_start": "2016-12-01"
+  },
+  "counts": {
+    "train": 828654,
+    "validation": 278502,
+    "test": 264010
+  },
+  "in_time_holdout": {
+    "roc_auc": 0.6054113620475818,
+    "pr_auc": 0.31711327143574786,
+    "brier_score": 0.1840655146569126,
+    "log_loss": 0.5553313830489698,
+    "precision": 0.2597435385811958,
+    "recall": 0.9353745985658352,
+    "f1": 0.4065832499378518,
+    "threshold": 0.11936936936936937,
+    "confusion_matrix": [
+      [
+        28522,
+        181787
+      ],
+      [
+        4407,
+        63786
+      ]
+    ],
+    "calibration": [
+      {
+        "mean_predicted": 0.10025578549785907,
+        "observed_rate": 0.1311981616459014
+      },
+      {
+        "mean_predicted": 0.1251979939611371,
+        "observed_rate": 0.17152603231597846
+      },
+      {
+        "mean_predicted": 0.14150379872361596,
+        "observed_rate": 0.1987073608617594
+      },
+      {
+        "mean_predicted": 0.1562723636978382,
+        "observed_rate": 0.21080789946140036
+      },
+      {
+        "mean_predicted": 0.17112516127854638,
+        "observed_rate": 0.23648114901256734
+      },
+      {
+        "mean_predicted": 0.18686609077552355,
+        "observed_rate": 0.2429084380610413
+      },
+      {
+        "mean_predicted": 0.20382192072635869,
+        "observed_rate": 0.27120287253141834
+      },
+      {
+        "mean_predicted": 0.22221283592202448,
+        "observed_rate": 0.2962657091561939
+      },
+      {
+        "mean_predicted": 0.24567199893261962,
+        "observed_rate": 0.3266427289048474
+      },
+      {
+        "mean_predicted": 0.29431591217765457,
+        "observed_rate": 0.36282359699831246
+      }
+    ]
+  },
+  "out_of_time": {
+    "roc_auc": 0.5999637793965716,
+    "pr_auc": 0.3437256693447022,
+    "brier_score": 0.20231556230391654,
+    "log_loss": 0.6005523939265439,
+    "precision": 0.2897608872249497,
+    "recall": 0.9132043968276053,
+    "f1": 0.43993109319176604,
+    "threshold": 0.11936936936936937,
+    "confusion_matrix": [
+      [
+        31268,
+        160872
+      ],
+      [
+        6238,
+        65632
+      ]
+    ],
+    "calibration": [
+      {
+        "mean_predicted": 0.09651996739099752,
+        "observed_rate": 0.15544865724783152
+      },
+      {
+        "mean_predicted": 0.12052719416692316,
+        "observed_rate": 0.20241657512972994
+      },
+      {
+        "mean_predicted": 0.13605694931427342,
+        "observed_rate": 0.2194613840384834
+      },
+      {
+        "mean_predicted": 0.150113651458861,
+        "observed_rate": 0.24427105033900232
+      },
+      {
+        "mean_predicted": 0.16426350987549465,
+        "observed_rate": 0.2547630771561683
+      },
+      {
+        "mean_predicted": 0.17967360796788232,
+        "observed_rate": 0.27748948903450626
+      },
+      {
+        "mean_predicted": 0.196740984638812,
+        "observed_rate": 0.29688269383735466
+      },
+      {
+        "mean_predicted": 0.21576256518139036,
+        "observed_rate": 0.3224877845536154
+      },
+      {
+        "mean_predicted": 0.2397076723799093,
+        "observed_rate": 0.35653952501799174
+      },
+      {
+        "mean_predicted": 0.2886584815341246,
+        "observed_rate": 0.39248513313889627
+      }
+    ]
+  },
+  "by_vintage_year": [
+    {
+      "vintage_year": 2016,
+      "accounts": 20051,
+      "risk_rate": 0.27464964340930625,
+      "roc_auc": 0.6037758998798008,
+      "pr_auc": 0.3472680209697361,
+      "brier_score": 0.2029798841449366,
+      "log_loss": 0.6010657865047374,
+      "precision": 0.28780846728548787,
+      "recall": 0.9233702560377701,
+      "f1": 0.4388349514563107,
+      "threshold": 0.11936936936936937,
+      "confusion_matrix": [
+        [
+          1961,
+          12583
+        ],
+        [
+          422,
+          5085
+        ]
+      ],
+      "calibration": [
+        {
+          "mean_predicted": 0.10002095723118962,
+          "observed_rate": 0.17098703888334996
+        },
+        {
+          "mean_predicted": 0.1252471035719736,
+          "observed_rate": 0.19351620947630924
+        },
+        {
+          "mean_predicted": 0.14165092367804072,
+          "observed_rate": 0.21496259351620947
+        },
+        {
+          "mean_predicted": 0.156524211030844,
+          "observed_rate": 0.23790523690773066
+        },
+        {
+          "mean_predicted": 0.17116703522912424,
+          "observed_rate": 0.23840399002493765
+        },
+        {
+          "mean_predicted": 0.18641023159353862,
+          "observed_rate": 0.2773067331670823
+        },
+        {
+          "mean_predicted": 0.2026673758364844,
+          "observed_rate": 0.30972568578553616
+        },
+        {
+          "mean_predicted": 0.2204733055966064,
+          "observed_rate": 0.33665835411471323
+        },
+        {
+          "mean_predicted": 0.24156182315411773,
+          "observed_rate": 0.37605985037406486
+        },
+        {
+          "mean_predicted": 0.28107245356109506,
+          "observed_rate": 0.3910224438902743
+        }
+      ]
+    },
+    {
+      "vintage_year": 2017,
+      "accounts": 178817,
+      "risk_rate": 0.27214973967799483,
+      "roc_auc": 0.6052279145015291,
+      "pr_auc": 0.3488050616696927,
+      "brier_score": 0.20164543361259238,
+      "log_loss": 0.5982542500820803,
+      "precision": 0.2896446090311573,
+      "recall": 0.9209287989314703,
+      "f1": 0.44068713249031444,
+      "threshold": 0.11936936936936937,
+      "confusion_matrix": [
+        [
+          20238,
+          109914
+        ],
+        [
+          3848,
+          44817
+        ]
+      ],
+      "calibration": [
+        {
+          "mean_predicted": 0.09732604884393757,
+          "observed_rate": 0.15071021138575103
+        },
+        {
+          "mean_predicted": 0.12184800371201365,
+          "observed_rate": 0.19567162509786376
+        },
+        {
+          "mean_predicted": 0.13767191485129884,
+          "observed_rate": 0.21810860690118003
+        },
+        {
+          "mean_predicted": 0.15189293014334976,
+          "observed_rate": 0.24275808075159377
+        },
+        {
+          "mean_predicted": 0.16613454302900382,
+          "observed_rate": 0.255284643775864
+        },
+        {
+          "mean_predicted": 0.18150849018511497,
+          "observed_rate": 0.2749846205469493
+        },
+        {
+          "mean_predicted": 0.19838125017125857,
+          "observed_rate": 0.29890392573537633
+        },
+        {
+          "mean_predicted": 0.21690924267214892,
+          "observed_rate": 0.32403109445780437
+        },
+        {
+          "mean_predicted": 0.24010553372249505,
+          "observed_rate": 0.361145285762219
+        },
+        {
+          "mean_predicted": 0.28737110880267913,
+          "observed_rate": 0.399899340118555
+        }
+      ]
+    },
+    {
+      "vintage_year": 2018,
+      "accounts": 65142,
+      "risk_rate": 0.2716833993429738,
+      "roc_auc": 0.5860105906278368,
+      "pr_auc": 0.3303609084998868,
+      "brier_score": 0.2039506070517325,
+      "log_loss": 0.60670285220615,
+      "precision": 0.29073098604565195,
+      "recall": 0.8888009944626512,
+      "f1": 0.4381432530674206,
+      "threshold": 0.11936936936936937,
+      "confusion_matrix": [
+        [
+          9069,
+          38375
+        ],
+        [
+          1968,
+          15730
+        ]
+      ],
+      "calibration": [
+        {
+          "mean_predicted": 0.09376640006975634,
+          "observed_rate": 0.15871066768994627
+        },
+        {
+          "mean_predicted": 0.11620978306320259,
+          "observed_rate": 0.21369358305188824
+        },
+        {
+          "mean_predicted": 0.130679300074169,
+          "observed_rate": 0.22781700951796133
+        },
+        {
+          "mean_predicted": 0.14368040909438262,
+          "observed_rate": 0.2525330058335892
+        },
+        {
+          "mean_predicted": 0.15715040141005762,
+          "observed_rate": 0.2655818237642002
+        },
+        {
+          "mean_predicted": 0.17220625504884796,
+          "observed_rate": 0.2826220448265275
+        },
+        {
+          "mean_predicted": 0.18951738687838712,
+          "observed_rate": 0.2887626650291679
+        },
+        {
+          "mean_predicted": 0.21030485082409028,
+          "observed_rate": 0.3143997543751919
+        },
+        {
+          "mean_predicted": 0.23753751737782777,
+          "observed_rate": 0.3401903592262819
+        },
+        {
+          "mean_predicted": 0.29450747754115336,
+          "observed_rate": 0.37252494244052187
+        }
+      ]
+    }
+  ],
+  "random_split_reference": {
+    "roc_auc": 0.6015172932910253,
+    "pr_auc": 0.2827423143813544,
+    "brier_score": 0.16495866555241484,
+    "log_loss": 0.5092831619752101
+  },
+  "provenance": {
+    "generated_at": "2026-08-14T10:59:55.243259+00:00",
+    "random_seed": 42,
+    "raw_file_sha256": "3eae03c28fd9d2e8a076ebeb73507e8d4d0f44d90500decdb0936e0933d1f36a",
+    "diagnostic_recipe": "sigmoid-calibrated-histogram-gradient-boosting-cv3"
+  },
+  "evidence_boundary": "Lending Club is the only training cohort with disclosed issue dates, so this evidence is single-source. Other cohorts have no published origination or behavior period and cannot support a temporal claim. Status-at-extract labels have unequal follow-up and censoring, so this is a vintage robustness diagnostic, not fixed-horizon out-of-time PD validation or unseen-country generalization."
+}

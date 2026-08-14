@@ -1,0 +1,1113 @@
+{
+  "classification": "Source-context ablation: explicit region contribution",
+  "method": "Same calibrated histogram-gradient-boosting recipe and published 60/20/20 split. 'region_included' reproduces the champion pipeline; 'features_only' drops the one-hot region context; 'region_only' learns from region alone. Structural missingness remains available to both feature-bearing variants, so this analysis does not isolate or rule out source identification through missingness.",
+  "variants": {
+    "region_included": {
+      "test_metrics": {
+        "roc_auc": 0.6697461588387467,
+        "pr_auc": 0.30451459136238707,
+        "brier_score": 0.14066003622864745,
+        "log_loss": 0.4449408845545234,
+        "precision": 0.24353146772958073,
+        "recall": 0.7777403430647312,
+        "f1": 0.37091838873286664,
+        "threshold": 0.16891891891891891,
+        "confusion_matrix": [
+          [
+            140720,
+            164923
+          ],
+          [
+            15173,
+            53094
+          ]
+        ],
+        "calibration": [
+          {
+            "mean_predicted": 0.044175806587987546,
+            "observed_rate": 0.04337361736993035
+          },
+          {
+            "mean_predicted": 0.08093928196702894,
+            "observed_rate": 0.0823479188900747
+          },
+          {
+            "mean_predicted": 0.11327099792139989,
+            "observed_rate": 0.11428788974759203
+          },
+          {
+            "mean_predicted": 0.15117969330352143,
+            "observed_rate": 0.14976866090770508
+          },
+          {
+            "mean_predicted": 0.17585920706295655,
+            "observed_rate": 0.17456072316867696
+          },
+          {
+            "mean_predicted": 0.19654251041075643,
+            "observed_rate": 0.194565537161349
+          },
+          {
+            "mean_predicted": 0.21769815031325374,
+            "observed_rate": 0.21721804712363937
+          },
+          {
+            "mean_predicted": 0.24117092358277475,
+            "observed_rate": 0.2427856970928833
+          },
+          {
+            "mean_predicted": 0.2706932103294293,
+            "observed_rate": 0.27322082854162766
+          },
+          {
+            "mean_predicted": 0.34436532101293293,
+            "observed_rate": 0.3448690861437244
+          }
+        ]
+      },
+      "macro_test_metrics": {
+        "macro_roc_auc": 0.6824154182536378,
+        "macro_brier_score": 0.13887671216215874
+      },
+      "per_source_test": {
+        "fico_heloc": {
+          "roc_auc": 0.7615829828012202,
+          "pr_auc": 0.7668027141289231,
+          "brier_score": 0.20042526496898963,
+          "log_loss": 0.5876158871146805,
+          "precision": 0.5330882352941176,
+          "recall": 0.9883154819863681,
+          "f1": 0.6925963834868646,
+          "threshold": 0.16891891891891891,
+          "confusion_matrix": [
+            [
+              58,
+              889
+            ],
+            [
+              12,
+              1015
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.17272097929176267,
+              "observed_rate": 0.17676767676767677
+            },
+            {
+              "mean_predicted": 0.23561372202545933,
+              "observed_rate": 0.2639593908629442
+            },
+            {
+              "mean_predicted": 0.33597075558169043,
+              "observed_rate": 0.29441624365482233
+            },
+            {
+              "mean_predicted": 0.4582698362633575,
+              "observed_rate": 0.4292929292929293
+            },
+            {
+              "mean_predicted": 0.5265640325714298,
+              "observed_rate": 0.4720812182741117
+            },
+            {
+              "mean_predicted": 0.5864048074218675,
+              "observed_rate": 0.5228426395939086
+            },
+            {
+              "mean_predicted": 0.6413190622171401,
+              "observed_rate": 0.6363636363636364
+            },
+            {
+              "mean_predicted": 0.6887141283590892,
+              "observed_rate": 0.7208121827411168
+            },
+            {
+              "mean_predicted": 0.738710261847644,
+              "observed_rate": 0.8223350253807107
+            },
+            {
+              "mean_predicted": 0.8003877633633746,
+              "observed_rate": 0.8636363636363636
+            }
+          ],
+          "accounts": 1974,
+          "risk_rate": 0.5202634245187436
+        },
+        "give_me_some_credit": {
+          "roc_auc": 0.8525348621658926,
+          "pr_auc": 0.38321210842041975,
+          "brier_score": 0.04981888501656161,
+          "log_loss": 0.18206929147443074,
+          "precision": 0.34658385093167704,
+          "recall": 0.5566084788029925,
+          "f1": 0.427177033492823,
+          "threshold": 0.16891891891891891,
+          "confusion_matrix": [
+            [
+              25891,
+              2104
+            ],
+            [
+              889,
+              1116
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.00892306146107864,
+              "observed_rate": 0.006666666666666667
+            },
+            {
+              "mean_predicted": 0.009860076454582988,
+              "observed_rate": 0.008330556481172943
+            },
+            {
+              "mean_predicted": 0.01115099352105035,
+              "observed_rate": 0.01163177135260884
+            },
+            {
+              "mean_predicted": 0.012961537451892276,
+              "observed_rate": 0.016042780748663103
+            },
+            {
+              "mean_predicted": 0.016138167110959226,
+              "observed_rate": 0.01633877959319773
+            },
+            {
+              "mean_predicted": 0.02465905388730899,
+              "observed_rate": 0.024674891630543514
+            },
+            {
+              "mean_predicted": 0.047694900888395446,
+              "observed_rate": 0.04465178273908697
+            },
+            {
+              "mean_predicted": 0.07284321753715191,
+              "observed_rate": 0.059940059940059943
+            },
+            {
+              "mean_predicted": 0.11453474643450559,
+              "observed_rate": 0.11949265687583445
+            },
+            {
+              "mean_predicted": 0.35066660755420814,
+              "observed_rate": 0.3606666666666667
+            }
+          ],
+          "accounts": 30000,
+          "risk_rate": 0.06683333333333333
+        },
+        "home_credit": {
+          "roc_auc": 0.5185408103109086,
+          "pr_auc": 0.08422650220240402,
+          "brier_score": 0.07419430463914892,
+          "log_loss": 0.2804230635329631,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "threshold": 0.16891891891891891,
+          "confusion_matrix": [
+            [
+              56534,
+              3
+            ],
+            [
+              4965,
+              0
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.07272092553892517,
+              "observed_rate": 0.0738321737895783
+            },
+            {
+              "mean_predicted": 0.0748361135249139,
+              "observed_rate": 0.07114556416881998
+            },
+            {
+              "mean_predicted": 0.07768085828290162,
+              "observed_rate": 0.07528409090909091
+            },
+            {
+              "mean_predicted": 0.07887888466645639,
+              "observed_rate": 0.07768492726709997
+            },
+            {
+              "mean_predicted": 0.08007902290702593,
+              "observed_rate": 0.08849557522123894
+            },
+            {
+              "mean_predicted": 0.08148948007544639,
+              "observed_rate": 0.08763422237616904
+            },
+            {
+              "mean_predicted": 0.08196188925930757,
+              "observed_rate": 0.08099654874892148
+            },
+            {
+              "mean_predicted": 0.08214958088622344,
+              "observed_rate": 0.09331860850358918
+            },
+            {
+              "mean_predicted": 0.08230200405214355,
+              "observed_rate": 0.08560723303738699
+            },
+            {
+              "mean_predicted": 0.17408390383894348,
+              "observed_rate": 0.0
+            }
+          ],
+          "accounts": 61502,
+          "risk_rate": 0.08072908198107379
+        },
+        "lending_club_full": {
+          "roc_auc": 0.6013620875426143,
+          "pr_auc": 0.2823447048026798,
+          "brier_score": 0.16497899130614,
+          "log_loss": 0.5093426701496091,
+          "precision": 0.23749116087911878,
+          "recall": 0.8498547968004347,
+          "f1": 0.3712397160174188,
+          "threshold": 0.16891891891891891,
+          "confusion_matrix": [
+            [
+              54682,
+              160669
+            ],
+            [
+              8841,
+              50042
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.12010142970378304,
+              "observed_rate": 0.11989498249708284
+            },
+            {
+              "mean_predicted": 0.15309417701666025,
+              "observed_rate": 0.15191627465995697
+            },
+            {
+              "mean_predicted": 0.17174629229998367,
+              "observed_rate": 0.16887284396309668
+            },
+            {
+              "mean_predicted": 0.1871912039141673,
+              "observed_rate": 0.1868436406067678
+            },
+            {
+              "mean_predicted": 0.2024841425027429,
+              "observed_rate": 0.20264011960762862
+            },
+            {
+              "mean_predicted": 0.21834368458851788,
+              "observed_rate": 0.2169346898588776
+            },
+            {
+              "mean_predicted": 0.23540799466544352,
+              "observed_rate": 0.23563302217036172
+            },
+            {
+              "mean_predicted": 0.2549000836750569,
+              "observed_rate": 0.2561718265689385
+            },
+            {
+              "mean_predicted": 0.28033271716837205,
+              "observed_rate": 0.28038507821901326
+            },
+            {
+              "mean_predicted": 0.3260436459926492,
+              "observed_rate": 0.3278879813302217
+            }
+          ],
+          "accounts": 274234,
+          "risk_rate": 0.21471808747274226
+        },
+        "south_german_credit": {
+          "roc_auc": 0.6069047619047618,
+          "pr_auc": 0.3975026436624601,
+          "brier_score": 0.20086476988097707,
+          "log_loss": 0.5903147181113394,
+          "precision": 0.3,
+          "recall": 1.0,
+          "f1": 0.46153846153846156,
+          "threshold": 0.16891891891891891,
+          "confusion_matrix": [
+            [
+              0,
+              140
+            ],
+            [
+              0,
+              60
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.20761775674089925,
+              "observed_rate": 0.28
+            },
+            {
+              "mean_predicted": 0.2252800579721337,
+              "observed_rate": 0.23809523809523808
+            },
+            {
+              "mean_predicted": 0.24185095275640625,
+              "observed_rate": 0.29411764705882354
+            },
+            {
+              "mean_predicted": 0.24537338212390883,
+              "observed_rate": 0.13157894736842105
+            },
+            {
+              "mean_predicted": 0.2641833800647375,
+              "observed_rate": 0.3508771929824561
+            },
+            {
+              "mean_predicted": 0.3274885653914976,
+              "observed_rate": 0.0
+            },
+            {
+              "mean_predicted": 0.483760802021021,
+              "observed_rate": 0.65
+            }
+          ],
+          "accounts": 200,
+          "risk_rate": 0.3
+        },
+        "taiwan_credit": {
+          "roc_auc": 0.7535670047964295,
+          "pr_auc": 0.4791954736326173,
+          "brier_score": 0.1429780571611353,
+          "log_loss": 0.45034893925834796,
+          "precision": 0.43506821627084385,
+          "recall": 0.6488319517709118,
+          "f1": 0.5208711433756806,
+          "threshold": 0.16891891891891891,
+          "confusion_matrix": [
+            [
+              3555,
+              1118
+            ],
+            [
+              466,
+              861
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.08270447918663072,
+              "observed_rate": 0.07165605095541401
+            },
+            {
+              "mean_predicted": 0.08552633234041743,
+              "observed_rate": 0.08838821490467938
+            },
+            {
+              "mean_predicted": 0.0979782819477217,
+              "observed_rate": 0.09876543209876543
+            },
+            {
+              "mean_predicted": 0.11955963530712181,
+              "observed_rate": 0.1
+            },
+            {
+              "mean_predicted": 0.13936874821659898,
+              "observed_rate": 0.15916955017301038
+            },
+            {
+              "mean_predicted": 0.14630186864402564,
+              "observed_rate": 0.14796747967479676
+            },
+            {
+              "mean_predicted": 0.1893113054742969,
+              "observed_rate": 0.21805792163543442
+            },
+            {
+              "mean_predicted": 0.2989856312923265,
+              "observed_rate": 0.2859504132231405
+            },
+            {
+              "mean_predicted": 0.42151034431855694,
+              "observed_rate": 0.42327150084317033
+            },
+            {
+              "mean_predicted": 0.6194193579230618,
+              "observed_rate": 0.6260434056761269
+            }
+          ],
+          "accounts": 6000,
+          "risk_rate": 0.22116666666666668
+        }
+      },
+      "validation_macro_roc_auc": 0.6780850403569919,
+      "validation_macro_brier": 0.14184501408895306
+    },
+    "features_only": {
+      "test_metrics": {
+        "roc_auc": 0.6697498687008707,
+        "pr_auc": 0.30457123574218276,
+        "brier_score": 0.14065611000299982,
+        "log_loss": 0.44493695349153267,
+        "precision": 0.24352648215532768,
+        "recall": 0.7764366384929761,
+        "f1": 0.3707641567834697,
+        "threshold": 0.16891891891891891,
+        "confusion_matrix": [
+          [
+            140992,
+            164651
+          ],
+          [
+            15262,
+            53005
+          ]
+        ],
+        "calibration": [
+          {
+            "mean_predicted": 0.0435235999257562,
+            "observed_rate": 0.04304377244573986
+          },
+          {
+            "mean_predicted": 0.0810411979403898,
+            "observed_rate": 0.08226380723689658
+          },
+          {
+            "mean_predicted": 0.11420856242896689,
+            "observed_rate": 0.11439128896576123
+          },
+          {
+            "mean_predicted": 0.15089124225588244,
+            "observed_rate": 0.14998261613757322
+          },
+          {
+            "mean_predicted": 0.17569175999408113,
+            "observed_rate": 0.17391885747907251
+          },
+          {
+            "mean_predicted": 0.1965017302668591,
+            "observed_rate": 0.19499344762108528
+          },
+          {
+            "mean_predicted": 0.21804931867083296,
+            "observed_rate": 0.21802037923564493
+          },
+          {
+            "mean_predicted": 0.24181164292081245,
+            "observed_rate": 0.24131475488753978
+          },
+          {
+            "mean_predicted": 0.2708104413605603,
+            "observed_rate": 0.27391618303869913
+          },
+          {
+            "mean_predicted": 0.34381903551264753,
+            "observed_rate": 0.34527025219972723
+          }
+        ]
+      },
+      "macro_test_metrics": {
+        "macro_roc_auc": 0.6839997174790605,
+        "macro_brier_score": 0.13979991480654624
+      },
+      "per_source_test": {
+        "fico_heloc": {
+          "roc_auc": 0.7609275023160311,
+          "pr_auc": 0.7688081876830503,
+          "brier_score": 0.20044577553880935,
+          "log_loss": 0.5884102477942191,
+          "precision": 0.522296258329062,
+          "recall": 0.9922103213242454,
+          "f1": 0.6843519140362659,
+          "threshold": 0.16891891891891891,
+          "confusion_matrix": [
+            [
+              15,
+              932
+            ],
+            [
+              8,
+              1019
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.19352492628189935,
+              "observed_rate": 0.18686868686868688
+            },
+            {
+              "mean_predicted": 0.2488768964131137,
+              "observed_rate": 0.25888324873096447
+            },
+            {
+              "mean_predicted": 0.33543889749020944,
+              "observed_rate": 0.28426395939086296
+            },
+            {
+              "mean_predicted": 0.4423087285350939,
+              "observed_rate": 0.4393939393939394
+            },
+            {
+              "mean_predicted": 0.5147140542788577,
+              "observed_rate": 0.4416243654822335
+            },
+            {
+              "mean_predicted": 0.5819608863119616,
+              "observed_rate": 0.5482233502538071
+            },
+            {
+              "mean_predicted": 0.6391527592549466,
+              "observed_rate": 0.6565656565656566
+            },
+            {
+              "mean_predicted": 0.6926664635251124,
+              "observed_rate": 0.7055837563451777
+            },
+            {
+              "mean_predicted": 0.7414722267484524,
+              "observed_rate": 0.8223350253807107
+            },
+            {
+              "mean_predicted": 0.803103796428871,
+              "observed_rate": 0.8585858585858586
+            }
+          ],
+          "accounts": 1974,
+          "risk_rate": 0.5202634245187436
+        },
+        "give_me_some_credit": {
+          "roc_auc": 0.8523406522094478,
+          "pr_auc": 0.3836757800198494,
+          "brier_score": 0.049816361025302514,
+          "log_loss": 0.182063155210604,
+          "precision": 0.3465036061461273,
+          "recall": 0.5511221945137157,
+          "f1": 0.4254909510974201,
+          "threshold": 0.16891891891891891,
+          "confusion_matrix": [
+            [
+              25911,
+              2084
+            ],
+            [
+              900,
+              1105
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.008957469714747727,
+              "observed_rate": 0.005
+            },
+            {
+              "mean_predicted": 0.009795143401597825,
+              "observed_rate": 0.01
+            },
+            {
+              "mean_predicted": 0.011167875083244785,
+              "observed_rate": 0.012982689747003996
+            },
+            {
+              "mean_predicted": 0.013038747443418049,
+              "observed_rate": 0.015010006671114077
+            },
+            {
+              "mean_predicted": 0.016745090776635538,
+              "observed_rate": 0.015343562374916611
+            },
+            {
+              "mean_predicted": 0.02472974296231173,
+              "observed_rate": 0.026
+            },
+            {
+              "mean_predicted": 0.04815722633188436,
+              "observed_rate": 0.04633333333333333
+            },
+            {
+              "mean_predicted": 0.07270147013519883,
+              "observed_rate": 0.058666666666666666
+            },
+            {
+              "mean_predicted": 0.11540881726257754,
+              "observed_rate": 0.117
+            },
+            {
+              "mean_predicted": 0.3497057402037979,
+              "observed_rate": 0.362
+            }
+          ],
+          "accounts": 30000,
+          "risk_rate": 0.06683333333333333
+        },
+        "home_credit": {
+          "roc_auc": 0.5183108884251418,
+          "pr_auc": 0.08425625499085744,
+          "brier_score": 0.07419443427008643,
+          "log_loss": 0.2804265518170751,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "threshold": 0.16891891891891891,
+          "confusion_matrix": [
+            [
+              56537,
+              0
+            ],
+            [
+              4965,
+              0
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.07221641686897502,
+              "observed_rate": 0.0738321737895783
+            },
+            {
+              "mean_predicted": 0.07438983605801604,
+              "observed_rate": 0.0715857167033339
+            },
+            {
+              "mean_predicted": 0.07813220175538353,
+              "observed_rate": 0.07489669421487603
+            },
+            {
+              "mean_predicted": 0.07940384505464973,
+              "observed_rate": 0.07553324968632372
+            },
+            {
+              "mean_predicted": 0.07984867062607638,
+              "observed_rate": 0.08631688582215857
+            },
+            {
+              "mean_predicted": 0.08131999930104443,
+              "observed_rate": 0.08874458874458875
+            },
+            {
+              "mean_predicted": 0.08219607365002017,
+              "observed_rate": 0.07852077001013172
+            },
+            {
+              "mean_predicted": 0.08239962307852779,
+              "observed_rate": 0.08614756488772236
+            },
+            {
+              "mean_predicted": 0.08257961479477542,
+              "observed_rate": 0.0831758034026465
+            }
+          ],
+          "accounts": 61502,
+          "risk_rate": 0.08072908198107379
+        },
+        "lending_club_full": {
+          "roc_auc": 0.601456790375721,
+          "pr_auc": 0.2825085679880544,
+          "brier_score": 0.164970230635126,
+          "log_loss": 0.5093194736846806,
+          "precision": 0.23751794696256573,
+          "recall": 0.8484622047110372,
+          "f1": 0.3711393815581763,
+          "threshold": 0.16891891891891891,
+          "confusion_matrix": [
+            [
+              54969,
+              160382
+            ],
+            [
+              8923,
+              49960
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.12007891682830825,
+              "observed_rate": 0.11978558926487748
+            },
+            {
+              "mean_predicted": 0.1528148913467287,
+              "observed_rate": 0.1520621376217044
+            },
+            {
+              "mean_predicted": 0.1715353318434949,
+              "observed_rate": 0.16872698100134922
+            },
+            {
+              "mean_predicted": 0.18709669297720713,
+              "observed_rate": 0.1878281796966161
+            },
+            {
+              "mean_predicted": 0.20254448272099193,
+              "observed_rate": 0.20125442147102796
+            },
+            {
+              "mean_predicted": 0.21871948905357674,
+              "observed_rate": 0.21748167596543047
+            },
+            {
+              "mean_predicted": 0.2360176512781625,
+              "observed_rate": 0.23599766627771296
+            },
+            {
+              "mean_predicted": 0.25535790159020594,
+              "observed_rate": 0.2544944025088429
+            },
+            {
+              "mean_predicted": 0.28013925498520925,
+              "observed_rate": 0.2807862013638187
+            },
+            {
+              "mean_predicted": 0.3253557219269522,
+              "observed_rate": 0.32876312718786466
+            }
+          ],
+          "accounts": 274234,
+          "risk_rate": 0.21471808747274226
+        },
+        "south_german_credit": {
+          "roc_auc": 0.6184523809523809,
+          "pr_auc": 0.4047595734346378,
+          "brier_score": 0.20641950847288812,
+          "log_loss": 0.6038064578236004,
+          "precision": 0.3076923076923077,
+          "recall": 1.0,
+          "f1": 0.47058823529411764,
+          "threshold": 0.16891891891891891,
+          "confusion_matrix": [
+            [
+              5,
+              135
+            ],
+            [
+              0,
+              60
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.16860980596253536,
+              "observed_rate": 0.3181818181818182
+            },
+            {
+              "mean_predicted": 0.18426304994239098,
+              "observed_rate": 0.2222222222222222
+            },
+            {
+              "mean_predicted": 0.24918791485926212,
+              "observed_rate": 0.14285714285714285
+            },
+            {
+              "mean_predicted": 0.2501261903546816,
+              "observed_rate": 0.09090909090909091
+            },
+            {
+              "mean_predicted": 0.2503279334398788,
+              "observed_rate": 0.29411764705882354
+            },
+            {
+              "mean_predicted": 0.268650879363872,
+              "observed_rate": 0.3508771929824561
+            },
+            {
+              "mean_predicted": 0.39338216950933036,
+              "observed_rate": 0.65
+            }
+          ],
+          "accounts": 200,
+          "risk_rate": 0.3
+        },
+        "taiwan_credit": {
+          "roc_auc": 0.7525100905956407,
+          "pr_auc": 0.4786824742998626,
+          "brier_score": 0.14295317889706508,
+          "log_loss": 0.45044802778198634,
+          "precision": 0.43506821627084385,
+          "recall": 0.6488319517709118,
+          "f1": 0.5208711433756806,
+          "threshold": 0.16891891891891891,
+          "confusion_matrix": [
+            [
+              3555,
+              1118
+            ],
+            [
+              466,
+              861
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.08109850491326166,
+              "observed_rate": 0.07903780068728522
+            },
+            {
+              "mean_predicted": 0.08381624441572363,
+              "observed_rate": 0.10597826086956522
+            },
+            {
+              "mean_predicted": 0.09513129946718168,
+              "observed_rate": 0.09171075837742504
+            },
+            {
+              "mean_predicted": 0.11543877284949706,
+              "observed_rate": 0.10242587601078167
+            },
+            {
+              "mean_predicted": 0.1392759656433518,
+              "observed_rate": 0.16186252771618626
+            },
+            {
+              "mean_predicted": 0.14467218260787232,
+              "observed_rate": 0.14796747967479676
+            },
+            {
+              "mean_predicted": 0.18984940938437572,
+              "observed_rate": 0.21404109589041095
+            },
+            {
+              "mean_predicted": 0.30383004821104725,
+              "observed_rate": 0.2866666666666667
+            },
+            {
+              "mean_predicted": 0.4240710489397907,
+              "observed_rate": 0.4242928452579035
+            },
+            {
+              "mean_predicted": 0.6228087151818981,
+              "observed_rate": 0.6260434056761269
+            }
+          ],
+          "accounts": 6000,
+          "risk_rate": 0.22116666666666668
+        }
+      },
+      "validation_macro_roc_auc": 0.6760132003660186,
+      "validation_macro_brier": 0.14171370910240358
+    },
+    "region_only": {
+      "test_metrics": {
+        "roc_auc": 0.5816318330171976,
+        "pr_auc": 0.2113740717802121,
+        "brier_score": 0.14609971123128296,
+        "log_loss": 0.46331831741302604,
+        "precision": 0.21491687883780142,
+        "recall": 0.8828570172997202,
+        "f1": 0.3456829776800181,
+        "threshold": 0.08963963963963964,
+        "confusion_matrix": [
+          [
+            85479,
+            220164
+          ],
+          [
+            7997,
+            60270
+          ]
+        ],
+        "calibration": [
+          {
+            "mean_predicted": 0.0855614618840255,
+            "observed_rate": 0.08555137147503103
+          },
+          {
+            "mean_predicted": 0.21472042822267134,
+            "observed_rate": 0.21471808747274226
+          },
+          {
+            "mean_predicted": 0.22356820554882445,
+            "observed_rate": 0.22370967741935485
+          }
+        ]
+      },
+      "macro_test_metrics": {
+        "macro_roc_auc": 0.5,
+        "macro_brier_score": 0.18775420511394833
+      },
+      "per_source_test": {
+        "fico_heloc": {
+          "roc_auc": 0.5,
+          "pr_auc": 0.5202634245187436,
+          "brier_score": 0.43855518994526754,
+          "log_loss": 1.3219882434819985,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "threshold": 0.08963963963963964,
+          "confusion_matrix": [
+            [
+              947,
+              0
+            ],
+            [
+              1027,
+              0
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.0855614618840006,
+              "observed_rate": 0.5202634245187436
+            }
+          ],
+          "accounts": 1974,
+          "risk_rate": 0.5202634245187436
+        },
+        "give_me_some_credit": {
+          "roc_auc": 0.5,
+          "pr_auc": 0.06683333333333333,
+          "brier_score": 0.06271738168789934,
+          "log_loss": 0.24777821995818095,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "threshold": 0.08963963963963964,
+          "confusion_matrix": [
+            [
+              27995,
+              0
+            ],
+            [
+              2005,
+              0
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.08556146188402369,
+              "observed_rate": 0.06683333333333333
+            }
+          ],
+          "accounts": 30000,
+          "risk_rate": 0.06683333333333333
+        },
+        "home_credit": {
+          "roc_auc": 0.5,
+          "pr_auc": 0.08072908198107379,
+          "brier_score": 0.07423524919909308,
+          "log_loss": 0.28069829467740953,
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "threshold": 0.08963963963963964,
+          "confusion_matrix": [
+            [
+              56537,
+              0
+            ],
+            [
+              4965,
+              0
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.08556146188402505,
+              "observed_rate": 0.08072908198107379
+            }
+          ],
+          "accounts": 61502,
+          "risk_rate": 0.08072908198107379
+        },
+        "lending_club_full": {
+          "roc_auc": 0.5,
+          "pr_auc": 0.21471808747274226,
+          "brier_score": 0.16861423039026915,
+          "log_loss": 0.5201410593680532,
+          "precision": 0.21471808747274226,
+          "recall": 1.0,
+          "f1": 0.353527439308111,
+          "threshold": 0.08963963963963964,
+          "confusion_matrix": [
+            [
+              0,
+              215351
+            ],
+            [
+              0,
+              58883
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.21472042822267134,
+              "observed_rate": 0.21471808747274226
+            }
+          ],
+          "accounts": 274234,
+          "risk_rate": 0.21471808747274226
+        },
+        "south_german_credit": {
+          "roc_auc": 0.5,
+          "pr_auc": 0.3,
+          "brier_score": 0.21015113775078967,
+          "log_loss": 0.6112300066595346,
+          "precision": 0.3,
+          "recall": 1.0,
+          "f1": 0.46153846153846156,
+          "threshold": 0.08963963963963964,
+          "confusion_matrix": [
+            [
+              0,
+              140
+            ],
+            [
+              0,
+              60
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.28770619055013263,
+              "observed_rate": 0.3
+            }
+          ],
+          "accounts": 200,
+          "risk_rate": 0.3
+        },
+        "taiwan_credit": {
+          "roc_auc": 0.5,
+          "pr_auc": 0.22116666666666668,
+          "brier_score": 0.17225204171037117,
+          "log_loss": 0.5283808128675018,
+          "precision": 0.22116666666666668,
+          "recall": 1.0,
+          "f1": 0.362221918929985,
+          "threshold": 0.08963963963963964,
+          "confusion_matrix": [
+            [
+              0,
+              4673
+            ],
+            [
+              0,
+              1327
+            ]
+          ],
+          "calibration": [
+            {
+              "mean_predicted": 0.22143027271544757,
+              "observed_rate": 0.22116666666666668
+            }
+          ],
+          "accounts": 6000,
+          "risk_rate": 0.22116666666666668
+        }
+      },
+      "validation_macro_roc_auc": 0.5,
+      "validation_macro_brier": 0.18775409823849057
+    }
+  },
+  "published_validation_reference": {
+    "macro_roc_auc": 0.6780850403569919,
+    "macro_brier_score": 0.14184501408895306
+  },
+  "provenance": {
+    "generated_at": "2026-08-14T11:03:14.438931+00:00",
+    "random_seed": 42,
+    "model_checksum": "37a14c45a8118d8684e3e7bf7fdad45fe167844a4e7700b1833e15b78a25df72",
+    "dataset_version": "global-7-94bb4c0ad0f1"
+  },
+  "interpretation": "The gap between region_included and features_only measures only the incremental value of explicit region after the harmonized values and their missingness patterns are already present. The region_only row measures pooled separation from coarse regional base rates and has no within-source discrimination. Pooled figures are dominated by Lending Club; macro figures weight each cohort equally."
+}

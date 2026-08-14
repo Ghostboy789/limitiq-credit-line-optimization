@@ -19,9 +19,9 @@ banking product.
   endpoint below serve this version.
 - **Superseded v1:** Taiwan-only 30,000-row model, still verifiable via tag
   `v1.0.0` and Git history. V1 evidence is intentionally kept separate from v2.
-- **Source terms:** the four non-UCI upstream platforms (Give Me Some Credit,
-  FICO/HELOC, Lending Club, Home Credit) remain under license review for future
-  releases; the owner's 12 August 2026 review and decision are recorded in
+- **Source terms:** the repository owner confirmed the four-source publication
+  gate resolved on 14 August 2026. The earlier findings, owner attestation and
+  source-by-source evidence are recorded in
   [`NOTICE.md`](NOTICE.md).
 
 ## Product evidence
@@ -47,7 +47,7 @@ The free Render service may need about 50 seconds to wake after inactivity.
 - Strict transient CSV batch scoring and downloadable decisions
 - Baseline/champion, calibration, confusion, feature, band and governance evidence
 - Executive HTML/PDF plus quality, model, policy and financial reports
-- Multi-currency display toggle (USD default, INR, EUR) with documented fixed
+- Multi-currency display toggle (INR default, USD, EUR) with documented fixed
   presentation rates; INR remains the canonical internal currency
 
 ## Evidence boundary
@@ -66,7 +66,7 @@ For India-focused presentation, only source-disclosed currencies are converted
 to INR at documented fixed rates. FX localization does not make a historical
 population Indian or make cross-source amounts economically equivalent.
 
-The live app can present the canonical INR portfolio in USD (default), INR or
+The live app can present the canonical INR portfolio in INR (default), USD or
 EUR via a display toggle; these are fixed presentation rates (reference date
 31 July 2026, 95.4 INR/USD, 110 INR/EUR) and never alter model scores, loss
 proxies or the batch schema, which stay INR-canonical.
@@ -133,6 +133,21 @@ source; it does not establish unseen-country, future-vintage,
 leave-one-source-out or Indian-population generalization. Region is one-hot
 encoded, and region plus structural missingness may identify source and base rate.
 
+### Additive diagnostic evidence
+
+The Lending Club vintage-split robustness study fits the champion recipe on
+earlier issues and scores later issues. ROC-AUC is `0.6000` versus `0.6015` on
+the random within-source reference, while Brier score deteriorates from roughly
+`0.165` to `0.202`. Because the target is status at extract with unequal
+seasoning, this is not fixed-horizon out-of-time PD validation.
+
+The explicit-region ablation shows nearly identical pooled discrimination with
+and without region. It does not rule out source identification through structural
+missingness. Feature importance therefore shuffles values only within source
+cohorts, and fitted effect curves use deterministic samples only from cohorts
+that report each field. The monitoring page is a readiness baseline with
+illustrative investigation thresholds, not a live monitoring service.
+
 ## Simulated business results
 
 ### Verified deployed v1
@@ -143,7 +158,7 @@ Proposed lines increase from ₹3.005016B to ₹3.255868B; simulated expected lo
 increases from ₹302.466M to ₹314.697M; simulated annual incremental contribution
 is ₹41.343M and simulated contribution / incremental EAD is 21.93%.
 
-### Local v2 synthetic demo — not deployed
+### Deployed v2 synthetic demo
 
 The deterministic 1,200-profile synthetic demonstration produces ₹567.613M
 current and ₹608.791M proposed credit limits, ₹500.023M current and ₹530.935M
@@ -184,7 +199,7 @@ Python 3.11 is the tested local, CI and Docker version. The package contract is
 Python `>=3.11,<3.14`.
 
 ```bash
-python -m venv .venv
+py -3.11 -m venv .venv  # Windows; use python3.11 on Linux/macOS
 # Linux/macOS: source .venv/bin/activate
 # Windows PowerShell: .venv\Scripts\Activate.ps1
 python -m pip install -r requirements-dev.txt
@@ -210,6 +225,9 @@ python -m limitiq.multisource
 # External cross-dataset validation of the v1 modelling recipe
 python -m limitiq.external
 
+# V2 vintage, source-context, feature and monitoring diagnostics
+python -m limitiq.evidence
+
 # Unit and integration checks
 python -m pytest
 
@@ -220,10 +238,13 @@ ruff check . && ruff format --check .
 docker build -t limitiq . && docker run --rm -p 8000:8000 limitiq
 ```
 
-Raw sources, environments and caches are intentionally gitignored. V2 is
-published per the owner's 12 August 2026 terms decision recorded in
-[`NOTICE.md`](NOTICE.md); several upstream/competition source terms remain
-under review for future releases.
+Raw sources, environments and caches are intentionally gitignored. The source
+terms history and repository owner's 14 August 2026 resolution attestation are
+recorded in [`NOTICE.md`](NOTICE.md).
+
+Set `AUTO_INCREASES_ENABLED=false` to activate the demonstrated rollback control:
+otherwise eligible automatic increases are routed to manual review and the
+control state is exposed by `/health`.
 
 ## Security and privacy
 
@@ -252,12 +273,14 @@ debug, source secrets, personal data or uploaded deserialization.
 V1 is old and single-market. V2 adds scale and source diversity but combines
 different products, sampling frames, event definitions and horizons. Its random
 within-source split is not an out-of-time or unseen-market test; Lending Club
-dominates pooled metrics; region and missingness can reveal source; and several
-source terms remain unresolved. Both versions lack verified production
+dominates pooled metrics; region and missingness can reveal source. The repository
+owner attested that the earlier four-source terms issue was resolved, but the
+project has not independently verified that legal conclusion. Both versions lack verified production
 affordability, macro scenarios, observed line treatments, causal response and
 profit economics. Segment diagnostics cannot prove fair-lending compliance.
 
-Roadmap: clear source terms; add current, terms-cleared multi-market behavior;
+Roadmap: obtain independent source-terms validation; add current, independently
+terms-cleared multi-market behavior;
 perform leave-one-source-out and out-of-time evaluation; assess source-balanced
 training; add verified affordability inputs and causal line experiments;
 independent model/legal validation; shadow mode, monitored pilot and rollback.
@@ -275,6 +298,7 @@ LimitIQ. See the [career guide](docs/CAREER_TARGETING.md).
 
 ## Licence
 
-Code: [MIT](LICENSE). Dataset terms differ by source; attribution and the blocked
-v2 publication gate are recorded in [NOTICE.md](NOTICE.md). MIT does not
+Code: [MIT](LICENSE). Dataset terms differ by source; attribution, the historical
+review findings and the owner's resolution attestation are recorded in
+[NOTICE.md](NOTICE.md). MIT does not
 relicense third-party data or derived-artifact rights.

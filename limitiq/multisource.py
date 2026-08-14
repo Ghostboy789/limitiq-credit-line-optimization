@@ -417,7 +417,9 @@ DATASET_META = {
         "source_rows": 150_000,
         "target_definition": "Serious delinquency within two years",
         "target_horizon": "two years",
-        "license_status": "unresolved; OpenML metadata says Public",
+        "license_status": (
+            "owner-cleared 2026-08-14; OpenML metadata says Public; not independently verified"
+        ),
         "population_id": "give-me-some-credit-training-150k",
         "exclusions": "96/98 delinquency placeholders converted to missing",
     },
@@ -436,7 +438,9 @@ DATASET_META = {
         "source_rows": 10_459,
         "target_definition": "FICO RiskPerformance=Bad",
         "target_horizon": "not disclosed",
-        "license_status": "unresolved; OpenML Unknown / FICO custom",
+        "license_status": (
+            "owner-cleared 2026-08-14; OpenML Unknown / FICO custom; not independently verified"
+        ),
         "population_id": "fico-heloc-challenge",
         "exclusions": "OpenML cleaned mirror removes 588 all-special-value rows; 9,871 remain",
     },
@@ -455,7 +459,9 @@ DATASET_META = {
         "source_rows": 2_260_701,
         "target_definition": "Status at extract: charged off/default/late versus fully paid",
         "target_horizon": "variable status-at-extract horizon",
-        "license_status": "unresolved upstream; mirror declares CC0",
+        "license_status": (
+            "owner-cleared 2026-08-14; mirror declares CC0; upstream not independently verified"
+        ),
         "population_id": "lending-club-accepted-2007-2018q4",
         "exclusions": "Current, in-grace and other statuses excluded",
     },
@@ -464,7 +470,10 @@ DATASET_META = {
         "publisher": "Home Credit / poc_scoring_fair Hugging Face mirror",
         "source_url": "https://huggingface.co/cantalapiedra/poc_scoring_fair/blob/main/application_train.csv",
         "doi": None,
-        "license": "Competition and mirror terms unresolved; human review required",
+        "license": (
+            "Competition and mirror terms not independently established; "
+            "release covered by owner attestation"
+        ),
         "currency": "Undisclosed",
         "currency_status": "not disclosed",
         "region": "undisclosed",
@@ -473,7 +482,10 @@ DATASET_META = {
         "source_rows": 307_511,
         "target_definition": "Home Credit TARGET payment-difficulty indicator; horizon undisclosed",
         "target_horizon": "X-day delinquency within Y days; X and Y undisclosed",
-        "license_status": "unresolved; mirror has no licence declaration",
+        "license_status": (
+            "owner-cleared 2026-08-14; mirror has no licence declaration; "
+            "not independently verified"
+        ),
         "population_id": "home-credit-application-train",
         "exclusions": "None; monetary inputs excluded because currency is undisclosed",
         "relationship_note": (
@@ -789,11 +801,17 @@ def build_global() -> dict[str, Any]:
         "macro_test_metrics": macro_test_metrics,
         "per_market_test_metrics": per_market,
         "publication_gate": {
-            "status": "blocked",
+            "status": "cleared",
             "reason": (
-                "Upstream or competition redistribution and derived-artifact terms require "
-                "manual review before publishing the v2 model or source-derived demo rows."
+                "Repository owner confirmed the publication-rights issue resolved on 14 August "
+                "2026; supporting documents are retained by the owner and are not included in "
+                "the repository."
             ),
+            "resolution_basis": (
+                "Owner attestation recorded in NOTICE.md; not an independent legal opinion "
+                "by the project."
+            ),
+            "resolved_at": "2026-08-14",
             "sources": [
                 "give_me_some_credit",
                 "fico_heloc",
@@ -1054,10 +1072,9 @@ def _write_report(payload: dict[str, Any]) -> None:
         (
             "Publication gate",
             f'<div class="notice"><strong>Status: {payload["publication_gate"]["status"]}.</strong> '
-            f"{payload['publication_gate']['reason']}</div><p>Affected sources: "
-            f"{', '.join(payload['publication_gate']['sources'])}. Local modelling may continue, "
-            "but v2 model and source-derived artifacts must not be publicly redistributed until "
-            "the terms review is resolved.</p>",
+            f"{payload['publication_gate']['reason']}</div><p>Sources covered by the owner "
+            f"attestation: {', '.join(payload['publication_gate']['sources'])}. "
+            f"{payload['publication_gate']['resolution_basis']}</p>",
         ),
         (
             "Interpretation",
@@ -1074,7 +1091,7 @@ def _write_report(payload: dict[str, Any]) -> None:
         OUTPUT_DIR,
         "global_model_report.html",
         "Multi-source adverse-credit-outcome benchmark",
-        "Multi-source evidence &bull; LimitIQ",
+        "Multi-source evidence · LimitIQ",
         sections,
     )
 

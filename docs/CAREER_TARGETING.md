@@ -7,10 +7,11 @@ local 1.87M-row multi-source adverse-credit-outcome benchmark, combining
 calibrated risk, provenance, source-level validation, policy controls and a
 deterministic synthetic INR exposure simulator.
 
-Be precise about version status: the public link is verified Taiwan-only v1.
-The multi-source v2 model is local and its publication gate is blocked pending
-terms review. V2 labels have different events/horizons, so never call its score a
-common-horizon or regulatory PD.
+Be precise about version status: the public link serves the multi-source v2
+benchmark. Its publication gate was cleared by repository-owner attestation on
+14 August 2026; the project does not offer an independent legal opinion. V2 labels
+have different events/horizons, so never call its score a common-horizon or
+regulatory PD.
 
 The project demonstrates credit-risk modelling, model governance, ML
 engineering, decision policy, security and product delivery. It does not
@@ -87,7 +88,7 @@ If the role values deployment more than multi-source modelling, substitute:
 
 LimitIQ shows how risk modelling becomes a governed product. The verified public
 v1 joins a calibrated model to candidate-line policy, portfolio/account views,
-batch scoring and transparent synthetic INR economics. Local v2 expands the
+batch scoring and transparent synthetic INR economics. V2 expands the
 research workflow to 1.87M harmonized rows, source-macro calibration evidence,
 provenance and publication controls. I kept source observations, model estimates
 and simulated business outputs separate and documented why heterogeneous labels
@@ -97,12 +98,13 @@ are not a common regulatory PD.
 
 “Many credit-risk projects end at a score. I built LimitIQ to connect risk to a
 governed operating decision: increase, hold, refer or freeze. I first deployed a
-Taiwan-data v1, then built a local 1.87-million-row multi-source benchmark with a
+Taiwan-data v1, then built a 1.87-million-row multi-source benchmark with a
 calibrated logistic baseline, gradient-boosting champion, source-macro selection
 and checksum-bound provenance. The app uses a deterministic synthetic INR
 portfolio to demonstrate exposure and policy trade-offs. The important judgment
 was documenting that source labels differ, pooled metrics are Lending-Club-
-dominated and v2 cannot be published until dataset terms are cleared.”
+dominated and the publication gate relies on a dated owner attestation rather
+than an independent legal opinion.”
 
 ## Evidence to discuss by interviewer
 
