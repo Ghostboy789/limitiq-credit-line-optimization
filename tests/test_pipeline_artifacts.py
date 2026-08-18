@@ -209,6 +209,18 @@ def test_global_model_evidence_is_present_checksum_bound_and_sane() -> None:
     assert gate.get("reason")
     assert gate.get("resolution_basis")
 
+    simulation = json.loads((REPORT_DIR / "global_policy_simulation.json").read_text("utf-8"))
+    demo_path = PROCESSED_DIR / "global_demo_portfolio.csv"
+    assert simulation["model_version"] == evidence["model_version"]
+    assert simulation["dataset_checksum"] == evidence["dataset_checksum"]
+    assert simulation["dataset_version"] == evidence["dataset_version"]
+    assert simulation["model_checksum"] == evidence["model_checksum"]
+    assert simulation["random_seed"] == SEED
+    assert simulation["demo_rows"] == len(pd.read_csv(demo_path))
+    assert hashlib.sha256(demo_path.read_bytes()).hexdigest() == simulation["demo_portfolio_sha256"]
+    for name in ("global_data_quality_report.html", "global_eda_report.html"):
+        assert (REPORT_DIR / name).exists() and (REPORT_DIR / name).stat().st_size > 1_000
+
 
 def test_global_diagnostic_evidence_is_provenance_bound_and_sane() -> None:
     names = (
@@ -218,7 +230,15 @@ def test_global_diagnostic_evidence_is_provenance_bound_and_sane() -> None:
         "global_monitoring_baseline.json",
     )
     payloads = {name: json.loads((REPORT_DIR / name).read_text(encoding="utf-8")) for name in names}
+    metadata = json.loads((MODEL_DIR / "global_metadata.json").read_text(encoding="utf-8"))
     assert all((REPORT_DIR / name).stat().st_size > 1_000 for name in names)
+    for payload in payloads.values():
+        provenance = payload.get("provenance", payload)
+        assert provenance["random_seed"] == SEED
+        assert provenance["model_checksum"]
+        assert provenance.get("model_version") == metadata["model_version"]
+        assert provenance.get("dataset_version") == "global-7-94bb4c0ad0f1"
+        assert provenance.get("dataset_checksum")
     assert "status-at-extract" in payloads[names[0]]["classification"]
     assert payloads[names[0]]["provenance"]["random_seed"] == SEED
     assert payloads[names[1]]["provenance"]["model_checksum"]

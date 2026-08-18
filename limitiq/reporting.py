@@ -33,15 +33,8 @@ def _html_page(title: str, label: str, sections: list[tuple[str, str]]) -> str:
     )
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
-<title>{html.escape(title)} — LimitIQ</title><style>
-body{{font:16px/1.55 Inter,Arial,sans-serif;color:#17324d;max-width:980px;margin:40px auto;padding:0 24px}}
-h1{{font-size:38px;margin-bottom:4px}}h2{{border-bottom:2px solid #0f8b8d;padding-bottom:8px;margin-top:34px}}
-.label{{color:#087f80;font-weight:700;text-transform:uppercase;letter-spacing:.08em}}.notice{{background:#eef7f7;padding:16px;border-left:4px solid #0f8b8d}}
-table{{border-collapse:collapse;width:100%}}th,td{{border-bottom:1px solid #dce5eb;text-align:left;padding:10px}}th{{background:#f4f7f9}}
-.table-wrap{{max-width:100%;overflow-x:auto}}
-.metric{{display:inline-block;width:29%;padding:14px;margin:4px;background:#f4f7f9;vertical-align:top}}small{{color:#557083}}
-@media(max-width:700px){{.metric{{width:auto;display:block}}}}
-</style></head><body><div class="label">{html.escape(label)}</div><h1>{html.escape(title)}</h1>{body}
+<title>{html.escape(title)} — LimitIQ</title><link rel="stylesheet" href="/static/report.css">
+</head><body><div class="label">{html.escape(label)}</div><h1>{html.escape(title)}</h1>{body}
 <p class="notice"><strong>Educational-use notice.</strong> {html.escape(DISCLAIMER)}</p></body></html>"""
 
 
@@ -300,11 +293,95 @@ def _global_executive_pdf(
 def build_global_reports(report_dir: Path | None = None, model_dir: Path | None = None) -> None:
     report_dir = report_dir or REPORT_DIR
     model_dir = model_dir or MODEL_DIR
+    report_dir.mkdir(parents=True, exist_ok=True)
     model = _load(model_dir / "global_metadata.json")
     simulation = _load(report_dir / "global_policy_simulation.json")
     summary = simulation["summary"]
     macro = model["macro_test_metrics"]
     pooled = model["test_metrics"]
+    quality_rows = []
+    for source in model["datasets"].values():
+        missing = source["feature_missing_rate"]
+        quality_rows.append(
+            [
+                source["name"],
+                source["role"].replace("_", " ").title(),
+                f"{source['rows_in_union']:,}",
+                f"{source['risk_rate']:.2%}",
+                ", ".join(
+                    f"{feature.replace('_', ' ')} {rate:.0%}" for feature, rate in missing.items()
+                ),
+                source["file_sha256"][:12] + "…",
+            ]
+        )
+    _write_html(
+        report_dir,
+        "global_data_quality_report.html",
+        "LimitIQ v2 Global Data-Quality Report",
+        "Observed source provenance and harmonization quality",
+        [
+            (
+                "Validated union",
+                f"<p><strong>{model['rows']:,}</strong> harmonized rows from six independent training cohorts; one duplicate-population German file is retained as reference only. The fixed seed is {model['random_seed']} and the dataset version is <code>{html.escape(model['dataset_version'])}</code>.</p>",
+            ),
+            (
+                "Source checks",
+                _table(
+                    [
+                        "Source",
+                        "Role",
+                        "Union rows",
+                        "Outcome rate",
+                        "Feature missingness",
+                        "SHA-256",
+                    ],
+                    quality_rows,
+                ),
+            ),
+            (
+                "Quality boundary",
+                "<p>Harmonizers validate required columns, numeric coercion, binary targets and source-specific ranges before concatenation. Missingness is preserved because source coverage differs; it is not silently imputed in the stored evidence. File hashes bind every source. The public repository excludes raw data.</p>",
+            ),
+        ],
+    )
+    composition_rows = [
+        [
+            source["name"],
+            source["region"].replace("_", " ").title(),
+            source["period"],
+            f"{source['rows_in_union']:,}",
+            f"{source['risk_rate']:.2%}",
+        ]
+        for source in model["datasets"].values()
+        if source["role"] == "training"
+    ]
+    risk_band_rows = [
+        [name, f"{count:,}"]
+        for name, count in model["test_metrics"]["probability_summary"]["risk_bands"].items()
+    ]
+    _write_html(
+        report_dir,
+        "global_eda_report.html",
+        "LimitIQ v2 Global Exploratory Analysis",
+        "Observed source composition and model-score context",
+        [
+            (
+                "Training-cohort composition",
+                _table(
+                    ["Source", "Region category", "Period", "Rows", "Outcome rate"],
+                    composition_rows,
+                ),
+            ),
+            (
+                "Untouched-test score bands",
+                _table(["Descriptive score band", "Accounts"], risk_band_rows),
+            ),
+            (
+                "Interpretation",
+                f"<p>The pooled observed outcome rate is <strong>{model['risk_rate']:.2%}</strong>, but source labels use different events and horizons. Cohort outcome rates and model-score bands are descriptive; they are not comparable jurisdiction-level default rates. {html.escape(model['evaluation_scope'])}</p>",
+            ),
+        ],
+    )
     metric_html = "".join(
         f'<div class="metric"><small>{html.escape(label)}</small><br><strong>{value}</strong></div>'
         for label, value in (

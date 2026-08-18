@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import csv
 import hashlib
-import html
 import io
 import json
 import os
@@ -18,6 +17,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from markdown_it import MarkdownIt
 
 from limitiq import __version__
 from limitiq.config import (
@@ -47,6 +47,8 @@ MAX_UPLOAD_ROWS = 5_000
 ACCOUNT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{2,39}$")
 MONETARY_KEYS = ("servicing_cost", "max_account_exposure", "profitability_hurdle")
 CURRENT_REPORT_FILES = {
+    "global-data-quality": "global_data_quality_report.html",
+    "global-eda": "global_eda_report.html",
     "global-executive-html": "global_executive_report.html",
     "global-executive-pdf": "global_executive_report.pdf",
     "global-policy-simulation": "global_policy_simulation_report.html",
@@ -80,6 +82,7 @@ DOCUMENT_FILES = {
     "interview-walkthrough": "INTERVIEW_WALKTHROUGH.md",
     "career-targeting": "CAREER_TARGETING.md",
 }
+MARKDOWN = MarkdownIt("commonmark", {"html": False, "linkify": False}).enable("table")
 
 
 def _sha256(path: Path) -> str:
@@ -104,13 +107,25 @@ def _load_artifacts() -> tuple[Any, dict[str, Any], pd.DataFrame, dict[str, Any]
     if _sha256(model_path) != metadata["model_checksum"]:
         raise RuntimeError("Champion model checksum does not match trusted metadata")
     model = joblib.load(model_path)  # noqa: S301 — repository-built artifact, checksum verified above.
+    simulation = json.loads(simulation_path.read_text(encoding="utf-8"))
+    expected_provenance = {
+        "model_version": metadata["model_version"],
+        "dataset_version": metadata["dataset_version"],
+        "model_checksum": metadata["model_checksum"],
+        "dataset_checksum": metadata["dataset_checksum"],
+        "random_seed": metadata["random_seed"],
+        "demo_portfolio_sha256": _sha256(portfolio_path),
+    }
+    if any(simulation.get(key) != value for key, value in expected_provenance.items()):
+        raise RuntimeError("Synthetic demo artifacts do not match trusted global metadata")
     portfolio = pd.read_csv(portfolio_path)
+    if len(portfolio) != simulation.get("demo_rows"):
+        raise RuntimeError("Synthetic demo row count does not match trusted simulation metadata")
     names = {key: value["name"] for key, value in metadata["datasets"].items()}
     portfolio["source_name"] = portfolio["source_dataset"].map(names)
     portfolio["display_utilization"] = portfolio["utilization"].fillna(
         portfolio["current_balance_inr"] / portfolio["current_limit_inr"]
     )
-    simulation = json.loads(simulation_path.read_text(encoding="utf-8"))
     if not AUTO_INCREASES_ENABLED:
         increase = portfolio["increase_pct"].gt(0)
         portfolio.loc[increase, "action"] = "Manual review"
@@ -310,41 +325,45 @@ def _directional_sensitivity(
 
 
 def _markdownish(text: str) -> str:
-    """Tiny safe Markdown subset for repository-authored docs; avoids a runtime dependency."""
-    lines = text.splitlines()
-    output: list[str] = []
-    in_list = False
-    for raw in lines:
-        line = html.escape(raw)
-        if line.startswith("### "):
-            if in_list:
-                output.append("</ul>")
-                in_list = False
-            output.append(f"<h3>{line[4:]}</h3>")
-        elif line.startswith("## "):
-            if in_list:
-                output.append("</ul>")
-                in_list = False
-            output.append(f"<h2>{line[3:]}</h2>")
-        elif line.startswith("# "):
-            output.append(f"<h1>{line[2:]}</h1>")
-        elif line.startswith("- "):
-            if not in_list:
-                output.append("<ul>")
-                in_list = True
-            output.append(f"<li>{line[2:]}</li>")
-        elif not line.strip():
-            if in_list:
-                output.append("</ul>")
-                in_list = False
-        else:
-            if in_list:
-                output.append("</ul>")
-                in_list = False
-            output.append(f"<p>{line}</p>")
-    if in_list:
-        output.append("</ul>")
-    return "".join(output)
+    """Render repository-authored Markdown with raw HTML disabled."""
+    rendered = MARKDOWN.render(text)
+    return rendered.replace("<table>", '<div class="table-wrap"><table>').replace(
+        "</table>", "</table></div>"
+    )
+
+
+def _synthetic_history(row: dict[str, Any]) -> list[dict[str, Any]]:
+    """Deterministic display-only history; never supplied to the model or optimizer."""
+    seed = int.from_bytes(hashlib.sha256(row["account_id"].encode()).digest()[:8], "big")
+    rng = np.random.default_rng(seed)
+    limit = float(row["current_limit_inr"])
+    current_balance = float(row["current_balance_inr"])
+    balances = [
+        min(limit * 1.5, max(0.0, current_balance * (0.78 + index * 0.045 + rng.normal(0, 0.04))))
+        for index in range(5)
+    ] + [current_balance]
+    raw_delinquency = row.get("delinquency_count")
+    delinquency: list[int | None] = [None] * 6
+    if pd.notna(raw_delinquency):
+        delinquency = [0] * 6
+        for index in rng.choice(6, size=min(int(raw_delinquency), 12), replace=True):
+            delinquency[int(index)] += 1
+    payments = [
+        balance * rng.uniform(0.03, 0.14)
+        if delinquency[index]
+        else balance * rng.uniform(0.12, 0.46)
+        for index, balance in enumerate(balances)
+    ]
+    return [
+        {
+            "period": f"M-{5 - index}" if index < 5 else "Current",
+            "bill": balance,
+            "payment": payments[index],
+            "utilization": balance / limit if limit else 0.0,
+            "delinquency": delinquency[index],
+        }
+        for index, balance in enumerate(balances)
+    ]
 
 
 PALETTE_RESULTS = 8
@@ -437,6 +456,7 @@ def create_app() -> FastAPI:
                 "Referrer-Policy": "strict-origin-when-cross-origin",
                 "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
                 "Cross-Origin-Opener-Policy": "same-origin",
+                "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
             }
         )
         requested_currency = request.query_params.get("ccy")
@@ -490,6 +510,7 @@ def create_app() -> FastAPI:
             "dataset_version": metadata["dataset_version"],
             "benchmark": "multi-source-adverse-credit-outcome",
             "automatic_increases_enabled": AUTO_INCREASES_ENABLED,
+            "deployment_commit": os.getenv("RENDER_GIT_COMMIT", "not-provided"),
         }
 
     @app.get("/", response_class=HTMLResponse)
@@ -518,6 +539,7 @@ def create_app() -> FastAPI:
         risk: str,
         action: str,
         delinquency: str,
+        utilization_band: str,
         sort: str,
         direction: str,
     ) -> pd.DataFrame:
@@ -536,18 +558,40 @@ def create_app() -> FastAPI:
             result = result[result["delinquency_count"].eq(0)]
         elif delinquency == "unknown":
             result = result[result["delinquency_count"].isna()]
+        utilization_ranges = {
+            "low": (0.0, 0.3),
+            "moderate": (0.3, 0.6),
+            "high": (0.6, 0.9),
+            "very_high": (0.9, np.inf),
+        }
+        if utilization_band in utilization_ranges:
+            lower, upper = utilization_ranges[utilization_band]
+            result = result[
+                result["display_utilization"].ge(lower) & result["display_utilization"].lt(upper)
+            ]
         allowed_sort = {
             "account_id",
             "current_limit_inr",
             "proposed_limit",
             "pd",
             "current_expected_loss",
+            "proposed_expected_loss",
             "incremental_contribution",
             "risk_band",
             "action",
+            "display_utilization",
         }
         key = sort if sort in allowed_sort else "pd"
-        return result.sort_values(key, ascending=direction != "desc", kind="stable")
+        return result.sort_values(
+            key,
+            ascending=direction != "desc",
+            kind="stable",
+            key=(
+                lambda values: values.map({"Low": 0, "Moderate": 1, "High": 2, "Very high": 3})
+                if key == "risk_band"
+                else values
+            ),
+        )
 
     @app.get("/portfolio", response_class=HTMLResponse)
     def explorer(
@@ -556,11 +600,14 @@ def create_app() -> FastAPI:
         risk: str = Query("", max_length=20),
         action: str = Query("", max_length=40),
         delinquency: str = Query("", max_length=7),
+        utilization_band: str = Query("", max_length=20),
         sort: str = Query("pd", max_length=40),
         direction: str = Query("desc", pattern="^(asc|desc)$"),
         page: int = Query(1, ge=1),
     ) -> HTMLResponse:
-        result = filtered_portfolio(search, risk, action, delinquency, sort, direction)
+        result = filtered_portfolio(
+            search, risk, action, delinquency, utilization_band, sort, direction
+        )
         page_size = 25
         pages = max(1, int(np.ceil(len(result) / page_size)))
         page = min(page, pages)
@@ -580,6 +627,7 @@ def create_app() -> FastAPI:
                 risk=risk,
                 action=action,
                 delinquency=delinquency,
+                utilization_band=utilization_band,
                 sort=sort,
                 direction=direction,
                 risk_options=["Low", "Moderate", "High", "Very high"],
@@ -593,15 +641,20 @@ def create_app() -> FastAPI:
         risk: str = Query("", max_length=20),
         action: str = Query("", max_length=40),
         delinquency: str = Query("", max_length=7),
+        utilization_band: str = Query("", max_length=20),
         sort: str = Query("pd", max_length=40),
         direction: str = Query("desc", pattern="^(asc|desc)$"),
     ) -> Response:
-        result = filtered_portfolio(search, risk, action, delinquency, sort, direction)
+        result = filtered_portfolio(
+            search, risk, action, delinquency, utilization_band, sort, direction
+        )
         columns = [
             "account_id",
             "source_name",
+            "region",
             "action",
             "risk_band",
+            "display_utilization",
             "current_limit_inr",
             "proposed_limit",
             "pd",
@@ -641,6 +694,7 @@ def create_app() -> FastAPI:
                 title=f"Account {account_id}",
                 account=row,
                 profile_rows=profile_rows,
+                synthetic_history=_synthetic_history(row),
             ),
         )
 

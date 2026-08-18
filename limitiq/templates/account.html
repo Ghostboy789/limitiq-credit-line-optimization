@@ -8,7 +8,7 @@
 <div class="notice" role="note"><strong>Evidence boundary:</strong> This is an educational adverse-credit-outcome model using heterogeneous source definitions and horizons. It is not a common-horizon regulatory PD, a production lending decision, or a jurisdiction-specific affordability assessment. All limit economics and expected-loss values are simulated proxies.</div>
 
 <section class="metric-grid four">
-  <article class="metric"><span>Adverse-outcome probability</span><strong>{{ account.pd|percent(2) }}</strong><small>Calibrated score for this source cohort</small></article>
+  <article class="metric"><span>Adverse-outcome probability</span><strong>{{ account.pd|percent(2) }}</strong><small>Pooled-calibrated score · source cohort shown below</small></article>
   <article class="metric"><span>Current / proposed loss proxy</span><strong>{{ account.current_expected_loss|money(ccy) }}</strong><small>{{ account.proposed_expected_loss|money(ccy) }} proposed · simulated</small></article>
   <article class="metric accent"><span>Incremental contribution</span><strong>{{ account.incremental_contribution|money(ccy) }}</strong><small>Simulated annual value</small></article>
   <article class="metric"><span>Source cohort</span><strong class="metric-text">{{ account.source_name }}</strong><small>{{ account.region|replace('_', ' ')|title }}</small></article>
@@ -22,6 +22,11 @@
 <section class="panel"><div class="panel-title"><div><p class="eyebrow">Harmonized source profile</p><h2>Reported coverage</h2></div></div>
   <p>The public sources do not provide a comparable six-month account history. The table shows only the harmonized point-in-time fields available for this synthetic demonstration row.</p>
   {% if profile_rows %}<div class="table-wrap"><table><thead><tr><th>Profile field</th><th>Value</th><th>Coverage</th></tr></thead><tbody>{% for item in profile_rows %}{% set available = item[1] is not none and item[1] == item[1] %}<tr><td>{{ item[0] }}</td><td>{% if not available %}—{% elif item[2] == 'percent' %}{{ item[1]|percent }}{% elif item[2] == 'money' %}{{ item[1]|money(ccy) }}{% else %}{{ item[1]|number }}{% endif %}</td><td><span class="badge{% if available %} risk-low{% else %} risk-high{% endif %}">{% if available %}Reported / derived{% else %}Unavailable{% endif %}</span></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty compact"><h3>Profile unavailable</h3><p>No harmonized profile fields were supplied for this row.</p></div>{% endif %}
+</section>
+
+<section class="panel"><div class="panel-title"><div><p class="eyebrow">Display-only simulation</p><h2>Illustrative six-period behavior</h2></div><span class="badge action">Synthetic history</span></div>
+  <p>Bill, payment, utilization and delinquency values below are deterministic synthetic illustrations anchored to the current demonstration balance. They are not source observations and are never used by the model or optimizer.</p>
+  <div class="table-wrap" tabindex="0" aria-label="Scrollable synthetic account history"><table><thead><tr><th>Period</th><th>Bill / balance proxy</th><th>Payment proxy</th><th>Utilization</th><th>Delinquency signal</th></tr></thead><tbody>{% for item in synthetic_history %}<tr><td>{{ item.period }}</td><td>{{ item.bill|money(ccy) }}</td><td>{{ item.payment|money(ccy) }}</td><td>{{ item.utilization|percent }}</td><td>{% if item.delinquency is none %}Unavailable from source{% else %}{{ item.delinquency }}{% endif %}</td></tr>{% endfor %}</tbody></table></div>
 </section>
 
 {% if account.checks %}<section class="panel"><p class="eyebrow">Simulation guardrails</p><h2>Policy checks</h2><ul class="check-list">{% for name, passed in account.checks.items() %}<li class="{% if passed %}passed{% else %}failed{% endif %}"><span aria-hidden="true">{% if passed %}✓{% else %}!{% endif %}</span>{{ name|replace('_',' ')|title }}</li>{% endfor %}</ul></section>{% endif %}

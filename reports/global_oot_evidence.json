@@ -343,7 +343,11 @@
     "generated_at": "2026-08-14T10:59:55.243259+00:00",
     "random_seed": 42,
     "raw_file_sha256": "3eae03c28fd9d2e8a076ebeb73507e8d4d0f44d90500decdb0936e0933d1f36a",
-    "diagnostic_recipe": "sigmoid-calibrated-histogram-gradient-boosting-cv3"
+    "diagnostic_recipe": "sigmoid-calibrated-histogram-gradient-boosting-cv3",
+    "model_version": "limitiq-global-2.0.0-37a14c45a811",
+    "model_checksum": "37a14c45a8118d8684e3e7bf7fdad45fe167844a4e7700b1833e15b78a25df72",
+    "dataset_version": "global-7-94bb4c0ad0f1",
+    "dataset_checksum": "94bb4c0ad0f13d7677b9afe00a4943850ea890df5be3450592be69b1b14340dd"
   },
   "evidence_boundary": "Lending Club is the only training cohort with disclosed issue dates, so this evidence is single-source. Other cohorts have no published origination or behavior period and cannot support a temporal claim. Status-at-extract labels have unequal follow-up and censoring, so this is a vintage robustness diagnostic, not fixed-horizon out-of-time PD validation or unseen-country generalization."
 }

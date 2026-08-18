@@ -5,7 +5,9 @@
     "generated_at": "2026-08-14T10:56:48.464608+00:00",
     "random_seed": 42,
     "model_checksum": "37a14c45a8118d8684e3e7bf7fdad45fe167844a4e7700b1833e15b78a25df72",
-    "dataset_version": "global-7-94bb4c0ad0f1"
+    "dataset_version": "global-7-94bb4c0ad0f1",
+    "model_version": "limitiq-global-2.0.0-37a14c45a811",
+    "dataset_checksum": "94bb4c0ad0f13d7677b9afe00a4943850ea890df5be3450592be69b1b14340dd"
   },
   "test_rows": 373910,
   "importance_rows": 68174,

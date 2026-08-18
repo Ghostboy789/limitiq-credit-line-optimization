@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 
 from limitiq.config import PROCESSED_DIR
 from limitiq.features import BATCH_COLUMNS
-from limitiq.web import app
+from limitiq.web import MAX_UPLOAD_BYTES, MAX_UPLOAD_ROWS, REPORT_FILES, app
 
 client = TestClient(app)
 
@@ -37,6 +37,8 @@ def test_health_contract_and_security_headers() -> None:
     assert "unsafe-inline" not in response.headers["content-security-policy"]
     assert response.headers["x-content-type-options"] == "nosniff"
     assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["strict-transport-security"].startswith("max-age=31536000")
+    assert "deployment_commit" in response.json()
 
 
 def test_portfolio_filter_search_sort_and_pagination() -> None:
@@ -68,6 +70,40 @@ def test_portfolio_global_delinquency_filters() -> None:
         assert response.status_code == 200, value
 
 
+def test_portfolio_utilization_filters_and_sort_links() -> None:
+    for value in ("low", "moderate", "high", "very_high"):
+        response = client.get("/portfolio", params={"utilization_band": value})
+        assert response.status_code == 200, value
+        assert f'value="{value}" selected' in response.text
+    filtered = client.get(
+        "/portfolio.csv",
+        params={"utilization_band": "high", "sort": "display_utilization", "direction": "asc"},
+    )
+    frame = pd.read_csv(io.BytesIO(filtered.content))
+    assert frame["display_utilization"].between(0.6, 0.9, inclusive="left").all()
+    assert frame["display_utilization"].is_monotonic_increasing
+    risk_sorted = pd.read_csv(
+        io.BytesIO(
+            client.get("/portfolio.csv", params={"sort": "risk_band", "direction": "asc"}).content
+        )
+    )
+    assert (
+        risk_sorted["risk_band"]
+        .map({"Low": 0, "Moderate": 1, "High": 2, "Very high": 3})
+        .is_monotonic_increasing
+    )
+    html = client.get("/portfolio").text
+    for sort in (
+        "action",
+        "risk_band",
+        "display_utilization",
+        "current_limit_inr",
+        "proposed_expected_loss",
+        "pd",
+    ):
+        assert f"sort={sort}" in html
+
+
 def test_account_decision_and_missing_account() -> None:
     account_id = pd.read_csv(PROCESSED_DIR / "global_demo_portfolio.csv", nrows=1).loc[
         0, "account_id"
@@ -78,6 +114,10 @@ def test_account_decision_and_missing_account() -> None:
     assert "Reason codes" in response.text
     assert "Harmonized source profile" in response.text
     assert "Source cohort" in response.text
+    assert "Illustrative six-period behavior" in response.text
+    assert "Synthetic history" in response.text
+    assert "never used by the model or optimizer" in response.text
+    assert response.text == client.get(f"/accounts/{account_id}").text
     missing = client.get("/accounts/LIQ-0000000000")
     assert missing.status_code == 404
     assert "Account not found" in missing.text
@@ -210,6 +250,25 @@ def test_batch_rejects_empty_wrong_media_and_invalid_identifier() -> None:
     assert "ACCOUNT_ID" in response.text
 
 
+def test_batch_enforces_byte_and_row_boundaries() -> None:
+    oversized = client.post(
+        "/batch",
+        files={"file": ("large.csv", b"x" * (MAX_UPLOAD_BYTES + 1), "text/csv")},
+    )
+    assert oversized.status_code == 413
+    assert "MB limit" in oversized.text
+
+    seed = _sample_frame(1)
+    exact = pd.concat([seed] * MAX_UPLOAD_ROWS, ignore_index=True)
+    exact["ACCOUNT_ID"] = [f"LIQ-QA-{index:06d}" for index in range(MAX_UPLOAD_ROWS)]
+    assert _upload(exact).status_code == 200
+    too_many = pd.concat([exact, seed], ignore_index=True)
+    too_many.loc[MAX_UPLOAD_ROWS, "ACCOUNT_ID"] = "LIQ-QA-TOO-MANY"
+    response = _upload(too_many)
+    assert response.status_code == 413
+    assert "row limit" in response.text
+
+
 def test_palette_search_endpoint() -> None:
     pages = client.get("/api/search").json()["results"]
     assert any(item["label"] == "Portfolio explorer" for item in pages)
@@ -255,6 +314,8 @@ def test_sample_and_filtered_csv_downloads_are_valid() -> None:
         "/downloads/reports/executive-report-html",
         "/downloads/reports/data-quality",
         "/downloads/reports/global-model",
+        "/downloads/reports/global-data-quality",
+        "/downloads/reports/global-eda",
         "/downloads/reports/global-executive-html",
         "/downloads/reports/global-executive-pdf",
         "/downloads/reports/global-policy-simulation",
@@ -275,9 +336,30 @@ def test_report_and_document_downloads(path: str) -> None:
     assert len(response.content) > 1_000
 
 
+def test_html_reports_use_csp_safe_shared_stylesheet() -> None:
+    for slug, filename in REPORT_FILES.items():
+        if not filename.endswith(".html"):
+            continue
+        response = client.get(f"/downloads/reports/{slug}")
+        assert response.status_code == 200, slug
+        assert '<link rel="stylesheet" href="/static/report.css">' in response.text, slug
+        assert "<style" not in response.text, slug
+        assert "style=" not in response.text, slug
+
+
 def test_report_and_document_allowlists_block_unknown_paths() -> None:
     assert client.get("/downloads/reports/../../README").status_code == 404
     assert client.get("/documents/not-real").status_code == 404
+
+
+def test_document_pages_render_safe_markdown() -> None:
+    response = client.get("/documents/model-card")
+    assert response.status_code == 200
+    assert "<strong>deployed v2 model</strong>" in response.text
+    assert "<code>limitiq-global-2.0.0-37a14c45a811</code>" in response.text
+    assert "<table>" in response.text
+    assert "**deployed v2 model**" not in response.text
+    assert "| Candidate |" not in response.text
 
 
 def test_static_assets_and_navigation_are_real() -> None:

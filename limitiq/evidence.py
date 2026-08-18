@@ -199,6 +199,10 @@ def oot_evidence() -> dict[str, Any]:
         "provenance": {
             "generated_at": datetime.now(UTC).isoformat(),
             "random_seed": SEED,
+            "model_version": reference["model_version"],
+            "model_checksum": reference["model_checksum"],
+            "dataset_version": reference["dataset_version"],
+            "dataset_checksum": reference["dataset_checksum"],
             "raw_file_sha256": _sha256(RAW_DIR / "lending_club_full.csv"),
             "diagnostic_recipe": "sigmoid-calibrated-histogram-gradient-boosting-cv3",
         },
@@ -314,8 +318,10 @@ def leakage_ablation(union: pd.DataFrame | None = None) -> dict[str, Any]:
         "provenance": {
             "generated_at": datetime.now(UTC).isoformat(),
             "random_seed": SEED,
+            "model_version": reference["model_version"],
             "model_checksum": reference["model_checksum"],
             "dataset_version": reference["dataset_version"],
+            "dataset_checksum": reference["dataset_checksum"],
         },
         "interpretation": (
             "The gap between region_included and features_only measures only the incremental "
@@ -703,7 +709,9 @@ def feature_evidence(union: pd.DataFrame | None = None) -> dict[str, Any]:
             "generated_at": datetime.now(UTC).isoformat(),
             "random_seed": SEED,
             "model_checksum": metadata["model_checksum"],
+            "model_version": metadata["model_version"],
             "dataset_version": metadata["dataset_version"],
+            "dataset_checksum": metadata["dataset_checksum"],
         },
         "test_rows": int(len(test_y)),
         "importance_rows": int(len(importance_frame)),
@@ -767,6 +775,9 @@ def _monitoring_baseline(feature_payload: dict[str, Any]) -> dict[str, Any]:
         "model_version": metadata["model_version"],
         "dataset_version": metadata["dataset_version"],
         "generated_at": datetime.now(UTC).isoformat(),
+        "random_seed": metadata["random_seed"],
+        "model_checksum": metadata["model_checksum"],
+        "dataset_checksum": metadata["dataset_checksum"],
         "snapshot": {
             "test_rows": feature_payload["test_rows"],
             "sources": len(feature_payload["per_source"]),

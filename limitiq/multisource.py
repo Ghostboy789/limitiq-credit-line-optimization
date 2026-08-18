@@ -923,12 +923,22 @@ def _write_demo(model: object, metadata: dict[str, Any]) -> None:
         lambda row: " | ".join(row.index[row.isna()]), axis=1
     )
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
-    output.to_csv(PROCESSED_DIR / "global_demo_portfolio.csv", index=False)
+    portfolio_path = PROCESSED_DIR / "global_demo_portfolio.csv"
+    temporary_path = portfolio_path.with_suffix(".csv.tmp")
+    output.to_csv(temporary_path, index=False)
+    temporary_path.replace(portfolio_path)
     _write_json(
         REPORT_DIR / "global_policy_simulation.json",
         {
             "classification": "Deterministic synthetic scenario; not observed or causal impact",
             "model_version": metadata["model_version"],
+            "dataset_version": metadata["dataset_version"],
+            "model_checksum": metadata["model_checksum"],
+            "dataset_checksum": metadata["dataset_checksum"],
+            "random_seed": metadata["random_seed"],
+            "generated_at": datetime.now(UTC).isoformat(),
+            "demo_rows": int(len(output)),
+            "demo_portfolio_sha256": _sha256(portfolio_path),
             "assumptions": assumptions.to_dict(),
             "summary": summarize_portfolio(decisions),
             "sensitivity": portfolio_sensitivity(

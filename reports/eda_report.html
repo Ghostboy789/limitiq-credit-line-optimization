@@ -1,12 +1,5 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
-<title>Exploratory Data Analysis — LimitIQ</title><style>
-body{font:16px/1.55 Inter,Arial,sans-serif;color:#17324d;max-width:980px;margin:40px auto;padding:0 24px}
-h1{font-size:38px;margin-bottom:4px}h2{border-bottom:2px solid #0f8b8d;padding-bottom:8px;margin-top:34px}
-.label{color:#087f80;font-weight:700;text-transform:uppercase;letter-spacing:.08em}.notice{background:#eef7f7;padding:16px;border-left:4px solid #0f8b8d}
-table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #dce5eb;text-align:left;padding:10px}th{background:#f4f7f9}
-.table-wrap{max-width:100%;overflow-x:auto}
-.metric{display:inline-block;width:29%;padding:14px;margin:4px;background:#f4f7f9;vertical-align:top}small{color:#557083}
-@media(max-width:700px){.metric{width:auto;display:block}}
-</style></head><body><div class="label">Observed behavior; currency-converted presentation</div><h1>Exploratory Data Analysis</h1><section><h2>Portfolio</h2><p>30,000 accounts; observed subsequent default rate 22.12%; median limit INR 415,800.</p></section><section><h2>Behavior</h2><p>Median current utilization 31.40%; 10,069 accounts have at least one positive repayment-delay status.</p></section><section><h2>Known gaps</h2><ul><li>Demographic attributes are observed but excluded from all model and optimizer inputs.</li><li>Source TWD monetary fields are deterministically converted to INR at 2.97 INR per TWD.</li><li>Negative bill amounts can represent credits and are clipped to zero only for behavioral ratios.</li><li>No limit-increase response or economics outcome is present in the source dataset.</li></ul></section>
+<title>Exploratory Data Analysis — LimitIQ</title><link rel="stylesheet" href="/static/report.css">
+</head><body><div class="label">Observed behavior; currency-converted presentation</div><h1>Exploratory Data Analysis</h1><section><h2>Portfolio</h2><p>30,000 accounts; observed subsequent default rate 22.12%; median limit INR 415,800.</p></section><section><h2>Behavior</h2><p>Median current utilization 31.40%; 10,069 accounts have at least one positive repayment-delay status.</p></section><section><h2>Known gaps</h2><ul><li>Demographic attributes are observed but excluded from all model and optimizer inputs.</li><li>Source TWD monetary fields are deterministically converted to INR at 2.97 INR per TWD.</li><li>Negative bill amounts can represent credits and are clipped to zero only for behavioral ratios.</li><li>No limit-increase response or economics outcome is present in the source dataset.</li></ul></section>
 <p class="notice"><strong>Educational-use notice.</strong> LimitIQ is an educational portfolio demonstration using public and synthetic data. It is not a production credit-decision system and must not be used to make real lending decisions.</p></body></html>
