@@ -12,17 +12,27 @@ banking product.
 
 ## Release status
 
-- **Live public deployment — v2.0.0** (12 August 2026): multi-source global
-  benchmark trained on 1,869,548 harmonized rows across six independent cohorts,
-  deployed via tag `v2.0.0` from commit `7e4ca6e` after green GitHub Actions CI
-  (including Docker container health check). The public URL and `/health`
-  endpoint below serve this version.
+- **Live public application — v2.1.0** (verified 18 August 2026): application
+  code was release-gated at commit
+  `c6154603da430b0eacb2d237a469f0843784557e`. GitHub Actions run
+  [32117394757](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32117394757)
+  passed Ruff, format, 92 tests at 69.00% coverage, Bandit, dependency and secret
+  scans, Docker build/run and container health. The unchanged champion remains
+  model `limitiq-global-2.0.0-37a14c45a811`; the application release does not
+  relabel or retrain it. Tag `v2.1.0` identifies the final evidence release.
+- **Historical v2.0.0 release** (12 August 2026): the same 1,869,548-row global
+  benchmark was released from the then-current history as tag `v2.0.0` after
+  green CI and Render verification.
 - **Superseded v1:** Taiwan-only 30,000-row model, still verifiable via tag
   `v1.0.0` and Git history. V1 evidence is intentionally kept separate from v2.
 - **Source terms:** the repository owner confirmed the four-source publication
-  gate resolved on 14 August 2026. The earlier findings, owner attestation and
+  gate resolved on 14 August 2026. This is an owner-cleared attestation, not an
+  independent legal opinion. The earlier findings, attestation and
   source-by-source evidence are recorded in
   [`NOTICE.md`](NOTICE.md).
+- **Repository identity:** every reachable commit author/committer and tagger
+  was rewritten to the GitHub identity `Ghostboy789`; commit hashes therefore
+  differ from the pre-rewrite historical references retained in this document.
 
 ## Product evidence
 
@@ -30,11 +40,12 @@ banking product.
 
 ![LimitIQ account decision](docs/assets/account-decision.png)
 
-**Live v2.0.0 demo:** https://limitiq-credit-line-optimization.onrender.com
+**Live v2.1.0 demo:** https://limitiq-credit-line-optimization.onrender.com
 
-**Live v2.0.0 health:** https://limitiq-credit-line-optimization.onrender.com/health
-(reports application `2.0.0`, model `limitiq-global-2.0.0-37a14c45a811`,
-dataset `global-7-94bb4c0ad0f1`)
+**Live v2.1.0 health:** https://limitiq-credit-line-optimization.onrender.com/health
+(verified 18 August 2026: application `2.1.0`, model
+`limitiq-global-2.0.0-37a14c45a811` and dataset `global-7-94bb4c0ad0f1`; the
+endpoint also exposes the exact deployed Git revision)
 
 The free Render service may need about 50 seconds to wake after inactivity.
 
@@ -84,7 +95,7 @@ Source TWD limits, bills and payments are converted before modelling to INR at a
 fixed ₹2.97 per TWD, derived from documented July 2026 USD reference rates. This
 is a deterministic presentation transform, not Indian borrower evidence.
 
-### Deployed v2 benchmark
+### Deployed v2 source union (unchanged in the v2.1 application)
 
 V2 trains on six independent cohorts: Taiwan Credit, corrected South German
 Credit, Give Me Some Credit, cleaned FICO/HELOC, Lending Club accepted loans and
@@ -112,7 +123,7 @@ gradient boosting. Untouched-test ROC-AUC is 0.781138, PR-AUC 0.567889, Brier
 0.133149 and log loss 0.426351 at threshold 0.173874. Model SHA-256:
 `284f9a7c8ca22ea2f8091dfea814796357f81014cfdbabecf62b7aaa0de14275`.
 
-### Deployed v2 benchmark
+### Deployed v2 benchmark (unchanged in the v2.1 application)
 
 The v2 champion is sigmoid-calibrated histogram gradient boosting, selected
 against a calibrated regularized-logistic baseline using source-macro validation
@@ -266,7 +277,7 @@ debug, source secrets, personal data or uploaded deserialization.
 - [Assumptions](docs/ASSUMPTIONS.md), [case study](docs/CASE_STUDY.md), [five-minute walkthrough](docs/INTERVIEW_WALKTHROUGH.md)
 - [Career targeting guide](docs/CAREER_TARGETING.md) for India-based risk, analytics, model-governance and risk-technology roles
 - [Deployment runbook](docs/DEPLOYMENT.md), [dataset attribution and terms](NOTICE.md)
-- [Verified v1 and deployed v2 QA evidence](docs/QA_REPORT.md)
+- [Verified v1, v2.0 and v2.1 QA evidence](docs/QA_REPORT.md)
 
 ## Limitations and roadmap
 

@@ -1,39 +1,48 @@
 # QA report
 
-## V2.1 release-candidate verification — 14 August 2026
+## V2.1 application verification — 18 August 2026
 
-- 85 tests passed with 69.05% statement coverage against the enforced 65%
-  threshold; the lower percentage than the earlier v2 run reflects the new
-  offline evidence module, whose long full-data paths are verified through
-  versioned artifact and provenance tests.
-- Ruff lint/format and Bandit passed. `pip-audit -r requirements.txt` reported
-  no known vulnerabilities. Detect-secrets scanned all 94 publishable tracked
-  and untracked text files with zero findings.
-- Desktop (1440), tablet (768) and mobile (390) browser checks found no
-  page-level horizontal overflow or console warnings/errors. Primary routes,
-  mobile navigation, accessible search/focus handling, account routing, INR/EUR
-  persistence, simulator extremes, valid batch download and missing-column
-  feedback passed.
+- Release-gated application-code commit:
+  `c6154603da430b0eacb2d237a469f0843784557e`. Every reachable Git commit
+  author/committer and tagger was rewritten to `Ghostboy789`.
+- GitHub Actions run
+  [32117394757](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32117394757)
+  succeeded on rerun after a transient Docker Hub HTTP 502. Ruff, format, 92
+  tests at 69.00% statement coverage (above the enforced 65%), Bandit,
+  `pip-audit`, secret scanning, Docker build/run and container `/health` passed.
+- Live `/health` reports application `2.1.0`, unchanged model
+  `limitiq-global-2.0.0-37a14c45a811`, dataset `global-7-94bb4c0ad0f1` and the
+  exact deployed Git revision.
+- Production HTTPS QA passed 23 checks with zero failures: 20 GET/download
+  checks, an extreme simulator submission, a valid batch flow and an invalid
+  batch flow. CSP, HSTS, PDF signatures and report styles were clean.
+- Local rendered browser QA covered 27 route/viewport combinations at 1440,
+  768 and 390 px with no layout or browser-console failures. Primary routes,
+  mobile navigation, accessible search/focus handling, account routing,
+  currency persistence, simulator extremes, valid batch download and
+  missing-column feedback passed.
+- Production visual browser replay was not rerun because the browser-control
+  runtime rejected its trusted path. This is not presented as a production
+  visual-browser pass; the exact deployment commit and production workflows
+  were verified directly over HTTPS.
 - Fifteen governance SVGs expose accessible titles/descriptions. Current-v2 and
-  archived-v1 reports are separated. CSP no longer permits inline styles.
+  archived-v1 reports are separated. CSP disallows inline styles and HSTS is
+  present.
 - Both two-page A4 executive PDFs were regenerated, rendered page by page and
   inspected for clipping/overlap; descriptive PDF metadata is present.
-- The model bytes and checksum are unchanged. This is an application,
-  diagnostic-evidence and governance release candidate. GitHub Actions Docker
-  and Render production verification remain the release gate until recorded
-  below.
+- The model bytes, checksum and `2.0.0` model identifier are unchanged. Tag
+  `v2.1.0` identifies the final evidence release after repeat gates pass.
 
 ## Version boundary
 
-This report separates verified **v1 production evidence** from verified **v2
-deployed evidence**. V2 passed the local automated, security and real-browser
-checks below, then passed Docker, GitHub Actions CI and Render verification on
-12 August 2026. V2 was committed as `7e4ca6e`, tagged `v2.0.0` and deployed;
-the live `/health` reports application `2.0.0`, model
-`limitiq-global-2.0.0-37a14c45a811` and dataset `global-7-94bb4c0ad0f1`.
-Publication proceeded per the owner's terms decision recorded in `NOTICE.md`.
+This report separates current **v2.1 application evidence** from historical
+**v2.0 and v1 release evidence**. The v2 model did not change between v2.0 and
+v2.1. Pre-rewrite commit `7e4ca6e`, v2.0 tag and 12 August results below are
+retained as historical evidence; current identity is the rewritten
+`Ghostboy789` history. Publication proceeds under the owner's 14 August 2026
+clearance attestation recorded in `NOTICE.md`, not an independent legal opinion.
 
-## Local v2 evidence — 11 August 2026
+## Historical local v2.0 evidence — 11 August 2026
 
 - 71 tests passed with 75.99% statement coverage, above the enforced 65%
   threshold.
@@ -58,9 +67,9 @@ duplicate, upload-size and other negative batch paths are covered by passing
 integration tests. The two-page A4 executive PDF was separately rendered and
 visually checked for clipping and overlap.
 
-## Deployed v2 verification — 12 August 2026
+## Historical deployed v2.0 verification — 12 August 2026
 
-- Commit `7e4ca6e` pushed to `main`; GitHub Actions run
+- The then-current pre-rewrite commit `7e4ca6e` was pushed to `main`; GitHub Actions run
   [31568971402](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/31568971402)
   passed every job including ruff, pytest (71 tests, 75.99% coverage), Bandit,
   pip-audit, the secret scan, the Docker image build and the container `/health`

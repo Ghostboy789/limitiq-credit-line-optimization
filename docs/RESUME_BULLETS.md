@@ -1,6 +1,6 @@
 # Evidence-based résumé bullets
 
-- Built and deployed (v2.0.0, live on Render, 12 Aug 2026) a production-shaped
+- Built and deployed (v2.1 application, live on Render, verified 18 Aug 2026) a production-shaped
   credit-line decision-support platform over a 1.87M-row multi-source
   adverse-credit-outcome benchmark, harmonizing six independent cohorts with
   checksum-bound provenance and governed increase/hold/refer/freeze actions.
@@ -13,15 +13,16 @@
 
 Deployment-focused alternative:
 
-- Released v2.0.0 as a tagged, checksum-verified build through GitHub Actions CI
-  (71 tests at 75.99% coverage, Ruff, Bandit, pip-audit, detect-secrets, Docker
-  image build and container `/health` smoke test) to Render, then verified every
-  route, CSV/PDF download and the live `/health` endpoint over public HTTPS.
-  Earlier v1 (0.781 test ROC-AUC, Brier 0.133) remains verifiable via tag
-  `v1.0.0`.
+- Deployed checksum-verified application `2.1.0` through GitHub Actions CI (92
+  tests at 69.00% coverage, Ruff, Bandit, pip-audit, secret scan, Docker
+  build/run and container `/health`) to Render, then passed 23 production HTTPS
+  route/download/simulator/batch checks with zero failures. Earlier v1 (0.781
+  test ROC-AUC, Brier 0.133) remains verifiable via tag `v1.0.0`; the current
+  evidence release is tagged `v2.1.0`.
 
 Use “multi-source adverse-credit-outcome benchmark,” not common-horizon/global
-regulatory PD. The live URL serves v2.0.0 until the v2.1 release is verified.
-The four-source publication gate was cleared by the repository owner's dated
-14 August 2026 attestation, not by an independent legal opinion; the historical
-review and resolution basis are recorded in NOTICE.md.
+regulatory PD. The model identifier remains
+`limitiq-global-2.0.0-37a14c45a811` because v2.1 did not retrain it. The
+four-source publication gate was owner-cleared by dated 14 August 2026
+attestation, not an independent legal opinion; the historical review and
+resolution basis are recorded in NOTICE.md.

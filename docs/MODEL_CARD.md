@@ -2,11 +2,18 @@
 
 ## Version boundary
 
-This card describes the **deployed v2 model**. V2 was committed as `7e4ca6e`,
-passed GitHub Actions CI (including Docker container health check), was tagged
-`v2.0.0` and deployed to Render on 12 August 2026. The live `/health` endpoint
-reports application `2.0.0`, model `limitiq-global-2.0.0-37a14c45a811` and
-dataset `global-7-94bb4c0ad0f1`.
+This card describes the **deployed v2 model**, unchanged in the v2.1 application
+release. The live `/health` endpoint was verified 18 August 2026 and reports
+application `2.1.0`, model `limitiq-global-2.0.0-37a14c45a811`, dataset
+`global-7-94bb4c0ad0f1`; the endpoint also exposes the exact deployed Git
+revision. Application code was release-gated at
+`c6154603da430b0eacb2d237a469f0843784557e`. Keeping the model identifier at
+`2.0.0` is deliberate: v2.1 changes application and governance evidence, not
+trained model bytes. Tag `v2.1.0` identifies the final evidence release.
+
+The original v2.0 application release was tagged `v2.0.0` and verified on
+Render on 12 August 2026. Its pre-authorship-rewrite commit references are
+historical only.
 
 ## Model identity
 
@@ -96,8 +103,9 @@ production-shaped workflow.
 
 No real lending, affordability decision, consumer notice, regulatory capital,
 IFRS 9 provision, punitive line decrease, causal uplift estimate, realized
-business impact, fair-lending certification or public v2 deployment before the
-terms gate passes.
+business impact or fair-lending certification. Public demonstration does not
+make the model production-ready or replace independent legal, model-risk and
+responsible-lending review.
 
 ## Inputs and explanation
 
@@ -125,9 +133,19 @@ artifact or freezes automation.
 
 ## Publication gate
 
-Status: **cleared by repository-owner attestation on 14 August 2026**. The
-supporting documents are retained by the owner and are not independently
-validated by this project. Historical findings remain in [`NOTICE.md`](../NOTICE.md).
+Status: **owner-cleared by attestation on 14 August 2026**. The supporting
+documents are retained by the owner. This is not an independent legal opinion
+or legal validation by the project. Historical findings remain in
+[`NOTICE.md`](../NOTICE.md).
+
+## Application-release verification
+
+GitHub Actions run
+[32117394757](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32117394757)
+passed Ruff, format, 92 tests at 69.00% coverage, Bandit, pip-audit, secret
+scanning, Docker build/run and container health after a transient Docker Hub 502
+was resolved by rerun. Production HTTPS QA passed 23 checks with zero failures;
+the model version and checksum remained unchanged.
 
 ## Additive robustness evidence
 
