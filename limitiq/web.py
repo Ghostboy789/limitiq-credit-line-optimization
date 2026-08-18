@@ -93,6 +93,11 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _text_sha256(path: Path) -> str:
+    """Hash UTF-8 text with platform newlines normalized to LF."""
+    return hashlib.sha256(path.read_text(encoding="utf-8").encode()).hexdigest()
+
+
 def _load_artifacts() -> tuple[Any, dict[str, Any], pd.DataFrame, dict[str, Any]]:
     model_path = MODEL_DIR / "global_champion.joblib"
     metadata_path = MODEL_DIR / "global_metadata.json"
@@ -114,7 +119,7 @@ def _load_artifacts() -> tuple[Any, dict[str, Any], pd.DataFrame, dict[str, Any]
         "model_checksum": metadata["model_checksum"],
         "dataset_checksum": metadata["dataset_checksum"],
         "random_seed": metadata["random_seed"],
-        "demo_portfolio_sha256": _sha256(portfolio_path),
+        "demo_portfolio_sha256": _text_sha256(portfolio_path),
     }
     if any(simulation.get(key) != value for key, value in expected_provenance.items()):
         raise RuntimeError("Synthetic demo artifacts do not match trusted global metadata")

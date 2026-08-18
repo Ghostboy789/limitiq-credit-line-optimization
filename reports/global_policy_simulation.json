@@ -7,7 +7,7 @@
   "random_seed": 42,
   "generated_at": "2026-08-17T12:37:43.325354+00:00",
   "demo_rows": 1200,
-  "demo_portfolio_sha256": "4fe40fada8bd9cd1a57270b8bcd41606ed8fdecb6406bdd5e5d7bdbea9331d77",
+  "demo_portfolio_sha256": "97bd7bbfde25573beb7f4fa0b8ae4886a87a37607ce11d47da44608a7f4e2be5",
   "assumptions": {
     "lgd": 0.65,
     "ccf": 0.75,

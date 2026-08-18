@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import io
 import json
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -10,9 +12,15 @@ from fastapi.testclient import TestClient
 
 from limitiq.config import PROCESSED_DIR
 from limitiq.features import BATCH_COLUMNS
-from limitiq.web import MAX_UPLOAD_BYTES, MAX_UPLOAD_ROWS, REPORT_FILES, app
+from limitiq.web import MAX_UPLOAD_BYTES, MAX_UPLOAD_ROWS, REPORT_FILES, _text_sha256, app
 
 client = TestClient(app)
+
+
+def test_text_artifact_checksum_is_platform_newline_stable(tmp_path: Path) -> None:
+    artifact = tmp_path / "artifact.csv"
+    artifact.write_bytes(b"a,b\r\n1,2\r\n")
+    assert _text_sha256(artifact) == hashlib.sha256(b"a,b\n1,2\n").hexdigest()
 
 
 @pytest.mark.parametrize(

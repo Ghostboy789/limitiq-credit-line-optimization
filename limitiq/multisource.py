@@ -82,6 +82,11 @@ _INSTALLMENT_RATE = {1: 0.35, 2: 0.30, 3: 0.225, 4: 0.125}
 _MAX_HF_BYTES = 2 * 1024 * 1024 * 1024
 
 
+def _text_sha256(path: Path) -> str:
+    """Hash UTF-8 text with platform newlines normalized to LF."""
+    return hashlib.sha256(path.read_text(encoding="utf-8").encode()).hexdigest()
+
+
 def _read_arff(path: Path) -> pd.DataFrame:
     """Minimal ARFF reader; returns string-valued cells, '?' becomes NaN."""
     lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
@@ -925,7 +930,7 @@ def _write_demo(model: object, metadata: dict[str, Any]) -> None:
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     portfolio_path = PROCESSED_DIR / "global_demo_portfolio.csv"
     temporary_path = portfolio_path.with_suffix(".csv.tmp")
-    output.to_csv(temporary_path, index=False)
+    output.to_csv(temporary_path, index=False, lineterminator="\n")
     temporary_path.replace(portfolio_path)
     _write_json(
         REPORT_DIR / "global_policy_simulation.json",
@@ -938,7 +943,7 @@ def _write_demo(model: object, metadata: dict[str, Any]) -> None:
             "random_seed": metadata["random_seed"],
             "generated_at": datetime.now(UTC).isoformat(),
             "demo_rows": int(len(output)),
-            "demo_portfolio_sha256": _sha256(portfolio_path),
+            "demo_portfolio_sha256": _text_sha256(portfolio_path),
             "assumptions": assumptions.to_dict(),
             "summary": summarize_portfolio(decisions),
             "sensitivity": portfolio_sensitivity(

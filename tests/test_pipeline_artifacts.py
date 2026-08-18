@@ -217,7 +217,8 @@ def test_global_model_evidence_is_present_checksum_bound_and_sane() -> None:
     assert simulation["model_checksum"] == evidence["model_checksum"]
     assert simulation["random_seed"] == SEED
     assert simulation["demo_rows"] == len(pd.read_csv(demo_path))
-    assert hashlib.sha256(demo_path.read_bytes()).hexdigest() == simulation["demo_portfolio_sha256"]
+    normalized = demo_path.read_text(encoding="utf-8").encode()
+    assert hashlib.sha256(normalized).hexdigest() == simulation["demo_portfolio_sha256"]
     for name in ("global_data_quality_report.html", "global_eda_report.html"):
         assert (REPORT_DIR / name).exists() and (REPORT_DIR / name).stat().st_size > 1_000
 
