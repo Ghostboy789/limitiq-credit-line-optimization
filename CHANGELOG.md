@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — v3 research and recruiter evidence
+## 3.0.0 — 2026-08-21
 
 - Separate a coherent single-definition primary decision model from the
   heterogeneous multi-source transportability benchmark.
@@ -9,6 +9,9 @@
 - Add recruiter-guided website paths, operational readiness endpoints, a credit
   committee memo, SQL reconciliation, source manifest, SBOM, CodeQL, container
   scanning and load-smoke evidence.
+- Passed 112 tests, dependency and secret audits, CodeQL, Docker build, strict
+  HIGH/CRITICAL Trivy scanning, container health and concurrency smoke; verified
+  the exact Render commit and production desktop/tablet/mobile workflows.
 
 ## 2.1.0 — 2026-08-18
 

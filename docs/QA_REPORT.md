@@ -1,6 +1,6 @@
 # QA report
 
-## V3.0.0 release-candidate boundary — 18 August 2026
+## V3.0.0 verified release — 21 August 2026
 
 The working tree contains a coherent UCI Taiwan next-month primary model,
 Taiwan-contract synthetic demo, two-track governance, operational endpoints,
@@ -10,7 +10,7 @@ scan gates.
 - Full suite: **112 passed**, **72.82%** scoped statement coverage (65% required).
 - Ruff lint and format: pass. Bandit: no findings. Pip-audit: no known
   vulnerabilities in pinned runtime dependencies.
-- Secret scan: 85 publishable source/config/document files, zero findings;
+- Secret scan: 131 publishable source/config/document files, zero findings;
   generated reports/data and binary artifacts were separately provenance-bound
   and excluded from entropy scanning.
 - Primary smoke training, SQL reconciliation, SBOM check and source-manifest
@@ -25,9 +25,22 @@ scan gates.
 - The coverage headline applies to the primary/runtime package. Large offline
   research CLIs remain explicitly omitted and are checked through artifact,
   schema and provenance tests; the headline is not full rebuild-path coverage.
-- Local Docker is unavailable. Docker build, Trivy, GitHub Actions, Render and
-  live v3 workflow/browser verification remain release gates; this section
-  records no premature deployment claim.
+- Local Docker is unavailable; GitHub Actions supplied the container evidence.
+- CI [run 32455018502](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32455018502)
+  passed Docker build, zero HIGH/CRITICAL Trivy scanning, non-root container
+  health and a 50-request/5-concurrency benchmark. CodeQL
+  [run 32455018503](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32455018503)
+  passed on the same commit.
+- Render `/health` reported application `3.0.0`, model
+  `limitiq-primary-3.0.0-89f9a2530bde`, dataset
+  `uci-350-next-month-dc05bd56186a` and exact commit
+  `1dc6257f96617b3618527446203c96d55ae75568`.
+- Production HTTPS QA passed 21 GET/download/document routes, stressed simulator,
+  valid/invalid batch, valid/out-of-scope prediction and security/observability
+  header checks.
+- Fresh production browser QA covered executive, portfolio, governance,
+  monitoring, reports and committee views across 1440/768/390 px. Mobile
+  navigation, overflow and console checks passed with zero warning/error.
 
 ## V2.1 application verification — 18 August 2026
 
@@ -64,9 +77,10 @@ scan gates.
 
 ## Version boundary
 
-This report separates current **v2.1 application evidence** from historical
-**v2.0 and v1 release evidence**. The v2 model did not change between v2.0 and
-v2.1. Pre-rewrite commit `7e4ca6e`, v2.0 tag and 12 August results below are
+This report separates current **v3 application evidence** from historical
+**v2.1, v2.0 and v1 release evidence**. V3 uses the coherent primary model for
+the educational demo while the v2 model remains research only. Pre-rewrite
+commit `7e4ca6e`, v2.0 tag and 12 August results below are
 retained as historical evidence; current identity is the rewritten
 `Ghostboy789` history. Publication proceeds under the owner's 14 August 2026
 clearance attestation recorded in `NOTICE.md`, not an independent legal opinion.

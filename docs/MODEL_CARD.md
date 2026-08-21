@@ -12,7 +12,7 @@
 - **Model SHA-256:** `89f9a2530bde4fbae25974255d5de5963b1ae8ec392042287dad17356c98df33`
 - **Dataset version:** `uci-350-next-month-dc05bd56186a`
 - **Seed:** 42; bootstrap seed 3042
-- **Release state:** v3.0.0 release candidate, not yet verified live
+- **Release state:** v3.0.0 application verified live on 21 August 2026
 
 The model may demonstrate policy mechanics only. It is prohibited for real
 lending, Indian customer decisions, pricing, affordability, regulatory PD,

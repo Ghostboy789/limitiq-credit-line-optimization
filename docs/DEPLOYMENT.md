@@ -2,17 +2,12 @@
 
 ## Status boundary
 
-The repository currently contains a **v3.0.0 release candidate** with primary
+The public service runs the verified **v3.0.0 application** with primary
 model `limitiq-primary-3.0.0-89f9a2530bde` and dataset
-`uci-350-next-month-dc05bd56186a`. It is not described as deployed until the
-full suite, CI, Docker/Trivy, Render and production workflow gates pass.
-
-The URLs below serve the **v2.1.0 application**. Application code was
-release-gated at commit `c6154603da430b0eacb2d237a469f0843784557e` on 18
-August 2026. The live
-`/health` endpoint reports application `2.1.0`, unchanged model
-`limitiq-global-2.0.0-37a14c45a811`, dataset `global-7-94bb4c0ad0f1` and the
-exact deployed Git revision. Tag `v2.1.0` identifies the final evidence release.
+`uci-350-next-month-dc05bd56186a`. Application code was release-gated at commit
+`1dc6257f96617b3618527446203c96d55ae75568` on 21 August 2026. Live `/health`
+reports application `3.0.0`, that exact Git revision and the primary model and
+dataset identifiers. The v2 global model remains a research benchmark only.
 
 Publication proceeded under the repository owner's 14 August 2026 clearance
 attestation documented in [`NOTICE.md`](../NOTICE.md). This is an owner-cleared
@@ -26,7 +21,32 @@ Health endpoint: https://limitiq-credit-line-optimization.onrender.com/health
 The `limitiq-production` Blueprint deploys the Docker service from `main` on
 Render's free plan with a `$0` workspace spend limit.
 
-## V2.1 deployment verification — 18 August 2026
+## V3.0 deployment verification — 21 August 2026
+
+1. GitHub Actions
+   [run 32455018502](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32455018502)
+   passed Ruff, format, 112 tests at 72.82% scoped coverage, primary smoke,
+   source/analytics/SBOM checks, Bandit, pip-audit, secret scanning, Docker build,
+   zero HIGH/CRITICAL Trivy scanning, container health and concurrency smoke.
+2. Matching CodeQL
+   [run 32455018503](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32455018503)
+   passed.
+3. Render `/health`, `/live`, `/ready` and `/ops` returned 200; `/health` proved
+   the exact commit, application, primary model and dataset.
+4. Twenty-one production GET/download/document routes returned 200. The stressed
+   simulator, valid transient batch CSV, invalid batch rejection, valid API
+   decision and out-of-scope-region rejection passed. CSP, HSTS, request ID and
+   timing headers were present.
+5. Fresh production browser QA covered the executive, portfolio, governance,
+   monitoring, reports and committee views at 1440, 768 and 390 px. No page-level
+   horizontal overflow or console warning/error was observed; the mobile menu
+   expanded with accessible state.
+
+The runtime container uses the current official Python 3.11 slim Trixie base,
+applies published OS security updates during build, removes build-only packaging
+tools and runs as a non-root user.
+
+## Historical v2.1 deployment verification — 18 August 2026
 
 1. Every reachable commit author/committer and tagger was rewritten to
    `Ghostboy789`; the tested application commit is `c6154603`.
@@ -47,7 +67,7 @@ Render's free plan with a `$0` workspace spend limit.
    directly over HTTPS. This constraint is recorded rather than treated as a
    visual-browser pass.
 
-The final documentation commit is tagged `v2.1.0` only after repeat CI, Render
+The final documentation commit was tagged `v2.1.0` after repeat CI, Render
 verification and the independent audit pass.
 
 ## Local production smoke test
@@ -58,9 +78,9 @@ docker run --rm -p 8000:8000 -e PORT=8000 limitiq
 curl http://localhost:8000/health
 ```
 
-V3 adds `/live`, `/ready` and aggregate-only `/ops`; release verification must
-check all four operational endpoints plus portfolio, account, simulator,
-committee memo, reports and transient batch workflows.
+V3 adds `/live`, `/ready` and aggregate-only `/ops`; release verification checks
+all four operational endpoints plus portfolio, account, simulator, committee
+memo, reports and transient batch workflows.
 
 The image runs a non-root user, one Uvicorn worker, no debug mode, capped numeric
 threads and a stdlib health check. Training and downloading never occur in the

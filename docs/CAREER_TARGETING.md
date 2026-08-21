@@ -6,8 +6,7 @@
 a calibrated next-month default model, constrained actions, model-risk controls
 and a separately governed 1.87M-row transportability benchmark.
 
-Be precise about version status: v3 is a release candidate until CI and live
-deployment are verified; the public link still serves verified v2.1. V3 uses
+Be precise about version status: v3 is the verified live application. It uses
 one Taiwan next-month target for account decisions and never uses the
 heterogeneous global benchmark for individual recommendations.
 
@@ -119,7 +118,7 @@ economics remain explicitly simulated.”
 
 ## Application checklist
 
-1. Until final deployment, label the link “verified v2.1 live demo; v3 release candidate in repository.”
+1. Label the link “verified v3 educational live demo.”
 2. Match the first bullet to the job family.
 3. Lead with primary 0.757 ROC-AUC and explain why the multi-source benchmark is research only.
 4. Label every financial result “synthetic and simulated.”

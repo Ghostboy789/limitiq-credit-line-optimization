@@ -2,12 +2,12 @@
 
 ## Version status
 
-V3 is the source-coherent release candidate: a UCI Taiwan next-month default
+V3 is the verified source-coherent release: a UCI Taiwan next-month default
 model drives the educational synthetic decision portfolio. The v2 1,869,548-row
 multi-source model remains transportability research only because it is not a
-common-horizon regulatory PD. The public deployment remains verified v2.1 until
-v3 release gates pass. The source-terms attestation in `NOTICE.md` is not a legal
-opinion.
+common-horizon regulatory PD. CI, container security, exact-commit Render and
+production-browser gates passed on 21 August 2026. The source-terms attestation
+in `NOTICE.md` is not a legal opinion.
 
 ## Product
 

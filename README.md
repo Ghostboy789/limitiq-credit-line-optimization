@@ -32,13 +32,18 @@ rules and a recruiter-ready banking workflow in one Dockerized FastAPI service.
 
 [View the 390 px mobile capture](docs/assets/v3-overview-mobile.png) · [View the governance verdict](docs/assets/v3-governance.png)
 
-The public deployment currently serves verified **v2.1.0**. The repository
-contains the **v3.0.0 release candidate** described below; it is not called live
-until CI, Render and production workflow verification pass.
+The public deployment serves verified **v3.0.0** application code from
+`1dc6257f96617b3618527446203c96d55ae75568`. GitHub Actions
+[run 32455018502](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32455018502)
+passed the full release gate, including Docker, a zero HIGH/CRITICAL Trivy scan,
+container health and concurrency smoke; matching CodeQL
+[run 32455018503](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32455018503)
+also passed. Render `/health` reported the exact commit, primary model and dataset
+before production workflow and responsive-browser verification on 21 August 2026.
 
-Current local v3 gate: **112 tests passed at 72.82% coverage**; Ruff, formatting,
-Bandit, dependency audit, source/demo/SBOM checks and local runtime smoke passed.
-Docker/Trivy, GitHub Actions and production verification remain pending.
+The v3 gate is **112 tests passed at 72.82% coverage**; Ruff, formatting,
+Bandit, dependency audit, secret scan, source/demo/SBOM checks, Docker/Trivy,
+runtime smoke and public HTTPS verification passed.
 Coverage measures the primary/runtime package and explicitly omits the large
 offline multi-source and external-validation CLIs; their committed evidence is
 checked by artifact, provenance and schema tests rather than included in the headline.
@@ -247,7 +252,7 @@ larger decorative model.
 
 ## Release history
 
-- **v3.0.0 release candidate:** coherent primary model, research separation,
+- **v3.0.0:** coherent primary model, research separation,
   confidence intervals, validation package, committee memo, SQL/SBOM/ops gates.
 - **v2.1.0:** verified live application and multi-source research benchmark.
 - **v1.0.0:** archived Taiwan-only original pipeline.

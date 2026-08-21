@@ -46,8 +46,10 @@ unseen markets.
 
 ## Deployment boundary
 
-The public Render service remains verified at v2.1 until the v3 release candidate
-passes CI and production QA. Research-source publication proceeds under the
+The public Render service serves verified v3 application code from
+`1dc6257f96617b3618527446203c96d55ae75568`; CI, CodeQL, container security,
+exact-commit health, production workflows and 1440/768/390 px browser QA passed
+on 21 August 2026. Research-source publication proceeds under the
 repository owner's 14 August 2026 resolution attestation in `NOTICE.md`; this
 record is not an independent legal opinion.
 
