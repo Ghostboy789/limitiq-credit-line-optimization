@@ -14,7 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt && \
 
 COPY limitiq ./limitiq
 COPY models ./models
-COPY data/processed/global_demo_portfolio.csv ./data/processed/global_demo_portfolio.csv
+COPY release ./release
+COPY data/processed/primary_demo_portfolio.csv ./data/processed/primary_demo_portfolio.csv
 COPY reports ./reports
 COPY docs ./docs
 COPY LICENSE README.md ./

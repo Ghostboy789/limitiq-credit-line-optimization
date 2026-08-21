@@ -1,0 +1,27 @@
+{
+  "input_columns": [
+    "delinquency_count",
+    "utilization",
+    "debt_to_income",
+    "credit_lines",
+    "income_inr",
+    "credit_age_months",
+    "region"
+  ],
+  "active_decision_features": [
+    "delinquency_count",
+    "utilization"
+  ],
+  "constant_context": {
+    "region": "asia"
+  },
+  "unavailable_source_features": [
+    "credit_age_months",
+    "credit_lines",
+    "debt_to_income",
+    "income_inr"
+  ],
+  "target": "default",
+  "target_definition": "Default payment in the following month",
+  "prediction_horizon": "One month"
+}

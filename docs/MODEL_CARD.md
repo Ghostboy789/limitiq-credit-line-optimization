@@ -1,163 +1,107 @@
-# Model card
+# Model card — LimitIQ v3 primary candidate
 
-## Version boundary
+## Identity and use boundary
 
-This card describes the **deployed v2 model**, unchanged in the v2.1 application
-release. The live `/health` endpoint was verified 18 August 2026 and reports
-application `2.1.0`, model `limitiq-global-2.0.0-37a14c45a811`, dataset
-`global-7-94bb4c0ad0f1`; the endpoint also exposes the exact deployed Git
-revision. Application code was release-gated at
-`c6154603da430b0eacb2d237a469f0843784557e`. Keeping the model identifier at
-`2.0.0` is deliberate: v2.1 changes application and governance evidence, not
-trained model bytes. Tag `v2.1.0` identifies the final evidence release.
+- **Version:** `limitiq-primary-3.0.0-89f9a2530bde`
+- **Role:** source-coherent primary candidate for an educational synthetic demo
+- **Source:** UCI Default of Credit Card Clients, Taiwan, 30,000 rows
+- **Target:** default payment in the following month
+- **Horizon:** one month
+- **Champion:** sigmoid-calibrated histogram gradient boosting
+- **Baseline:** sigmoid-calibrated regularized logistic regression
+- **Model SHA-256:** `89f9a2530bde4fbae25974255d5de5963b1ae8ec392042287dad17356c98df33`
+- **Dataset version:** `uci-350-next-month-dc05bd56186a`
+- **Seed:** 42; bootstrap seed 3042
+- **Release state:** v3.0.0 release candidate, not yet verified live
 
-The original v2.0 application release was tagged `v2.0.0` and verified on
-Render on 12 August 2026. Its pre-authorship-rewrite commit references are
-historical only.
+The model may demonstrate policy mechanics only. It is prohibited for real
+lending, Indian customer decisions, pricing, affordability, regulatory PD,
+IFRS 9/Ind AS 109, provisioning, capital or automatic customer treatment.
 
-## Model identity
+## Model contract
 
-- Classification: multi-source adverse-credit-outcome benchmark
-- Version: `limitiq-global-2.0.0-37a14c45a811`
-- Champion: sigmoid-calibrated histogram gradient boosting
-- Baseline: sigmoid-calibrated regularized logistic regression
-- Artifact SHA-256:
-  `37a14c45a8118d8684e3e7bf7fdad45fe167844a4e7700b1833e15b78a25df72`
-- Dataset version: `global-7-94bb4c0ad0f1`
-- Seed: 42
-- Split: 1,121,728 train / 373,910 validation / 373,910 untouched test
-- Threshold: `0.16891891891891891`
+The full harmonized input contract accepts delinquency count, utilization, debt
+to income, credit lines, income, credit age and region. Only **delinquency count**
+and **utilization** are observed and active for this primary source; region is
+constant `asia` and the remaining fields are explicitly unavailable. Customer
+ID and demographic attributes are excluded from inference.
 
-The suffix `global-7` records six independent training sources plus one legacy
-reference file; it does not mean seven markets.
+## Development and selection
 
-## Target interpretation
+The fixed stratified split is 18,000 train / 6,000 validation / 6,000 untouched
+test. Both candidates use serialized preprocessing and three-fold sigmoid
+calibration. Selection chooses the lowest validation Brier score among models
+within 0.02 ROC-AUC of the best. The selected threshold minimizes a documented
+validation cost with false negatives weighted five times false positives.
 
-Source labels differ in event and horizon: next-month default, two-year serious
-delinquency, historical good/bad performance, status at extract and payment
-difficulty. The calibrated output is an educational probability of the relevant
-source-specific adverse outcome. It is **not** a common-horizon contractual,
-IFRS 9 or regulatory PD and is not comparable across sources as a single legal
-default definition.
-
-## Selection
-
-Both candidates use unified imputation/preprocessing and three-fold sigmoid
-calibration. Selection chooses the lowest source-macro validation Brier score
-among candidates within 0.02 macro ROC-AUC of the best. Validation evidence:
-
-| Candidate | Macro ROC-AUC | Macro Brier | Pooled ROC-AUC | Pooled Brier |
+| Validation candidate | ROC-AUC | PR-AUC | Brier | Log loss |
 |---|---:|---:|---:|---:|
-| Regularized logistic regression | 0.609702 | 0.180764 | 0.642906 | 0.143872 |
-| Histogram gradient boosting | 0.678085 | 0.141845 | 0.669017 | 0.140721 |
+| Regularized logistic regression | 0.704729 | 0.460870 | 0.149363 | 0.469577 |
+| **Histogram gradient boosting** | **0.743372** | **0.474880** | **0.146294** | **0.458581** |
 
-The threshold is selected on validation with false negatives weighted five
-times false positives. The champion is then refit on train plus validation and
-evaluated on the held-out test only after model and threshold selection. Later
-diagnostics use those frozen test rows post-selection and never alter model bytes.
+The champion type and threshold `0.163964` were frozen before refitting on train
+plus validation and reading the untouched test set once.
 
 ## Untouched-test evidence
 
-Source-macro evidence is primary; pooled evidence is secondary because Lending
-Club dominates the row count.
-
-| Metric | Macro | Pooled row-weighted |
+| Metric | Result | Seeded 95% bootstrap interval |
 |---|---:|---:|
-| ROC-AUC | 0.6845295228 | 0.6698913281 |
-| PR-AUC | 0.4023697231 | 0.3049645893 |
-| Brier score | 0.1389681610 | 0.1406294588 |
-| Log loss | 0.4333847612 | 0.4448560373 |
-| Mean absolute calibration-bin gap | 0.0269678270 | Versioned in metadata |
+| ROC-AUC | 0.757410 | 0.743319–0.773753 |
+| PR-AUC | 0.508729 | 0.480370–0.542755 |
+| Brier score | 0.141683 | 0.136133–0.146975 |
+| Log loss | 0.447444 | 0.433312–0.460640 |
 
-At the selected threshold, pooled precision is 0.243562, recall 0.777521 and F1
-0.370929; confusion matrix: TN 140,794, FP 164,849, FN 15,188, TP 53,079.
+At the selected threshold: precision 0.379188, recall 0.724943 and F1 0.497930.
+The confusion matrix is TN 3,098, FP 1,575, FN 365, TP 962.
 
-Per-source ROC-AUC ranges from 0.5175 for Home Credit to 0.8529 for Give Me Some
-Credit. Small-cohort metrics—especially the 200-row South German test and
-1,974-row HELOC test—are descriptive and uncertain, not league tables.
+The 500-repeat nonparametric percentile intervals quantify test-population
+sampling uncertainty. They do not cover time, geography, model selection,
+policy or economic uncertainty.
 
-## Evaluation scope
+## Explanation and policy use
 
-The seeded split is random within each source. It measures interpolation for
-represented source cohorts and does not evaluate:
+The score feeds a deterministic optimizer that evaluates current line and
++10%, +20%, +30% candidates. Reason codes are generated from behavior and policy
+checks—not presented as causal feature attribution or consumer adverse-action
+reasons. Guardrails cover delinquency, expected loss, exposure, profitability,
+overextension, portfolio growth, manual review and early-warning freeze.
 
-- an unseen country or institution;
-- future vintages or macroeconomic drift;
-- leave-one-source-out transfer;
-- Indian borrower performance;
-- causal response to a credit-line change.
+## Fairness and customer protection
 
-The one-hot region context and structural missingness may reveal source identity
-and base rate. Histogram gradient boosting does not enforce common effect
-directions. Pooled metrics may benefit from between-source differences and must
-not be called like-for-like cross-market ranking.
-
-## Intended use
-
-Educational benchmarking, calibration/governance review and deterministic
-synthetic portfolio scenario comparison. The app demonstrates how a model,
-policy controls, reason codes, human review and rollback can be joined in a
-production-shaped workflow.
-
-## Non-use
-
-No real lending, affordability decision, consumer notice, regulatory capital,
-IFRS 9 provision, punitive line decrease, causal uplift estimate, realized
-business impact or fair-lending certification. Public demonstration does not
-make the model production-ready or replace independent legal, model-risk and
-responsible-lending review.
-
-## Inputs and explanation
-
-Six heterogeneous harmonized proxies plus one-hot region context enter the
-pipeline. No source identifier, customer ID, target or demographic attribute is
-an explicit input. However, region and missingness can act as source proxies.
-Reason codes come from behavior/policy checks and are educational; they are not
-consumer adverse-action reasons or causal feature explanations.
-
-## Fairness and responsible lending
-
-Comparable protected attributes are not available across sources, so v2 cannot
-perform a defensible cross-jurisdiction fairness audit. Region is not a protected-
-class substitute and its use would require legal and model-risk review in any
-real system. The synthetic policy layer cannot replace verified income,
-obligations or ability-to-pay assessment.
+Protected attributes are excluded from inference. The public Taiwan source and
+limited audit fields cannot establish fair-lending, affordability or
+customer-outcome compliance in India or any other jurisdiction. No automatic
+punitive line decrease is recommended. Positive controls do not replace local
+fairness analysis or legal review.
 
 ## Monitoring and rollback
 
-Monitor source/schema version, missingness, source mix, feature and score drift,
-per-source calibration/discrimination, risk-band outcomes, overrides and policy
-breaches. Material deterioration or an unknown source routes to human review and
-disables automatic increases. Rollback restores the prior checksum-verified v1
-artifact or freezes automation.
+Production monitoring is not claimed. A real implementation would track schema
+and range failures, score drift, calibration, risk bands, outcomes, actions,
+overrides and customer-protection guardrails against a dated local baseline.
+`AUTO_INCREASES_ENABLED=false` demonstrates a kill switch that routes otherwise
+eligible increases to manual review.
 
-## Publication gate
+## Limitations
 
-Status: **owner-cleared by attestation on 14 August 2026**. The supporting
-documents are retained by the owner. This is not an independent legal opinion
-or legal validation by the project. Historical findings remain in
-[`NOTICE.md`](../NOTICE.md).
+- Taiwan source from 2005; no Indian or current-vintage validation
+- random within-source split, not out-of-time testing
+- only two active harmonized features
+- no observed treatment response or causal profit evidence
+- no verified affordability or comparable fairness population
+- threshold cost ratio is a research assumption, not approved risk appetite
 
-## Application-release verification
+## Separate research benchmark
 
-GitHub Actions run
-[32117394757](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32117394757)
-passed Ruff, format, 92 tests at 69.00% coverage, Bandit, pip-audit, secret
-scanning, Docker build/run and container health after a transient Docker Hub 502
-was resolved by rerun. Production HTTPS QA passed 23 checks with zero failures;
-the model version and checksum remained unchanged.
+`limitiq-global-2.0.0-37a14c45a811` remains available for transportability
+research across 1,869,548 rows. Its six cohorts have different events and
+horizons, so v3 never loads it for account or batch decisions. Source-macro test
+ROC-AUC is 0.684530 and pooled ROC-AUC is 0.669891; those numbers must not be
+mixed with primary evidence.
 
-## Additive robustness evidence
+## Validation status
 
-The Lending Club vintage split produces ROC-AUC 0.6000 and Brier 0.2023 on the
-latest 20% of issues, versus 0.6015 and roughly 0.165 on the random reference.
-Because labels are status at extract with unequal seasoning, this is not a
-fixed-horizon PD backtest. Explicit-region ablation does not isolate structural
-missingness. Feature importance therefore uses source-preserving shuffles and
-effect curves use only cohorts reporting the field.
-
-## Verified deployed v1 reference
-
-V1 remains sigmoid-calibrated histogram gradient boosting on 30,000 Taiwan
-accounts: test ROC-AUC 0.781138, PR-AUC 0.567889, Brier 0.133149 and threshold
-0.173874. Those numbers must not be mixed with v2 evidence.
+The [validation-style review](INDEPENDENT_VALIDATION.md) gives conditional
+approval for educational demonstration only. It is not organizationally
+independent bank validation. See the [issue ledger](VALIDATION_ISSUES.md) and
+[model inventory](MODEL_INVENTORY.md).

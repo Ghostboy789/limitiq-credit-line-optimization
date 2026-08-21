@@ -23,6 +23,10 @@ jobs:
       - run: ruff check .
       - run: ruff format --check .
       - run: python -m pytest --cov=limitiq --cov-report=term-missing
+      - run: python -m limitiq.primary --smoke
+      - run: python -m limitiq.sources manifest > /dev/null
+      - run: python -m limitiq.analytics --check
+      - run: python -m limitiq.sbom --check sbom/limitiq.cdx.json
       - run: bandit -q -r limitiq
       - run: pip-audit -r requirements.txt
       - name: Secret scan
@@ -31,6 +35,14 @@ jobs:
             --exclude-files '(^|/)(data/raw|data/processed/clean_source.csv|__pycache__|\.git)(/|$)|\.(png|pdf|joblib|xls)$' . > .secrets.json
           python -c "import json; d=json.load(open('.secrets.json')); assert not any(d['results'].values()), d['results']"
       - run: docker build -t limitiq:test .
+      - name: Scan container image
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          image-ref: limitiq:test
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: HIGH,CRITICAL
       - run: docker run -d --rm --name limitiq -p 8000:8000 limitiq:test
       - run: |
           for i in {1..30}; do
@@ -39,3 +51,4 @@ jobs:
           done
           docker logs limitiq
           exit 1
+      - run: python -m limitiq.benchmark http://127.0.0.1:8000/ --requests 50 --concurrency 5

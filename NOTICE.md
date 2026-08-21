@@ -4,6 +4,14 @@ LimitIQ code is MIT licensed. That licence does not grant rights to third-party
 datasets or override upstream, competition or mirror terms. Raw datasets are
 gitignored and must never be committed.
 
+## V3 use boundary
+
+The v3 decision candidate uses only the CC BY 4.0 UCI Taiwan source and its
+following-month default target. The six-cohort v2 model and the four
+owner-attested non-UCI sources remain separate transportability research and do
+not drive account, API or batch recommendations. This architecture restriction
+does not replace an institution's independent source-terms review.
+
 ## Publication gate — owner resolution attestation (14 Aug 2026)
 
 On 14 August 2026 the repository owner explicitly confirmed that the publication
@@ -47,7 +55,7 @@ evidence that clears upstream redistribution rights. The project publication
 decision relies on the later owner attestation; an institution must perform its
 own source-terms review before using or redistributing these artifacts.
 
-## V1 primary dataset
+## V3 primary dataset and v1 archive source
 
 **Default of Credit Card Clients**, created by I-Cheng Yeh and distributed by
 the UCI Machine Learning Repository:
@@ -60,9 +68,10 @@ the UCI Machine Learning Repository:
 - Raw SHA-256:
   `30c6be3abd8dcfd3e6096c828bad8c2f011238620f5369220bd60cfc82700933`
 
-The repository does not redistribute the raw XLS. The v1 demonstration uses
-deterministic synthetic account identifiers and excludes original identifiers
-and demographics.
+The repository does not redistribute the raw XLS. V3 uses the source for its
+coherent primary model; v1 remains an archived modelling recipe. Both use
+synthetic account identifiers and exclude original identifiers and demographics
+from inference and publication.
 
 ## V2 source ledger
 

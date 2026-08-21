@@ -1,9 +1,40 @@
 {% extends "base.html" %}
 {% from "_charts.html" import line_chart, horizontal_bars, histogram, cohort_comparison, value_bars, pdp_card %}
 {% block content %}
-<section class="page-heading"><p class="eyebrow">Independent challenge & control</p><h1>Global benchmark governance</h1><p>One pooled model is evaluated overall and separately by public source cohort. Outcomes, horizons, products and feature proxies differ, so these scores are not common-horizon regulatory probabilities of default.</p></section>
+<section class="page-heading"><p class="eyebrow">Independent challenge & control</p><h1>Two-track model governance</h1><p>The source-coherent primary candidate drives this educational decision demo. A separately governed pooled model investigates transportability patterns across heterogeneous public cohorts and never drives account recommendations.</p></section>
+<section class="validation-verdict" aria-labelledby="validation-verdict-heading">
+  <div><p class="eyebrow">Validation verdict</p><h2 id="validation-verdict-heading">Conditional approval for educational portfolio simulation only</h2></div>
+  <p><strong>Not approved</strong> for real lending decisions, regulatory PD, IFRS 9, Indian-customer decisions or automated customer treatment. Any broader use requires coherent target and horizon evidence, representative local validation, effective challenge and formal accountable approval.</p>
+</section>
 <div class="notice" role="note"><strong>Interpretation boundary:</strong> Pooled metrics are row-weighted and dominated by the largest dataset. Macro and source-cohort evidence are shown alongside them. Random within-source holdouts do not demonstrate performance in an unseen country, institution or time period.</div>
 <div class="notice{% if metadata.publication_gate.status != 'cleared' %} warning{% endif %}" role="note"><strong>V2 publication gate: {{ metadata.publication_gate.status|upper }}.</strong> {{ metadata.publication_gate.reason }}{% if metadata.publication_gate.resolution_basis %} {{ metadata.publication_gate.resolution_basis }}{% endif %}</div>
+
+<section class="panel"><div class="section-heading"><div><p class="eyebrow">Primary decision track</p><h2>UCI Taiwan next-month default</h2></div><span class="badge action">Application candidate</span></div>
+  <p>One disclosed event and one-month horizon; 18,000 training, 6,000 validation and 6,000 untouched-test rows. Only utilization and delinquency count are active. Random within-source validation does not establish out-of-time or geographic portability.</p>
+  <div class="metric-grid four">
+    <article class="metric"><span>Untouched-test ROC-AUC</span><strong>{{ primary.untouched_test_metrics.roc_auc|round(3) }}</strong><small>95% CI {{ primary.untouched_test_metrics.confidence_intervals.roc_auc.lower_95|round(3) }}–{{ primary.untouched_test_metrics.confidence_intervals.roc_auc.upper_95|round(3) }}</small></article>
+    <article class="metric"><span>PR-AUC</span><strong>{{ primary.untouched_test_metrics.pr_auc|round(3) }}</strong><small>Event-sensitive ranking evidence</small></article>
+    <article class="metric"><span>Brier score</span><strong>{{ primary.untouched_test_metrics.brier_score|round(3) }}</strong><small>Calibrated probability error</small></article>
+    <article class="metric"><span>Decision threshold</span><strong>{{ primary.selected_threshold|round(3) }}</strong><small>Frozen on validation data</small></article>
+  </div>
+  <div class="table-wrap" tabindex="0" aria-label="Scrollable primary model comparison"><table><thead><tr><th>Candidate</th><th>ROC-AUC</th><th>PR-AUC</th><th>Brier</th><th>Log loss</th></tr></thead><tbody>{% for name, result in primary.validation_models.items() %}<tr><td><strong>{{ name }}</strong>{% if name == primary.champion %}<span class="badge action">Champion</span>{% endif %}</td><td>{{ result.roc_auc|round(3) }}</td><td>{{ result.pr_auc|round(3) }}</td><td>{{ result.brier_score|round(3) }}</td><td>{{ result.log_loss|round(3) }}</td></tr>{% endfor %}</tbody></table></div>
+  <div class="dashboard-grid">
+    {{ line_chart('primary-roc', 'Primary ROC curve', 'Discrimination on the 6,000-row untouched Taiwan test partition.', primary_charts.roc, 'False positive rate', 'True positive rate') }}
+    {{ line_chart('primary-calibration', 'Primary calibration', 'Pooled-calibrated score compared with observed next-month default in quantile bins.', primary_charts.calibration, 'Mean predicted probability', 'Observed next-month default rate') }}
+  </div>
+  <div class="two-column">
+    <article><p class="eyebrow">Threshold outcome</p><h3>Primary untouched-test confusion matrix</h3><div class="confusion"><div></div><strong>Predicted non-default</strong><strong>Predicted default</strong><strong>Observed non-default</strong><span>{{ primary.untouched_test_metrics.confusion_matrix[0][0]|number }}</span><span>{{ primary.untouched_test_metrics.confusion_matrix[0][1]|number }}</span><strong>Observed default</strong><span>{{ primary.untouched_test_metrics.confusion_matrix[1][0]|number }}</span><span>{{ primary.untouched_test_metrics.confusion_matrix[1][1]|number }}</span></div><p>Precision {{ primary.untouched_test_metrics.precision|percent }} · Recall {{ primary.untouched_test_metrics.recall|percent }} · F1 {{ primary.untouched_test_metrics.f1|percent }}</p></article>
+    {{ value_bars('primary-importance', 'Primary permutation importance', 'Untouched-test ROC-AUC drop after deterministic single-field shuffling; diagnostic, not causal.', primary_importance, digits=4) }}
+  </div>
+  <div class="dashboard-grid">
+    {{ histogram('primary-score-distribution', 'Primary score distribution', 'Next-month default probabilities on the untouched Taiwan test partition.', primary.untouched_test_metrics.probability_summary.histogram) }}
+    {% set primary_bands = primary.untouched_test_metrics.probability_summary.risk_bands %}{% set primary_band_rows = [('Low', primary_bands['Low']), ('Moderate', primary_bands['Moderate']), ('High', primary_bands['High']), ('Very high', primary_bands['Very high'])] %}
+    {{ horizontal_bars('primary-score-bands', 'Primary score bands', 'Fixed descriptive bands; not approval cutoffs or regulatory grades.', primary_band_rows) }}
+  </div>
+  <div class="table-wrap" tabindex="0" aria-label="Scrollable primary segment diagnostics"><table><thead><tr><th>Primary test segment</th><th>Accounts</th><th>Observed default</th><th>Mean score</th><th>ROC-AUC</th></tr></thead><tbody>{% for row in primary.untouched_test_metrics.segments %}<tr><td><strong>{{ row.segment }}</strong></td><td>{{ row.accounts|number }}</td><td>{{ row.event_rate|percent }}</td><td>{{ row.mean_probability|percent }}</td><td>{% if row.roc_auc is not none %}{{ row.roc_auc|round(3) }}{% else %}Not estimable{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+</section>
+
+<div class="section-heading"><div><p class="eyebrow">Separate research track</p><h2>Multi-source transportability benchmark</h2></div></div>
 
 <section class="metric-grid four">
   <article class="metric"><span>Pooled ROC-AUC</span><strong>{{ test.roc_auc|round(3) }}</strong><small>Row-weighted untouched test</small></article>

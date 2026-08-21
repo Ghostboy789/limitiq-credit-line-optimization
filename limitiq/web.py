@@ -6,6 +6,8 @@ import io
 import json
 import os
 import re
+import secrets
+import time
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +20,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from markdown_it import MarkdownIt
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from limitiq import __version__
 from limitiq.config import (
@@ -31,6 +34,7 @@ from limitiq.config import (
     PROCESSED_DIR,
     REPORT_DIR,
     ROOT,
+    SEED,
     PolicyAssumptions,
 )
 from limitiq.features import (
@@ -43,10 +47,15 @@ from limitiq.features import (
 from limitiq.optimizer import Decision, recommend_portfolio, summarize_portfolio
 
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(5 * 1024 * 1024)))
+MAX_UPLOAD_REQUEST_BYTES = MAX_UPLOAD_BYTES + 64 * 1024
 MAX_UPLOAD_ROWS = 5_000
 ACCOUNT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{2,39}$")
 MONETARY_KEYS = ("servicing_cost", "max_account_exposure", "profitability_hurdle")
-CURRENT_REPORT_FILES = {
+PRIMARY_REPORT_FILES = {
+    "primary-model-evidence": "primary_model.json",
+    "primary-policy-simulation-evidence": "primary_policy_simulation.json",
+}
+RESEARCH_REPORT_FILES = {
     "global-data-quality": "global_data_quality_report.html",
     "global-eda": "global_eda_report.html",
     "global-executive-html": "global_executive_report.html",
@@ -69,7 +78,7 @@ LEGACY_REPORT_FILES = {
     "financial-impact": "financial_impact_analysis.html",
     "external-validation": "external_validation_report.html",
 }
-REPORT_FILES = {**CURRENT_REPORT_FILES, **LEGACY_REPORT_FILES}
+REPORT_FILES = {**PRIMARY_REPORT_FILES, **RESEARCH_REPORT_FILES, **LEGACY_REPORT_FILES}
 DOCUMENT_FILES = {
     "methodology": "METHODOLOGY.md",
     "data-card": "DATA_CARD.md",
@@ -81,8 +90,66 @@ DOCUMENT_FILES = {
     "architecture": "ARCHITECTURE.md",
     "interview-walkthrough": "INTERVIEW_WALKTHROUGH.md",
     "career-targeting": "CAREER_TARGETING.md",
+    "independent-validation": "INDEPENDENT_VALIDATION.md",
+    "validation-issues": "VALIDATION_ISSUES.md",
+    "model-inventory": "MODEL_INVENTORY.md",
+    "experiment-design": "EXPERIMENT_DESIGN.md",
+    "india-readiness": "INDIA_READINESS.md",
+    "recruiter-brief": "RECRUITER_BRIEF.md",
 }
 MARKDOWN = MarkdownIt("commonmark", {"html": False, "linkify": False}).enable("table")
+RELEASE_MANIFEST_PATH = ROOT / "release" / "checksums-v3.0.0.sha256"
+
+
+class RequestBodyLimitMiddleware:
+    """Bound a batch request before Starlette's multipart parser can spool it."""
+
+    def __init__(self, app: ASGIApp, max_bytes: int, path: str) -> None:
+        self.app = app
+        self.max_bytes = max_bytes
+        self.path = path
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if (
+            scope["type"] != "http"
+            or scope.get("method") != "POST"
+            or scope.get("path") != self.path
+        ):
+            await self.app(scope, receive, send)
+            return
+
+        messages: list[Message] = []
+        total = 0
+        while True:
+            message = await receive()
+            messages.append(message)
+            if message["type"] == "http.request":
+                total += len(message.get("body", b""))
+                if total > self.max_bytes:
+                    response = Response(
+                        f"Request exceeds the {MAX_UPLOAD_BYTES // (1024 * 1024)} MB limit",
+                        status_code=413,
+                        media_type="text/plain",
+                        headers={"Cache-Control": "no-store"},
+                    )
+                    await response(scope, receive, send)
+                    return
+                if not message.get("more_body", False):
+                    break
+            elif message["type"] == "http.disconnect":
+                break
+
+        index = 0
+
+        async def replay() -> Message:
+            nonlocal index
+            if index < len(messages):
+                message = messages[index]
+                index += 1
+                return message
+            return {"type": "http.disconnect"}
+
+        await self.app(scope, replay, send)
 
 
 def _sha256(path: Path) -> str:
@@ -93,24 +160,77 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _verify_release_manifest(required_paths: list[Path]) -> None:
+    if not RELEASE_MANIFEST_PATH.is_file():
+        raise RuntimeError("V3 release checksum manifest is missing")
+    entries: dict[str, str] = {}
+    for line in RELEASE_MANIFEST_PATH.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        checksum, relative = line.split(maxsplit=1)
+        normalized = Path(relative).as_posix()
+        if normalized in entries or len(checksum) != 64:
+            raise RuntimeError("V3 release checksum manifest is invalid")
+        entries[normalized] = checksum
+    for path in required_paths:
+        relative = path.relative_to(ROOT).as_posix()
+        if entries.get(relative) != _sha256(path):
+            raise RuntimeError(f"Release checksum mismatch: {relative}")
+
+
 def _text_sha256(path: Path) -> str:
     """Hash UTF-8 text with platform newlines normalized to LF."""
     return hashlib.sha256(path.read_text(encoding="utf-8").encode()).hexdigest()
 
 
-def _load_artifacts() -> tuple[Any, dict[str, Any], pd.DataFrame, dict[str, Any]]:
-    model_path = MODEL_DIR / "global_champion.joblib"
-    metadata_path = MODEL_DIR / "global_metadata.json"
-    portfolio_path = PROCESSED_DIR / "global_demo_portfolio.csv"
-    simulation_path = REPORT_DIR / "global_policy_simulation.json"
-    for path in (model_path, metadata_path, portfolio_path, simulation_path):
+def _load_artifacts() -> tuple[
+    Any,
+    dict[str, Any],
+    dict[str, Any],
+    pd.DataFrame,
+    dict[str, Any],
+    dict[str, Any],
+]:
+    model_path = MODEL_DIR / "primary_champion.joblib"
+    metadata_path = MODEL_DIR / "primary_metadata.json"
+    report_path = REPORT_DIR / "primary_model.json"
+    portfolio_path = PROCESSED_DIR / "primary_demo_portfolio.csv"
+    simulation_path = REPORT_DIR / "primary_policy_simulation.json"
+    research_path = MODEL_DIR / "global_metadata.json"
+    schema_path = MODEL_DIR / "primary_feature_schema.json"
+    research_feature_path = REPORT_DIR / "global_feature_evidence.json"
+    for path in (
+        model_path,
+        metadata_path,
+        schema_path,
+        report_path,
+        portfolio_path,
+        simulation_path,
+        research_path,
+        research_feature_path,
+    ):
         if not path.exists():
             raise RuntimeError(
-                f"Required artifact missing: {path.name}; run python -m limitiq.multisource"
+                f"Required artifact missing: {path.name}; run python -m limitiq.primary"
             )
+    _verify_release_manifest(
+        [
+            model_path,
+            metadata_path,
+            schema_path,
+            report_path,
+            portfolio_path,
+            simulation_path,
+            research_path,
+            research_feature_path,
+        ]
+    )
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     if _sha256(model_path) != metadata["model_checksum"]:
-        raise RuntimeError("Champion model checksum does not match trusted metadata")
+        raise RuntimeError("Primary model checksum does not match trusted metadata")
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    if _sha256(report_path) != metadata["artifact_checksums"][report_path.name]:
+        raise RuntimeError("Primary model report checksum does not match trusted metadata")
     model = joblib.load(model_path)  # noqa: S301 — repository-built artifact, checksum verified above.
     simulation = json.loads(simulation_path.read_text(encoding="utf-8"))
     expected_provenance = {
@@ -118,16 +238,15 @@ def _load_artifacts() -> tuple[Any, dict[str, Any], pd.DataFrame, dict[str, Any]
         "dataset_version": metadata["dataset_version"],
         "model_checksum": metadata["model_checksum"],
         "dataset_checksum": metadata["dataset_checksum"],
-        "random_seed": metadata["random_seed"],
+        "random_seed": SEED,
         "demo_portfolio_sha256": _text_sha256(portfolio_path),
     }
     if any(simulation.get(key) != value for key, value in expected_provenance.items()):
-        raise RuntimeError("Synthetic demo artifacts do not match trusted global metadata")
+        raise RuntimeError("Synthetic demo artifacts do not match trusted primary metadata")
     portfolio = pd.read_csv(portfolio_path)
     if len(portfolio) != simulation.get("demo_rows"):
         raise RuntimeError("Synthetic demo row count does not match trusted simulation metadata")
-    names = {key: value["name"] for key, value in metadata["datasets"].items()}
-    portfolio["source_name"] = portfolio["source_dataset"].map(names)
+    portfolio["source_name"] = metadata["source"]["dataset"]
     portfolio["display_utilization"] = portfolio["utilization"].fillna(
         portfolio["current_balance_inr"] / portfolio["current_limit_inr"]
     )
@@ -170,7 +289,8 @@ def _load_artifacts() -> tuple[Any, dict[str, Any], pd.DataFrame, dict[str, Any]
             "action_counts": portfolio["action"].value_counts().to_dict(),
             "risk_counts": portfolio["risk_band"].value_counts().to_dict(),
         }
-    return model, metadata, portfolio, simulation
+    research_metadata = json.loads(research_path.read_text(encoding="utf-8"))
+    return model, metadata, report, portfolio, simulation, research_metadata
 
 
 def _svg_points(x_values: list[float], y_values: list[float]) -> str:
@@ -204,6 +324,29 @@ def _governance_charts(metadata: dict[str, Any]) -> dict[str, Any]:
         "pooled_calibration": [series("pooled", pooled, "mean_predicted", "observed_rate")],
         "source_calibration": [
             series(key, value, "mean_predicted", "observed_rate") for key, value in sources.items()
+        ],
+    }
+
+
+def _primary_governance_charts(report: dict[str, Any]) -> dict[str, Any]:
+    metrics = report["untouched_test_metrics"]
+    roc = metrics["roc_points"]
+    calibration = metrics["calibration"]
+    return {
+        "roc": [
+            {
+                "label": "Primary untouched test",
+                "points": _svg_points(roc["fpr"], roc["tpr"]),
+            }
+        ],
+        "calibration": [
+            {
+                "label": "Primary untouched test",
+                "points": _svg_points(
+                    [point["mean_predicted"] for point in calibration],
+                    [point["observed_rate"] for point in calibration],
+                ),
+            }
         ],
     }
 
@@ -272,6 +415,21 @@ def _safe_csv(frame: pd.DataFrame) -> str:
             lambda value: f"'{value}" if str(value).startswith(("=", "+", "-", "@")) else value
         )
     return safe.to_csv(index=False, quoting=csv.QUOTE_MINIMAL)
+
+
+def _validate_primary_scope(frame: pd.DataFrame) -> None:
+    if not frame["region"].eq("taiwan").all():
+        raise SchemaError(
+            "The primary decision candidate accepts region=taiwan only; India and other "
+            "geographies require separate local development and validation"
+        )
+
+
+def _primary_model_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """Map the explicit external Taiwan contract to the model's fixed Asia context."""
+    model_frame = frame[MODEL_INPUT_COLUMNS].copy()
+    model_frame["region"] = "asia"
+    return model_frame
 
 
 def _decision_frame(decisions: list[Decision]) -> pd.DataFrame:
@@ -419,7 +577,7 @@ PALETTE_PAGES = [
 
 
 def create_app() -> FastAPI:
-    model, metadata, portfolio, simulation = _load_artifacts()
+    model, metadata, primary_report, portfolio, simulation, research_metadata = _load_artifacts()
     app = FastAPI(
         title="LimitIQ",
         version=__version__,
@@ -427,13 +585,28 @@ def create_app() -> FastAPI:
         redoc_url=None,
         openapi_url=None,
     )
+    app.add_middleware(
+        RequestBodyLimitMiddleware,
+        max_bytes=MAX_UPLOAD_REQUEST_BYTES,
+        path="/batch",
+    )
     templates = Jinja2Templates(directory=ROOT / "limitiq" / "templates")
     templates.env.filters.update(money=_money, percent=_percent, number=_number)
     app.mount("/static", StaticFiles(directory=ROOT / "limitiq" / "static"), name="static")
     app.state.model = model
     app.state.metadata = metadata
+    app.state.primary_report = primary_report
+    app.state.research_metadata = research_metadata
     app.state.portfolio = portfolio
     app.state.simulation = simulation
+    app.state.started_at = time.monotonic()
+    app.state.operations = {
+        "requests": 0,
+        "client_errors": 0,
+        "server_errors": 0,
+        "latency_seconds": 0.0,
+        "max_latency_seconds": 0.0,
+    }
 
     def context(request: Request, **values: Any) -> dict[str, Any]:
         return {
@@ -442,7 +615,10 @@ def create_app() -> FastAPI:
             "model_version": metadata["model_version"],
             "dataset_version": metadata["dataset_version"],
             "benchmark_classification": metadata["classification"],
-            "target_note": metadata["target_note"],
+            "target_note": (
+                f"{metadata['source']['target_definition']} · "
+                f"{metadata['source']['prediction_horizon']} horizon"
+            ),
             "ccy": _resolve_ccy(
                 request.query_params.get("ccy") or request.cookies.get("limitiq_ccy")
             ),
@@ -452,7 +628,28 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def security_headers(request: Request, call_next: Any) -> Response:
-        response = await call_next(request)
+        request_id = secrets.token_hex(16)
+        request.state.request_id = request_id
+        started = time.perf_counter()
+        try:
+            response = await call_next(request)
+        except Exception:
+            elapsed = time.perf_counter() - started
+            operations = app.state.operations
+            operations["requests"] += 1
+            operations["server_errors"] += 1
+            operations["latency_seconds"] += elapsed
+            operations["max_latency_seconds"] = max(operations["max_latency_seconds"], elapsed)
+            raise
+        elapsed = time.perf_counter() - started
+        operations = app.state.operations
+        operations["requests"] += 1
+        operations["client_errors"] += 400 <= response.status_code < 500
+        operations["server_errors"] += response.status_code >= 500
+        operations["latency_seconds"] += elapsed
+        operations["max_latency_seconds"] = max(operations["max_latency_seconds"], elapsed)
+        response.headers["X-Request-ID"] = request_id
+        response.headers["Server-Timing"] = f"app;dur={elapsed * 1_000:.2f}"
         response.headers.update(
             {
                 "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
@@ -513,10 +710,62 @@ def create_app() -> FastAPI:
             "version": __version__,
             "model_version": metadata["model_version"],
             "dataset_version": metadata["dataset_version"],
-            "benchmark": "multi-source-adverse-credit-outcome",
+            "model_role": "source-coherent-primary-decision-candidate",
+            "research_benchmark_version": research_metadata["model_version"],
             "automatic_increases_enabled": AUTO_INCREASES_ENABLED,
             "deployment_commit": os.getenv("RENDER_GIT_COMMIT", "not-provided"),
         }
+
+    @app.get("/live")
+    def live() -> dict[str, str]:
+        """Process liveness probe; it intentionally does not claim dependency readiness."""
+        return {"status": "alive"}
+
+    @app.get("/ready")
+    def ready() -> JSONResponse:
+        artifacts_loaded = all(
+            getattr(app.state, name, None) is not None
+            for name in (
+                "model",
+                "metadata",
+                "primary_report",
+                "research_metadata",
+                "portfolio",
+                "simulation",
+            )
+        )
+        return JSONResponse(
+            {
+                "status": "ready" if artifacts_loaded else "not-ready",
+                "artifacts_loaded": artifacts_loaded,
+                "model_version": metadata["model_version"],
+                "dataset_version": metadata["dataset_version"],
+            },
+            status_code=200 if artifacts_loaded else 503,
+            headers={"Cache-Control": "no-store"},
+        )
+
+    @app.get("/ops")
+    def operations() -> JSONResponse:
+        """Bounded, process-local aggregates only; no request paths, inputs or identities."""
+        values = app.state.operations
+        request_count = values["requests"]
+        return JSONResponse(
+            {
+                "scope": "single-process in-memory aggregates",
+                "uptime_seconds": round(time.monotonic() - app.state.started_at, 1),
+                "requests": request_count,
+                "client_errors": values["client_errors"],
+                "server_errors": values["server_errors"],
+                "mean_latency_ms": round(
+                    values["latency_seconds"] * 1_000 / request_count if request_count else 0.0,
+                    2,
+                ),
+                "max_latency_ms": round(values["max_latency_seconds"] * 1_000, 2),
+                "contains_customer_data": False,
+            },
+            headers={"Cache-Control": "no-store"},
+        )
 
     @app.get("/", response_class=HTMLResponse)
     def overview(request: Request) -> HTMLResponse:
@@ -538,6 +787,28 @@ def create_app() -> FastAPI:
                 assumptions=simulation["assumptions"],
             ),
         )
+
+    @app.get("/committee-memo", response_class=HTMLResponse)
+    def committee_memo(request: Request, download: bool = False) -> HTMLResponse:
+        summary = simulation["summary"]
+        response = templates.TemplateResponse(
+            request,
+            "committee_memo.html",
+            context(
+                request,
+                title="Credit committee memo",
+                summary=summary,
+                assumptions=simulation["assumptions"],
+                test=primary_report["untouched_test_metrics"],
+                primary=primary_report,
+                research=research_metadata,
+            ),
+        )
+        if download:
+            response.headers["Content-Disposition"] = (
+                'attachment; filename="limitiq-credit-committee-memo.html"'
+            )
+        return response
 
     def filtered_portfolio(
         search: str,
@@ -768,6 +1039,7 @@ def create_app() -> FastAPI:
             key: value * DISPLAY_RATES[ccy] if key in MONETARY_KEYS else value
             for key, value in assumptions.to_dict().items()
         }
+        scenario_applied = request.method == "POST" and error is None
         return templates.TemplateResponse(
             request,
             "simulator.html",
@@ -781,6 +1053,7 @@ def create_app() -> FastAPI:
                 actions=actions,
                 sensitivity=sensitivity,
                 error=error,
+                scenario_applied=scenario_applied,
             ),
         )
 
@@ -827,6 +1100,7 @@ def create_app() -> FastAPI:
             raise HTTPException(422, f"Unexpected fields: {', '.join(extra)}")
         try:
             clean = validate_input(pd.DataFrame([payload]), require_account_id=True)
+            _validate_primary_scope(clean)
         except SchemaError as exc:
             raise HTTPException(422, str(exc)) from exc
         account_id = clean.loc[0, "ACCOUNT_ID"]
@@ -834,7 +1108,7 @@ def create_app() -> FastAPI:
             raise HTTPException(
                 422, "ACCOUNT_ID must be 3–40 letters, numbers, underscores or hyphens"
             )
-        probability = model.predict_proba(clean[MODEL_INPUT_COLUMNS])[:, 1]
+        probability = model.predict_proba(_primary_model_frame(clean))[:, 1]
         decision = recommend_portfolio(
             clean[[*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]],
             probability,
@@ -844,7 +1118,7 @@ def create_app() -> FastAPI:
         return JSONResponse(
             {
                 "classification": "Educational synthetic-economics decision",
-                "model_output": "Source-horizon adverse-credit-outcome probability",
+                "model_output": "Taiwan-source following-month default probability",
                 "decision": decision.to_dict(),
             },
             headers={"Cache-Control": "no-store"},
@@ -879,6 +1153,7 @@ def create_app() -> FastAPI:
             raise HTTPException(422, f"Unexpected columns: {', '.join(extra)}")
         try:
             clean = validate_input(frame, require_account_id=True)
+            _validate_primary_scope(clean)
         except SchemaError as exc:
             raise HTTPException(422, str(exc)) from exc
         invalid_ids = [
@@ -888,7 +1163,7 @@ def create_app() -> FastAPI:
             raise HTTPException(
                 422, "ACCOUNT_ID must be 3–40 letters, numbers, underscores or hyphens"
             )
-        probability = model.predict_proba(clean[MODEL_INPUT_COLUMNS])[:, 1]
+        probability = model.predict_proba(_primary_model_frame(clean))[:, 1]
         decisions = recommend_portfolio(
             clean[[*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]],
             probability,
@@ -908,6 +1183,7 @@ def create_app() -> FastAPI:
     @app.get("/sample-input.csv")
     def sample_input() -> Response:
         sample = portfolio.head(5).rename(columns={"account_id": "ACCOUNT_ID"})[BATCH_COLUMNS]
+        sample["region"] = "taiwan"
         return Response(
             _safe_csv(sample),
             media_type="text/csv",
@@ -918,17 +1194,15 @@ def create_app() -> FastAPI:
     def governance(request: Request) -> HTMLResponse:
         cohorts = [
             {
-                "source_name": metadata["datasets"][key]["name"],
-                "region": metadata["datasets"][key]["region"],
+                "source_name": research_metadata["datasets"][key]["name"],
+                "region": research_metadata["datasets"][key]["region"],
                 **value,
             }
-            for key, value in metadata["per_market_test_metrics"].items()
+            for key, value in research_metadata["per_market_test_metrics"].items()
         ]
-        charts = _governance_charts(metadata)
+        charts = _governance_charts(research_metadata)
         feature_path = REPORT_DIR / "global_feature_evidence.json"
-        feature_evidence = (
-            json.loads(feature_path.read_text(encoding="utf-8")) if feature_path.exists() else {}
-        )
+        feature_evidence = json.loads(feature_path.read_text(encoding="utf-8"))
         importance_rows: list[tuple[str, float]] = []
         pdp_cards: list[dict[str, Any]] = []
         discriminatory: dict[str, Any] = {}
@@ -946,10 +1220,16 @@ def create_app() -> FastAPI:
             context(
                 request,
                 title="Model governance",
-                metadata=metadata,
-                test=metadata["test_metrics"],
-                candidates=metadata["validation_models"],
-                macro=metadata["macro_test_metrics"],
+                metadata=research_metadata,
+                primary=primary_report,
+                primary_charts=_primary_governance_charts(primary_report),
+                primary_importance=[
+                    (item["feature"].replace("_", " ").title(), item["roc_auc_drop"])
+                    for item in primary_report["untouched_test_metrics"]["permutation_importance"]
+                ],
+                test=research_metadata["test_metrics"],
+                candidates=research_metadata["validation_models"],
+                macro=research_metadata["macro_test_metrics"],
                 cohorts=cohorts,
                 charts=charts,
                 feature_evidence=feature_evidence,
@@ -963,34 +1243,13 @@ def create_app() -> FastAPI:
 
     @app.get("/monitoring", response_class=HTMLResponse)
     def monitoring(request: Request) -> HTMLResponse:
-        path = REPORT_DIR / "global_monitoring_baseline.json"
-        baseline = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
-        names = {key: value["name"] for key, value in metadata["datasets"].items()}
-        source_mix_rows = [
-            (names.get(item["source"], item["source"]), item["accounts"])
-            for item in baseline.get("source_mix", [])
-        ]
-        missingness_rows = [
-            [
-                names.get(row["source"], row["source"]),
-                *[f"{row[column]:.1%}" for column in metadata["harmonized_features"]],
-            ]
-            for row in baseline.get("missingness", [])
-        ]
-        signal_rows = [
-            [
-                names.get(item["source"], item["source"]),
-                f"{item['accounts']:,}",
-                f"{item['risk_rate']:.1%}",
-                f"{item['mean_score']:.1%}",
-                f"{item['calibration_gap']:.4f}",
-                f"{item['gini']:.4f}",
-            ]
-            for item in baseline.get("per_source_signals", [])
-        ]
+        metrics = primary_report["untouched_test_metrics"]
         threshold_rows = [
-            [name.replace("_", " ").title(), f"{value:g}"]
-            for name, value in baseline.get("thresholds", {}).items()
+            ["Population stability index warning", "0.10"],
+            ["Population stability index escalation", "0.25"],
+            ["ROC-AUC deterioration warning", "0.03"],
+            ["Brier-score increase warning", "0.02"],
+            ["Calibration-gap warning", "0.03"],
         ]
         return templates.TemplateResponse(
             request,
@@ -998,12 +1257,15 @@ def create_app() -> FastAPI:
             context(
                 request,
                 title="Monitoring readiness",
-                monitoring=baseline,
-                source_mix_rows=source_mix_rows,
-                missingness_rows=missingness_rows,
-                signal_rows=signal_rows,
+                primary=primary_report,
+                monitoring=metrics,
                 threshold_rows=threshold_rows,
-                feature_columns=metadata["harmonized_features"],
+                protocol=[
+                    "Disable automatic increases and preserve manual-review routing.",
+                    "Confirm data lineage, schema, missingness and score-distribution changes.",
+                    "Recalculate performance and calibration on newly matured Taiwan outcomes.",
+                    "Require documented model-risk approval before restoring automation.",
+                ],
             ),
         )
 
@@ -1015,7 +1277,8 @@ def create_app() -> FastAPI:
             context(
                 request,
                 title="Reports & methodology",
-                current_reports=CURRENT_REPORT_FILES,
+                primary_reports=PRIMARY_REPORT_FILES,
+                research_reports=RESEARCH_REPORT_FILES,
                 legacy_reports=LEGACY_REPORT_FILES,
                 documents=DOCUMENT_FILES,
             ),
@@ -1029,7 +1292,10 @@ def create_app() -> FastAPI:
         path = REPORT_DIR / filename
         if not path.exists():
             raise HTTPException(404, "Report has not been generated")
-        media = "application/pdf" if path.suffix == ".pdf" else "text/html; charset=utf-8"
+        media = {
+            ".pdf": "application/pdf",
+            ".json": "application/json; charset=utf-8",
+        }.get(path.suffix, "text/html; charset=utf-8")
         disposition = "attachment" if path.suffix == ".pdf" else "inline"
         return Response(
             path.read_bytes(),

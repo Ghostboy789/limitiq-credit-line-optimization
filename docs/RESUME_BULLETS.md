@@ -1,28 +1,23 @@
 # Evidence-based résumé bullets
 
-- Built and deployed (v2.1 application, live on Render, verified 18 Aug 2026) a production-shaped
-  credit-line decision-support platform over a 1.87M-row multi-source
-  adverse-credit-outcome benchmark, harmonizing six independent cohorts with
-  checksum-bound provenance and governed increase/hold/refer/freeze actions.
-- Compared calibrated logistic and histogram-gradient-boosting pipelines using
-  source-macro validation; the champion achieved 0.685 macro ROC-AUC, 0.402
-  macro PR-AUC and 0.139 macro Brier on 373,910 untouched test rows.
-- Implemented deterministic INR exposure optimization with loss, profitability,
-  early-warning and human-review controls; the 1,200-profile synthetic scenario
-  produced ₹6.41M simulated—not causal or realized—incremental contribution.
+- Built a production-shaped credit-line decision-support platform that joins a
+  calibrated next-month default model to constrained +10%/+20%/+30%, hold,
+  manual-review and early-warning-freeze actions with explicit exposure, loss,
+  profitability and customer-protection controls.
+- Selected a sigmoid-calibrated histogram-gradient-boosting champion against a
+  regularized-logistic baseline; achieved 0.757 ROC-AUC (95% bootstrap CI
+  0.743–0.774), 0.509 PR-AUC and 0.142 Brier on a 6,000-row untouched test set.
+- Separated a 1.87M-row heterogeneous transportability benchmark from the
+  decision model, then shipped checksum-bound artifacts, transient batch
+  inference, policy simulation, validation evidence, Docker CI and security
+  gates; kept ₹9.10M scenario contribution explicitly simulated.
 
-Deployment-focused alternative:
+Deployment-focused alternative—use only after v3 is verified live:
 
-- Deployed checksum-verified application `2.1.0` through GitHub Actions CI (92
-  tests at 69.00% coverage, Ruff, Bandit, pip-audit, secret scan, Docker
-  build/run and container `/health`) to Render, then passed 23 production HTTPS
-  route/download/simulator/batch checks with zero failures. Earlier v1 (0.781
-  test ROC-AUC, Brier 0.133) remains verifiable via tag `v1.0.0`; the current
-  evidence release is tagged `v2.1.0`.
+- Deployed a non-root Dockerized FastAPI risk application through GitHub Actions
+  gates covering tests/coverage, Ruff, Bandit, dependency/secret scans, CodeQL,
+  SBOM, Trivy image scan, container health and concurrency smoke; verified
+  portfolio, simulator, batch, report and operational endpoints over HTTPS.
 
-Use “multi-source adverse-credit-outcome benchmark,” not common-horizon/global
-regulatory PD. The model identifier remains
-`limitiq-global-2.0.0-37a14c45a811` because v2.1 did not retrain it. The
-four-source publication gate was owner-cleared by dated 14 August 2026
-attestation, not an independent legal opinion; the historical review and
-resolution basis are recorded in NOTICE.md.
+Never claim that ₹9.10M is observed or realized impact, that the primary model
+is validated for India, or that any employer reviewed or endorsed the project.

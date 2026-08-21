@@ -7,28 +7,29 @@ checksum-bound sklearn pipeline and prepared synthetic portfolio, and runs the
 deterministic optimizer. There is no SPA, database, queue, feature store, LLM or
 paid API. Charts are server-side SVG and compatible with the restrictive CSP.
 
-## Local v2 data and model flow
+## V3 data and model flow
 
 ```mermaid
 flowchart LR
-  R[Gitignored source files] --> H[Seven harmonizers]
-  H --> G[Six independent training cohorts]
-  H --> X[Legacy Statlog reference]
-  G --> S[Within-source 60/20/20 split]
+  U[UCI Taiwan source] --> S[18k / 6k / 6k split]
   S --> B[Calibrated logistic baseline]
   S --> C[Calibrated histogram-GB challenger]
-  B --> V[Macro validation selection]
+  B --> V[Validation selection]
   C --> V
-  V --> M[Checksum-bound champion]
-  M --> E[Pooled, macro and per-source evidence]
-  M --> D[1,200 synthetic profiles]
+  V --> P[Checksum-bound primary champion]
+  P --> D[1,200 Taiwan-contract synthetic profiles]
   D --> O[Policy optimizer]
   O --> W[FastAPI/Jinja/SVG application]
+  R[Six-cohort research union] --> G[Global transportability benchmark]
+  G --> E[Pooled, macro and source evidence]
+  E --> W
 ```
 
-The harmonizers share six narrow numeric proxies plus region context. Source
-identification can still occur through region and missingness. The split is
-random within source, so it does not test future vintages or unseen markets.
+The primary model uses only delinquency count and utilization from one coherent
+source and target. The research harmonizers share six narrow proxies plus region
+context; source identification can occur through region and missingness. Both
+tracks use random within-source splits, so neither tests future vintages or
+unseen markets.
 
 ## Trust boundaries
 
@@ -36,17 +37,19 @@ random within source, so it does not test future vintages or unseen markets.
 - Every source and model artifact is SHA-256 bound.
 - Statlog German is reference-only to prevent duplicate-population leakage.
 - Model loading verifies the expected checksum before trusted joblib loading.
-- Uploaded CSV is size/row/schema/range bounded, processed in memory and never
-  deserialized as an object or retained.
+- The request body is bounded before multipart parsing; CSV content is then
+  row/schema/range bounded, processed transiently and never deserialized as an
+  object or retained. Framework-managed temporary spooling may occur.
 - Sort/report/document paths are allowlisted.
 - Jinja autoescape and CSP/security headers are enabled; production debug is off.
 - Synthetic `LIQ-*` IDs and profiles prevent source-ID exposure.
 
 ## Deployment boundary
 
-The public Render service serves v2. Publication proceeds under the repository
-owner's 14 August 2026 resolution attestation recorded in `NOTICE.md`; this
-architecture record is not an independent legal opinion.
+The public Render service remains verified at v2.1 until the v3 release candidate
+passes CI and production QA. Research-source publication proceeds under the
+repository owner's 14 August 2026 resolution attestation in `NOTICE.md`; this
+record is not an independent legal opinion.
 
 ## Failure behavior and rollback
 
@@ -56,5 +59,5 @@ summary, applies to API/batch/simulator decisions and is visible in `/health`.
 
 Missing or checksum-invalid model artifacts fail startup. Invalid uploads return
 bounded safe errors. Unknown/insufficient profiles route to manual review or
-freeze rather than automatic increase. Rollback restores the prior verified v1
-artifact or disables automatic increases.
+freeze rather than automatic increase. Rollback disables automatic increases or
+restores the prior checksum-verified application release.

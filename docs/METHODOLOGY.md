@@ -10,17 +10,28 @@ is recommended.
 
 ## Evidence layers
 
-- **Observed:** historical source features and source-specific adverse outcomes.
-- **Model-estimated:** calibrated probability of the source-specific adverse
-  outcome and risk band.
+- **Observed:** UCI Taiwan behavior and following-month default for the primary
+  model; heterogeneous public outcomes for the separate research benchmark.
+- **Model-estimated:** calibrated following-month default probability for the
+  primary track; source-specific adverse-outcome score for research only.
 - **Synthetic:** 1,200 demonstration profiles, limit/balance fields, response,
   EAD, LGD, revenue, cost, expected-loss proxy, contribution and action.
 
-The observed labels have different events and horizons. “Probability” in v2
-does not mean a common-horizon regulatory PD. Synthetic values are transparent
-scenario mechanics, not causal estimates, forecasts or realized outcomes.
+The v3 decision model has one event and one-month horizon. The v2 research labels
+have different events and horizons and do not form a common-horizon regulatory
+PD. Synthetic values are transparent scenario mechanics, not causal estimates,
+forecasts or realized outcomes.
 
-## Source selection and provenance
+## Primary source selection and provenance
+
+The application candidate uses UCI Default of Credit Card Clients: 30,000
+Taiwan accounts with April–September 2005 behavior and following-month default,
+CC BY 4.0. The source is checksum-bound and monetary fields are deterministically
+converted from TWD to INR for scenario presentation. Only delinquency count and
+current utilization have semantically direct harmonized mappings; other contract
+fields remain explicitly missing.
+
+## Research source selection and provenance
 
 V2 uses six independent training cohorts totaling 1,869,548 rows. Corrected
 South German replaces legacy Statlog German in training because both represent
@@ -51,7 +62,22 @@ Give Me Some Credit and Home Credit currency is undisclosed, so their monetary
 fields are not converted or shown as INR. FX conversion is presentation
 localization, not Indian borrower evidence or economic comparability.
 
-## Split, model and selection
+## Primary split, model and selection
+
+With seed 42, the primary population receives a stratified 60/20/20 split:
+18,000 train, 6,000 validation and 6,000 untouched test. Calibrated regularized
+logistic regression is the baseline and calibrated histogram gradient boosting
+the challenger. Selection minimizes validation Brier among candidates within
+0.02 ROC-AUC of the best. The threshold minimizes validation cost with missed
+defaults weighted five times false positives. Champion and threshold are frozen
+before the single test read.
+
+The primary champion is `limitiq-primary-3.0.0-89f9a2530bde`, threshold
+0.1639639640. Test ROC-AUC is 0.757410 (95% bootstrap CI 0.743319–0.773753),
+PR-AUC 0.508729, Brier 0.141683 and log loss 0.447444. The split does not
+establish future-vintage or geographic portability.
+
+## Research split, model and selection
 
 With seed 42, each training source receives a stratified random 60/20/20 split;
 the parts are combined into 1,121,728 train, 373,910 validation and 373,910
@@ -83,10 +109,10 @@ like-for-like cross-source ranking or new-market generalization is claimed.
 
 The educational expected-loss proxy is:
 
-`Expected-loss proxy = adverse-outcome probability × LGD × EAD`
+`Expected-loss proxy = primary next-month default score × LGD × EAD`
 
-The probability is not a common-horizon PD and the result is not IFRS 9 ECL or
-regulatory capital. EAD is simulated current drawn balance, capped at line, plus
+The score is not a production or regulatory PD and the result is not IFRS 9 ECL
+or regulatory capital. EAD is simulated current drawn balance, capped at line, plus
 CCF times positive undrawn line. Probability is held constant across candidate
 limits because no source observes a randomized limit increase.
 
@@ -99,10 +125,10 @@ elasticity and current utilization, then annualized. Interest uses simulated
 revolving-rate and APR assumptions. Funding and capital costs apply to
 incremental EAD. All assumptions are visible, editable and deterministic.
 
-The local 1,200-profile base scenario produces ₹567.613M current and ₹608.791M
-proposed credit limits, ₹500.023M current and ₹530.935M proposed exposure proxy,
-₹75.984M current and ₹77.625M proposed expected-loss proxy, ₹6.412M simulated
-incremental contribution and 20.74% contribution / incremental exposure. These
+The v3 1,200-profile base scenario produces ₹514.951M current and ₹566.423M
+proposed credit limits, ₹461.467M current and ₹500.086M proposed exposure proxy,
+₹53.140M current and ₹55.904M proposed expected-loss proxy, ₹9.100M simulated
+incremental contribution and 23.56% contribution / incremental exposure. These
 are not causal forecasts or production impact.
 
 ## Policy order

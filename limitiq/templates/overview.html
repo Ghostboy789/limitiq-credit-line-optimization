@@ -2,12 +2,20 @@
 {% from "_charts.html" import horizontal_bars %}
 {% block content %}
 <section class="hero">
-  <div class="hero-copy"><p class="eyebrow">Multi-source credit-risk research</p><h1>Credit growth.<br><span>Governed beautifully.</span></h1><p class="lede">LimitIQ combines a harmonized adverse-credit-outcome benchmark with transparent credit-line economics and customer-protection controls.</p><div class="hero-actions"><a class="button hero-primary" href="/portfolio">Explore the portfolio</a><a class="hero-link" href="/governance">Review model evidence <span aria-hidden="true">›</span></a></div><p class="hero-proof"><span aria-hidden="true"></span> V2 research benchmark · deterministic multi-currency simulation</p></div>
+  <div class="hero-copy"><p class="eyebrow">Source-coherent credit-risk decisioning</p><h1>Credit growth.<br><span>Governed beautifully.</span></h1><p class="lede">LimitIQ combines a one-month default model with transparent credit-line economics, customer-protection controls and a separately governed transportability benchmark.</p><div class="hero-actions"><a class="button hero-primary" href="/portfolio">Explore the portfolio</a><a class="hero-link" href="/governance">Review model evidence <span aria-hidden="true">›</span></a></div><p class="hero-proof"><span aria-hidden="true"></span> V3 primary model · deterministic INR simulation</p></div>
   <div class="hero-stage" aria-label="Portfolio posture: {{ summary.eligible_increases|number }} accounts eligible for a simulated increase"><div class="hero-orbit" aria-hidden="true"></div><div class="hero-callout"><span>Eligible for increase</span><strong>{{ summary.eligible_increases|number }}</strong><small>of {{ summary.accounts|number }} synthetic profiles</small><progress class="hero-progress" max="{{ summary.accounts or 1 }}" value="{{ summary.eligible_increases }}" aria-hidden="true"></progress></div><p>Risk controls applied before value optimization</p></div>
 </section>
-<div class="notice" role="note"><strong>Evidence boundary:</strong> Public datasets provide heterogeneous outcomes, horizons and feature proxies. The model output is a source-conditioned adverse-outcome probability—not a common-horizon regulatory PD. Limit response, exposure, expected-loss and financial outcomes are deterministic simulations, not causal or realized results.</div>
+<div class="notice" role="note"><strong>Evidence boundary:</strong> Account decisions use the UCI Taiwan next-month default model on deterministic profiles matching its field-availability contract but generated from fixed synthetic distributions. The separate six-cohort benchmark tests transportability patterns only. Limit response, exposure, expected-loss and financial outcomes are simulations, not causal or realized results.</div>
 {% if not automatic_increases_enabled %}<div class="notice warning" role="alert"><strong>Governance control active.</strong> Automatic increases are disabled; otherwise eligible accounts are routed to manual review.</div>{% endif %}
-<section aria-labelledby="portfolio-heading"><div class="section-heading"><div><p class="eyebrow">Executive overview</p><h2 id="portfolio-heading">Demonstration portfolio</h2></div><a class="button secondary" href="/downloads/reports/global-executive-pdf">Download v2 executive PDF</a></div>
+<section aria-labelledby="review-heading">
+  <div class="section-heading"><div><p class="eyebrow">Review in five minutes</p><h2 id="review-heading">Choose your decision lens</h2></div><a class="button secondary" href="/committee-memo">Open committee memo</a></div>
+  <div class="report-grid review-paths">
+    <article><span class="file-type">Executive</span><h3>Is the portfolio posture credible?</h3><p>Start with exposure, simulated value and early-warning controls, then take the one-page committee brief.</p><a href="#portfolio-heading">Review portfolio posture →</a></article>
+    <article><span class="file-type">Risk analyst</span><h3>Can I trace a recommendation?</h3><p>Filter score bands, utilization and policy outcomes, then inspect account-level checks and reason codes.</p><a href="/portfolio">Trace portfolio decisions →</a></article>
+    <article><span class="file-type">Model validator</span><h3>What evidence limits use?</h3><p>Challenge calibration, source-cohort stability, intended use and monitoring proposals before considering action.</p><a href="/governance">Review validation evidence →</a></article>
+  </div>
+</section>
+<section aria-labelledby="portfolio-heading"><div class="section-heading"><div><p class="eyebrow">Executive overview</p><h2 id="portfolio-heading">Primary-model demonstration</h2></div><a class="button secondary" href="/committee-memo?download=true">Download committee memo</a></div>
 <div class="metric-grid">
   <article class="metric"><span>Current credit limits</span><strong>{{ summary.current_limit|money(ccy) }}</strong><small>Synthetic portfolio inputs</small></article>
   <article class="metric"><span>Proposed credit limits</span><strong>{{ summary.proposed_limit|money(ccy) }}</strong><small>Simulated policy outcome</small></article>
@@ -20,7 +28,7 @@
 </div></section>
 <section class="dashboard-grid portfolio-charts">
   {{ horizontal_bars('portfolio-actions', 'Simulated recommendations', 'Account count by governed policy outcome.', actions) }}
-  {{ horizontal_bars('portfolio-score-bands', 'Model score bands', 'Account count by fixed descriptive adverse-outcome score band.', risks) }}
+  {{ horizontal_bars('portfolio-score-bands', 'Next-month risk bands', 'Account count by fixed descriptive next-month default score band.', risks) }}
 </section>
 <section class="panel"><div class="panel-title"><div><p class="eyebrow">Committee controls</p><h2>Policy assumptions</h2></div><a href="/simulator">Stress assumptions →</a></div>
 <dl class="assumption-grid">{% for key, value in assumptions.items() %}<div><dt>{{ key|replace('_',' ')|title }}</dt><dd>{% if key in ['servicing_cost','max_account_exposure','profitability_hurdle'] %}{{ value|money(ccy) }}{% elif value <= 1 %}{{ value|percent }}{% else %}{{ value|number }}{% endif %}</dd></div>{% endfor %}</dl></section>

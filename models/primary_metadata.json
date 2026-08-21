@@ -1,0 +1,71 @@
+{
+  "model_version": "limitiq-primary-3.0.0-89f9a2530bde",
+  "dataset_version": "uci-350-next-month-dc05bd56186a",
+  "classification": "Source-coherent application candidate; educational use only",
+  "role": "Primary decision-model candidate",
+  "trained_at": "2026-08-21T05:49:14.854993+00:00",
+  "champion": "Histogram gradient boosting",
+  "selected_threshold": 0.16396396396396395,
+  "source": {
+    "dataset": "Default of Credit Card Clients",
+    "publisher": "I-Cheng Yeh / UCI Machine Learning Repository",
+    "source_page": "https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients",
+    "doi": "https://doi.org/10.24432/C55S3H",
+    "license": "CC BY 4.0",
+    "source_file": "default_of_credit_card_clients.xls",
+    "source_sha256": "30c6be3abd8dcfd3e6096c828bad8c2f011238620f5369220bd60cfc82700933",
+    "source_rows": 30000,
+    "event_rate": 0.2212,
+    "geography": "Taiwan",
+    "target_definition": "Default payment in the following month",
+    "prediction_horizon": "One month",
+    "monetary_conversion_note": "Observed TWD monetary fields are deterministically converted to INR before modelling and simulation; the conversion is presentation localization, not evidence about Indian borrowers."
+  },
+  "split": {
+    "train": 18000,
+    "validation": 6000,
+    "untouched_test": 6000
+  },
+  "model_checksum": "89f9a2530bde4fbae25974255d5de5963b1ae8ec392042287dad17356c98df33",
+  "dataset_checksum": "dc05bd56186ad4dfa043879405c307c89ff5bb7b7ac5a2b6fb00b91a06d66f9b",
+  "feature_schema_checksum": "f7e9a6d1fce19d2c47034af786b857a9fdcbf380b9d76863c586e816a813ee65",
+  "training_config_checksum": "98896b2b790bfdb260803cde642e10022e6f0fee16bd306ee91af9ccfd2d5e41",
+  "feature_schema": {
+    "input_columns": [
+      "delinquency_count",
+      "utilization",
+      "debt_to_income",
+      "credit_lines",
+      "income_inr",
+      "credit_age_months",
+      "region"
+    ],
+    "active_decision_features": [
+      "delinquency_count",
+      "utilization"
+    ],
+    "constant_context": {
+      "region": "asia"
+    },
+    "unavailable_source_features": [
+      "credit_age_months",
+      "credit_lines",
+      "debt_to_income",
+      "income_inr"
+    ],
+    "target": "default",
+    "target_definition": "Default payment in the following month",
+    "prediction_horizon": "One month"
+  },
+  "limitations": [
+    "Random within-source splitting is not out-of-time validation.",
+    "Only delinquency count and utilization are observed in the harmonized contract.",
+    "The source is Taiwan-only and does not establish geographic transportability.",
+    "Credit-line response and economics remain simulated, not causal observations."
+  ],
+  "artifact_checksums": {
+    "primary_champion.joblib": "89f9a2530bde4fbae25974255d5de5963b1ae8ec392042287dad17356c98df33",
+    "primary_feature_schema.json": "81d1da2b6aca9c70e53e730466ddd13b5cb3d314219fb72cd50498f69150e930",
+    "primary_model.json": "92cafa02838112d0bdcb2c204321925e4086f4afdbdf91b9e1845463d38f35d5"
+  }
+}

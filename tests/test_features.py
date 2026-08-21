@@ -85,7 +85,13 @@ def test_global_region_numeric_and_exposure_validation(healthy_row: pd.Series) -
     with pytest.raises(SchemaError, match="finite"):
         validate_input(frame)
 
-    assert REGION_CATEGORIES == {"asia", "europe", "north_america", "undisclosed"}
+    assert REGION_CATEGORIES == {
+        "asia",
+        "europe",
+        "north_america",
+        "taiwan",
+        "undisclosed",
+    }
 
 
 def test_legacy_feature_engineering_schema_and_determinism(

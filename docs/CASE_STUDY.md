@@ -17,21 +17,16 @@ punitive decrease.
 
 ## Model development
 
-The verified public v1 uses 30,000 Taiwan accounts. Local v2 harmonizes six
-independent training cohorts totaling 1,869,548 rows; a seventh legacy Statlog
-file is reference-only because it duplicates the corrected South German
-population.
+V3 uses UCI Taiwan's 30,000 accounts and explicit following-month default target
+for the decision candidate. Calibrated logistic regression is the baseline and
+calibrated histogram gradient boosting the champion. On 6,000 untouched test
+rows, the champion records ROC-AUC 0.7574 (95% bootstrap CI 0.7433–0.7738),
+PR-AUC 0.5087 and Brier 0.1417.
 
-V2 compares calibrated logistic and histogram-gradient-boosting pipelines. The
-champion records macro test ROC-AUC 0.6845, PR-AUC 0.4024, Brier 0.1390 and log
-loss 0.4334 across 373,910 untouched rows. Pooled metrics—ROC-AUC 0.6699 and
-Brier 0.1406—are secondary because Lending Club dominates row counts.
-
-The source labels have different events and horizons, so the output is a
-source-specific adverse-outcome probability—not a common-horizon or regulatory
-PD. Random within-source splitting does not prove future-vintage, unseen-market
-or Indian-population performance. Region and structural missingness may identify
-source.
+The 1,869,548-row, six-cohort v2 model is retained only as transportability
+research because its source labels have different events and horizons. Random
+within-source splitting in both tracks does not prove future-vintage,
+unseen-market or Indian-population performance.
 
 ## Data honesty and publication control
 
@@ -47,13 +42,12 @@ not represent that attestation as an independent legal opinion.
 
 ## Synthetic business scenario
 
-The local demo uses 1,200 deterministic synthetic profiles and INR exposures.
-Its base scenario recommends 18 +10%, 18 +20% and 216 +30% increases, 283
-no-change actions, 619 manual reviews and 46 automatic-increase freezes. Credit
-limits move from ₹567.613M to ₹608.791M and the exposure proxy from ₹500.023M to
-₹530.935M; the expected-loss proxy moves from ₹75.984M to ₹77.625M. Simulated
-incremental contribution is ₹6.412M at 20.74% contribution / incremental
-exposure.
+The v3 demo uses 1,200 deterministic Taiwan-contract synthetic profiles and INR
+exposures. Its base scenario recommends 2 +20% and 268 +30% increases, 551
+no-change actions, 323 manual reviews and 56 automatic-increase freezes. Credit
+limits move from ₹514.951M to ₹566.423M and exposure proxy from ₹461.467M to
+₹500.086M; loss proxy moves from ₹53.140M to ₹55.904M. Simulated incremental
+contribution is ₹9.100M at 23.56% contribution / incremental exposure.
 
 No source observes a line-increase treatment. These values are synthetic,
 simulated, non-causal and not realized impact, IFRS 9 ECL or regulatory capital.
@@ -68,21 +62,21 @@ candidate metrics, source calibration, provenance and limitations.
 
 ## Product judgment
 
-The strongest choice was what not to claim. More rows do not make heterogeneous
-labels one PD, and a mirror does not clear upstream rights. Source-macro metrics,
-duplicate-population exclusion, human review and a documented publication gate are
-more credible to a model-risk reviewer than an inflated “global accuracy” claim.
+The strongest choice was correcting the architecture after challenge. More rows
+do not make heterogeneous labels one PD, so v3 moves the global model out of
+decisioning and promotes one coherent next-month target. Preserving the global
+work as restricted research is more credible than an inflated “global PD” claim.
 
 ## Résumé bullets
 
-- Built a production-shaped credit-line platform and local 1.87M-row multi-source
-  benchmark with six independent cohorts, checksum-bound provenance and governed
-  increase/hold/refer/freeze actions.
+- Built a production-shaped credit-line platform with a coherent next-month
+  primary model, a separate 1.87M-row research benchmark, checksum-bound
+  provenance and governed increase/hold/refer/freeze actions.
 - Selected a calibrated histogram-gradient-boosting champion against logistic
-  baseline using source-macro validation; achieved 0.685 macro ROC-AUC, 0.402
-  macro PR-AUC and 0.139 macro Brier on 373,910 untouched test rows.
+  regression; achieved 0.757 ROC-AUC (95% CI 0.743–0.774), 0.509 PR-AUC and
+  0.142 Brier on 6,000 untouched test rows.
 - Designed deterministic INR exposure and contribution simulation; a 1,200-
-  profile scenario produced ₹6.41M simulated—not causal or realized—incremental
+  profile scenario produced ₹9.10M simulated—not causal or realized—incremental
   contribution with explicit terms, model-risk and human-review controls.
 
 See the [career targeting guide](CAREER_TARGETING.md) for J.P. Morgan, UBS,

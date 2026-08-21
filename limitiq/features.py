@@ -25,7 +25,7 @@ MODEL_INPUT_COLUMNS = [
 ]
 EXPOSURE_COLUMNS = ["current_limit_inr", "current_balance_inr"]
 BATCH_COLUMNS = ["ACCOUNT_ID", *MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]
-REGION_CATEGORIES = {"asia", "europe", "north_america", "undisclosed"}
+REGION_CATEGORIES = {"asia", "europe", "north_america", "taiwan", "undisclosed"}
 FEATURE_NAMES = [
     "limit_bal",
     "current_utilization",

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<article class="committee-memo">
+  <header class="memo-heading"><div><p class="eyebrow">Credit committee brief · educational demonstration</p><h1>LimitIQ portfolio posture</h1><p>Decision memo generated from the versioned synthetic demonstration portfolio.</p></div><div class="memo-actions"><a class="button secondary" href="/committee-memo?download=true">Download HTML</a><button type="button" data-print>Print memo</button></div></header>
+  <div class="validation-verdict"><div><p class="eyebrow">Recommendation</p><h2>Conditional approval for simulation review only</h2></div><p>Use this evidence to challenge policy assumptions and workflow design. Do not use it for lending, customer treatment, regulatory PD or IFRS 9.</p></div>
+  <section><h2>Portfolio decision</h2><div class="metric-grid four">
+    <article class="metric"><span>Synthetic profiles</span><strong>{{ summary.accounts|number }}</strong><small>Deterministic demonstration population</small></article>
+    <article class="metric"><span>Eligible increases</span><strong>{{ summary.eligible_increases|number }}</strong><small>After simulated constraints</small></article>
+    <article class="metric"><span>Proposed limits</span><strong>{{ summary.proposed_limit|money(ccy) }}</strong><small>From {{ summary.current_limit|money(ccy) }}</small></article>
+    <article class="metric"><span>Incremental contribution</span><strong>{{ summary.incremental_contribution|money(ccy) }}</strong><small>Simulated, not realized</small></article>
+  </div></section>
+  <section class="two-column"><div><h2>Risk challenge</h2><ul><li>Current loss proxy: {{ summary.current_expected_loss|money(ccy) }}</li><li>Proposed loss proxy: {{ summary.proposed_expected_loss|money(ccy) }}</li><li>Early-warning population: {{ summary.early_warning|number }}</li><li>Risk-adjusted return proxy: {{ summary.risk_adjusted_return|percent }}</li></ul></div><div><h2>Primary model evidence</h2><ul><li>Untouched-test ROC-AUC: {{ test.roc_auc|round(3) }}</li><li>95% ROC interval: {{ test.confidence_intervals.roc_auc.lower_95|round(3) }}–{{ test.confidence_intervals.roc_auc.upper_95|round(3) }}</li><li>Brier score: {{ test.brier_score|round(3) }}</li><li>Target: next-month default · Taiwan source</li></ul></div></section>
+  <section><h2>Conditions before any broader use</h2><ol><li>Validate the coherent target on a representative local and out-of-time population.</li><li>Observe limit-response outcomes through a governed randomized pilot with customer-protection guardrails.</li><li>Complete organizationally independent validation and accountable approval.</li><li>Implement production monitoring, overrides, audit logging and tested rollback.</li></ol></section>
+  <footer class="memo-footnote"><strong>Evidence boundary:</strong> Decisions use one coherent next-month target; geographic portability is unproven. Exposure, expected loss, line response and contribution are deterministic simulations. The multi-source model remains research only. This memo is not a credit approval or production monitoring record.</footer>
+</article>
+{% endblock %}

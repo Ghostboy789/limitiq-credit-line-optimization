@@ -2,16 +2,14 @@
 
 ## Recruiter-safe positioning
 
-**One-line pitch:** Built a deployed credit-line decision-support product and a
-local 1.87M-row multi-source adverse-credit-outcome benchmark, combining
-calibrated risk, provenance, source-level validation, policy controls and a
-deterministic synthetic INR exposure simulator.
+**One-line pitch:** Built a production-shaped credit-line decision product with
+a calibrated next-month default model, constrained actions, model-risk controls
+and a separately governed 1.87M-row transportability benchmark.
 
-Be precise about version status: the public link serves the multi-source v2
-benchmark. Its publication gate was cleared by repository-owner attestation on
-14 August 2026; the project does not offer an independent legal opinion. V2 labels
-have different events/horizons, so never call its score a common-horizon or
-regulatory PD.
+Be precise about version status: v3 is a release candidate until CI and live
+deployment are verified; the public link still serves verified v2.1. V3 uses
+one Taiwan next-month target for account decisions and never uses the
+heterogeneous global benchmark for individual recommendations.
 
 The project demonstrates credit-risk modelling, model governance, ML
 engineering, decision policy, security and product delivery. It does not
@@ -46,7 +44,7 @@ not imply its core business is retail card-line management.
 Official career context:
 
 - J.P. Morgan Risk & Compliance:
-  https://careers.jpmorgan.com/us/en/students/programs/risk-compliance-program
+  https://www.jpmorganchase.com/careers/explore-opportunities/programs/risk-compliance-program
 - UBS India:
   https://www.ubs.com/global/en/careers/about-us/locations/india.html
 - Morgan Stanley technology careers in India:
@@ -65,46 +63,43 @@ SVG, Docker, GitHub Actions, Render, pytest
 
 Use these bullets:
 
-- Built a production-shaped credit-line decision-support platform and local
-  1.87M-row multi-source adverse-credit-outcome benchmark, harmonizing six independent
-  cohorts with checksum-bound provenance and source-level evaluation.
-- Compared calibrated logistic and histogram-gradient-boosting pipelines using
-  source-macro validation; the champion recorded 0.685 macro ROC-AUC, 0.402
-  macro PR-AUC and 0.139 macro Brier on 373,910 untouched test rows while
-  explicitly separating row-weighted pooled evidence.
+- Built a production-shaped credit-line decision-support platform that joins a
+  coherent UCI Taiwan next-month default model to governed candidate actions,
+  with a separate 1.87M-row research benchmark for transportability evidence.
+- Selected a calibrated histogram-gradient-boosting champion against logistic
+  regression; achieved 0.757 ROC-AUC (95% CI 0.743–0.774), 0.509 PR-AUC and
+  0.142 Brier on a 6,000-row untouched test set.
 - Implemented a deterministic INR exposure optimizer with loss, profitability,
   overextension, early-warning and human-review controls; the 1,200-profile
-  synthetic scenario produced ₹6.41M simulated—not causal or realized—
+  synthetic scenario produced ₹9.10M simulated—not causal or realized—
   incremental contribution, with a USD/INR/EUR display toggle over the
   INR-canonical portfolio.
 
 If the role values deployment more than multi-source modelling, substitute:
 
-- Deployed a Dockerized v1 decision-support app over 30,000 CC BY 4.0 UCI
-  accounts with portfolio, account, simulator, batch, governance and report
-  workflows; v1 test ROC-AUC 0.781 and Brier 0.133.
+- Engineered a Dockerized decision-support application with portfolio, account,
+  simulator, transient batch, governance and report workflows; added SBOM,
+  CodeQL, container scanning, liveness/readiness and privacy-safe operations
+  telemetry.
 
 ## LinkedIn/GitHub summary
 
-LimitIQ shows how risk modelling becomes a governed product. The verified public
-v1 joins a calibrated model to candidate-line policy, portfolio/account views,
-batch scoring and transparent synthetic INR economics. V2 expands the
-research workflow to 1.87M harmonized rows, source-macro calibration evidence,
-provenance and publication controls. I kept source observations, model estimates
-and simulated business outputs separate and documented why heterogeneous labels
-are not a common regulatory PD.
+LimitIQ shows how risk modelling becomes a governed product. V3 joins a
+source-coherent calibrated next-month model to candidate-line policy,
+portfolio/account views, transient batch scoring and synthetic INR economics.
+The heterogeneous 1.87M-row model remains visible as transportability research,
+not account decisioning. Source observations, model estimates and simulated
+business outputs stay separate.
 
 ## 30-second interview answer
 
 “Many credit-risk projects end at a score. I built LimitIQ to connect risk to a
-governed operating decision: increase, hold, refer or freeze. I first deployed a
-Taiwan-data v1, then built a 1.87-million-row multi-source benchmark with a
-calibrated logistic baseline, gradient-boosting champion, source-macro selection
-and checksum-bound provenance. The app uses a deterministic synthetic INR
-portfolio to demonstrate exposure and policy trade-offs. The important judgment
-was documenting that source labels differ, pooled metrics are Lending-Club-
-dominated and the publication gate relies on a dated owner attestation rather
-than an independent legal opinion.”
+governed action: increase, hold, refer or freeze. Model-risk review showed that
+my 1.87-million-row benchmark combined different adverse events and horizons,
+so I changed the architecture. A calibrated next-month Taiwan model now drives
+only the synthetic decision demo; the global model is research evidence only.
+The primary test ROC-AUC is 0.757 with a 0.743–0.774 bootstrap interval, and the
+economics remain explicitly simulated.”
 
 ## Evidence to discuss by interviewer
 
@@ -119,13 +114,14 @@ than an independent legal opinion.”
 - **Product manager:** six personas, candidate-action framing, simulator, human
   override, data-rights gate and phased shadow/pilot roadmap.
 - **Engineer:** single-service architecture, deterministic rebuild, server-side
-  CSP-safe charts, strict transient CSV handling, CI, Docker and v1 deployment.
+  CSP-safe charts, strict transient CSV handling, CI, Docker, SBOM, container
+  scanning and operational probes.
 
 ## Application checklist
 
-1. Label the link “verified v1 live demo”; never present it as v2.
+1. Until final deployment, label the link “verified v2.1 live demo; v3 release candidate in repository.”
 2. Match the first bullet to the job family.
-3. Use macro v2 metrics and explain why pooled metrics are secondary.
+3. Lead with primary 0.757 ROC-AUC and explain why the multi-source benchmark is research only.
 4. Label every financial result “synthetic and simulated.”
 5. Link the model/data cards for validation roles and architecture for technology
    roles.

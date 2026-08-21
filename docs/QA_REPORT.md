@@ -1,5 +1,34 @@
 # QA report
 
+## V3.0.0 release-candidate boundary — 18 August 2026
+
+The working tree contains a coherent UCI Taiwan next-month primary model,
+Taiwan-contract synthetic demo, two-track governance, operational endpoints,
+committee memo, source manifest, SQL reconciliation, SBOM, CodeQL and container
+scan gates.
+
+- Full suite: **112 passed**, **72.80%** scoped statement coverage (65% required).
+- Ruff lint and format: pass. Bandit: no findings. Pip-audit: no known
+  vulnerabilities in pinned runtime dependencies.
+- Secret scan: 85 publishable source/config/document files, zero findings;
+  generated reports/data and binary artifacts were separately provenance-bound
+  and excluded from entropy scanning.
+- Primary smoke training, SQL reconciliation, SBOM check and source-manifest
+  rendering: pass.
+- Local runtime: 16 routes/downloads returned 200 with unique request IDs;
+  50-request/5-concurrency health smoke completed 50/50 with p50 7.70 ms and p95
+  256.56 ms. This is point-in-time smoke evidence, not a capacity claim.
+- Fresh v3 browser QA on 21 August covered the overview, portfolio, governance
+  and monitoring routes at 1440, 768 and 390 px. No page-level horizontal
+  overflow or browser warning/error was observed; the favicon defect found in
+  server logs was fixed. Current screenshots are committed under `docs/assets/`.
+- The coverage headline applies to the primary/runtime package. Large offline
+  research CLIs remain explicitly omitted and are checked through artifact,
+  schema and provenance tests; the headline is not full rebuild-path coverage.
+- Local Docker is unavailable. Docker build, Trivy, GitHub Actions, Render and
+  live v3 workflow/browser verification remain release gates; this section
+  records no premature deployment claim.
+
 ## V2.1 application verification — 18 August 2026
 
 - Release-gated application-code commit:
@@ -127,7 +156,9 @@ automated application tests.
 
 - Upload limit: 5 MB and 5,000 rows; strict column, numeric-range, duplicate and
   unknown-column validation.
-- Uploaded bytes are processed in memory and not retained.
+- The complete request is bounded before multipart parsing; uploaded bytes are
+  processed transiently, may use framework-managed temporary spooling and are
+  closed without application retention.
 - Formula-safe CSV, allowlisted sorts/routes, Jinja autoescape and model checksum
   verification were exercised by tests.
 - CSP, frame denial, `nosniff`, referrer, permissions and opener headers were

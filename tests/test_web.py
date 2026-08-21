@@ -12,7 +12,14 @@ from fastapi.testclient import TestClient
 
 from limitiq.config import PROCESSED_DIR
 from limitiq.features import BATCH_COLUMNS
-from limitiq.web import MAX_UPLOAD_BYTES, MAX_UPLOAD_ROWS, REPORT_FILES, _text_sha256, app
+from limitiq.web import (
+    MAX_UPLOAD_BYTES,
+    MAX_UPLOAD_REQUEST_BYTES,
+    MAX_UPLOAD_ROWS,
+    REPORT_FILES,
+    _text_sha256,
+    app,
+)
 
 client = TestClient(app)
 
@@ -38,8 +45,10 @@ def test_health_contract_and_security_headers() -> None:
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
-    assert response.json()["model_version"].startswith("limitiq-global-2.0.0-")
-    assert response.json()["dataset_version"].startswith("global-7-")
+    assert response.json()["model_version"].startswith("limitiq-primary-3.0.0-")
+    assert response.json()["dataset_version"].startswith("uci-350-next-month-")
+    assert response.json()["model_role"] == "source-coherent-primary-decision-candidate"
+    assert response.json()["research_benchmark_version"].startswith("limitiq-global-2.0.0-")
     assert response.json()["automatic_increases_enabled"] is True
     assert "frame-ancestors 'none'" in response.headers["content-security-policy"]
     assert "unsafe-inline" not in response.headers["content-security-policy"]
@@ -47,10 +56,35 @@ def test_health_contract_and_security_headers() -> None:
     assert response.headers["x-frame-options"] == "DENY"
     assert response.headers["strict-transport-security"].startswith("max-age=31536000")
     assert "deployment_commit" in response.json()
+    assert len(response.headers["x-request-id"]) == 32
+    assert response.headers["server-timing"].startswith("app;dur=")
+
+
+def test_runtime_probes_and_privacy_safe_operations_metrics() -> None:
+    before = client.get("/ops").json()
+    live = client.get("/live")
+    missing = client.get("/accounts/LIQ-DOES-NOT-EXIST")
+    ready = client.get("/ready")
+    after_response = client.get("/ops")
+    after = after_response.json()
+
+    assert live.json() == {"status": "alive"}
+    assert ready.status_code == 200
+    assert ready.json()["status"] == "ready"
+    assert ready.json()["artifacts_loaded"] is True
+    assert missing.status_code == 404
+    assert live.headers["x-request-id"] != ready.headers["x-request-id"]
+    assert after["requests"] >= before["requests"] + 4
+    assert after["client_errors"] >= before["client_errors"] + 1
+    assert after["server_errors"] >= before["server_errors"]
+    assert after["mean_latency_ms"] >= 0
+    assert after["max_latency_ms"] >= after["mean_latency_ms"]
+    assert after["contains_customer_data"] is False
+    assert after_response.headers["cache-control"] == "no-store"
 
 
 def test_portfolio_filter_search_sort_and_pagination() -> None:
-    demo = pd.read_csv(PROCESSED_DIR / "global_demo_portfolio.csv", nrows=1)
+    demo = pd.read_csv(PROCESSED_DIR / "primary_demo_portfolio.csv", nrows=1)
     account_id = demo.loc[0, "account_id"]
     response = client.get(
         "/portfolio",
@@ -113,7 +147,7 @@ def test_portfolio_utilization_filters_and_sort_links() -> None:
 
 
 def test_account_decision_and_missing_account() -> None:
-    account_id = pd.read_csv(PROCESSED_DIR / "global_demo_portfolio.csv", nrows=1).loc[
+    account_id = pd.read_csv(PROCESSED_DIR / "primary_demo_portfolio.csv", nrows=1).loc[
         0, "account_id"
     ]
     response = client.get(f"/accounts/{account_id}")
@@ -139,6 +173,8 @@ def test_policy_simulator_recalculates_and_validates_extremes() -> None:
         "Current / proposed loss proxy",
         "Risk-adjusted return",
         "Computed directional sensitivity",
+        "Baseline versus scenario",
+        "Governed baseline shown",
     ):
         assert label in baseline.text
     stressed = client.post(
@@ -162,14 +198,17 @@ def test_policy_simulator_recalculates_and_validates_extremes() -> None:
     )
     assert baseline.status_code == stressed.status_code == 200
     assert baseline.text != stressed.text
+    assert "Scenario compared with governed baseline" in stressed.text
     invalid = client.post("/simulator", data={"lgd": "1.5"})
     assert invalid.status_code == 200
     assert "Assumptions not applied" in invalid.text
 
 
 def _sample_frame(rows: int = 2) -> pd.DataFrame:
-    demo = pd.read_csv(PROCESSED_DIR / "global_demo_portfolio.csv", nrows=rows)
-    return demo.rename(columns={"account_id": "ACCOUNT_ID"})[BATCH_COLUMNS]
+    demo = pd.read_csv(PROCESSED_DIR / "primary_demo_portfolio.csv", nrows=rows)
+    sample = demo.rename(columns={"account_id": "ACCOUNT_ID"})[BATCH_COLUMNS]
+    sample["region"] = "taiwan"
+    return sample
 
 
 def _upload(frame: pd.DataFrame):
@@ -207,6 +246,9 @@ def test_single_prediction_api_validates_and_returns_no_store_decision() -> None
     missing = dict(payload)
     missing.pop("region")
     assert client.post("/api/predict", json=missing).status_code == 422
+    out_of_scope = client.post("/api/predict", json={**payload, "region": "asia"})
+    assert out_of_scope.status_code == 422
+    assert "region=taiwan only" in out_of_scope.text
 
 
 def test_batch_missing_extra_duplicate_invalid_types_and_ranges() -> None:
@@ -229,6 +271,9 @@ def test_batch_missing_extra_duplicate_invalid_types_and_ranges() -> None:
     invalid_region = sample.copy()
     invalid_region.loc[0, "region"] = "antarctica"
     cases.append((invalid_region, "Unsupported region"))
+    out_of_scope = sample.copy()
+    out_of_scope.loc[0, "region"] = "north_america"
+    cases.append((out_of_scope, "region=taiwan only"))
     missing_exposure = sample.copy()
     missing_exposure.loc[0, "current_limit_inr"] = np.nan
     cases.append((missing_exposure, "cannot be blank"))
@@ -266,6 +311,13 @@ def test_batch_enforces_byte_and_row_boundaries() -> None:
     assert oversized.status_code == 413
     assert "MB limit" in oversized.text
 
+    ingress_oversized = client.post(
+        "/batch",
+        files={"file": ("too-large.csv", b"x" * (MAX_UPLOAD_REQUEST_BYTES + 1), "text/csv")},
+    )
+    assert ingress_oversized.status_code == 413
+    assert "Request exceeds" in ingress_oversized.text
+
     seed = _sample_frame(1)
     exact = pd.concat([seed] * MAX_UPLOAD_ROWS, ignore_index=True)
     exact["ACCOUNT_ID"] = [f"LIQ-QA-{index:06d}" for index in range(MAX_UPLOAD_ROWS)]
@@ -281,7 +333,7 @@ def test_palette_search_endpoint() -> None:
     pages = client.get("/api/search").json()["results"]
     assert any(item["label"] == "Portfolio explorer" for item in pages)
     assert any(item["label"] == "Monitoring readiness" for item in pages)
-    account_id = pd.read_csv(PROCESSED_DIR / "global_demo_portfolio.csv", nrows=1).loc[
+    account_id = pd.read_csv(PROCESSED_DIR / "primary_demo_portfolio.csv", nrows=1).loc[
         0, "account_id"
     ]
     matches = client.get("/api/search", params={"q": account_id}).json()["results"]
@@ -298,12 +350,16 @@ def test_governance_feature_and_monitoring_sections_render() -> None:
     assert "Permutation importance" in governance.text
     assert "Gini coefficient" in governance.text
     assert "Decile lift" in governance.text
+    assert "Conditional approval for educational portfolio simulation only" in governance.text
+    assert "Not approved" in governance.text
     monitoring = client.get("/monitoring")
     assert monitoring.status_code == 200
     assert "Monitoring readiness" in monitoring.text
-    assert "Baseline feature missingness" in monitoring.text
+    assert "Active-feature reference ranges" in monitoring.text
+    assert "Primary untouched-test diagnostics" in monitoring.text
+    assert "Separate research evidence" in monitoring.text
     assert "Proposed thresholds" in monitoring.text
-    assert "illustrative governance proposals" in monitoring.text
+    assert "Thresholds are governance proposals" in monitoring.text
 
 
 def test_sample_and_filtered_csv_downloads_are_valid() -> None:
@@ -363,10 +419,10 @@ def test_report_and_document_allowlists_block_unknown_paths() -> None:
 def test_document_pages_render_safe_markdown() -> None:
     response = client.get("/documents/model-card")
     assert response.status_code == 200
-    assert "<strong>deployed v2 model</strong>" in response.text
-    assert "<code>limitiq-global-2.0.0-37a14c45a811</code>" in response.text
+    assert "LimitIQ v3 primary candidate" in response.text
+    assert "<code>limitiq-primary-3.0.0-89f9a2530bde</code>" in response.text
     assert "<table>" in response.text
-    assert "**deployed v2 model**" not in response.text
+    assert "**source-coherent primary candidate**" not in response.text
     assert "| Candidate |" not in response.text
 
 
@@ -377,17 +433,40 @@ def test_static_assets_and_navigation_are_real() -> None:
     overview = client.get("/").text
     assert "Current loss proxy" in overview
     assert '<option value="INR" selected>' in overview
-    assert "heterogeneous outcomes" in overview
+    assert "next-month default model" in overview
+    assert "Review in five minutes" in overview
+    assert "Executive" in overview
+    assert "Risk analyst" in overview
+    assert "Model validator" in overview
+    assert 'href="/committee-memo"' in overview
     for path in ("/portfolio", "/simulator", "/batch", "/governance", "/monitoring", "/reports"):
         assert f'href="{path}"' in overview
 
     governance = client.get("/governance").text
-    assert "Global benchmark governance" in governance
+    assert "Two-track model governance" in governance
+    assert "UCI Taiwan next-month default" in governance
+    assert "Multi-source transportability benchmark" in governance
     assert "Pooled ROC curve" in governance
     assert "ROC by source cohort" in governance
     assert "Calibration by source cohort" in governance
     assert "Source-cohort comparison" in governance
     assert "<svg" in governance
+
+
+def test_credit_committee_memo_is_printable_and_downloadable() -> None:
+    memo = client.get("/committee-memo")
+    download = client.get("/committee-memo", params={"download": "true"})
+    assert memo.status_code == download.status_code == 200
+    assert "Credit committee brief" in memo.text
+    assert "Conditional approval for simulation review only" in memo.text
+    assert "Simulated, not realized" in memo.text
+    assert "data-print" in memo.text
+    assert "<style" not in memo.text
+    assert "style=" not in memo.text
+    assert "content-disposition" not in memo.headers
+    assert download.headers["content-disposition"] == (
+        'attachment; filename="limitiq-credit-committee-memo.html"'
+    )
 
 
 def test_display_currency_toggle_converts_and_validates() -> None:
@@ -418,5 +497,6 @@ def test_accessible_search_and_single_portfolio_row_tab_stop() -> None:
 def test_reports_separate_current_and_superseded_evidence() -> None:
     response = client.get("/reports")
     assert response.status_code == 200
-    assert "V2 multi-source evidence" in response.text
+    assert "V3 source-coherent evidence" in response.text
+    assert "V2 multi-source transportability evidence" in response.text
     assert "V1 Taiwan archive" in response.text

@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "purpose": "Reproducible source acquisition and checksum verification. A manifest entry is not a legal opinion or permission grant.",
+  "sources": [
+    {
+      "id": "taiwan_credit",
+      "role": "training",
+      "raw_file": "default_of_credit_card_clients.xls",
+      "publisher_page": "https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients",
+      "download_url": "https://archive.ics.uci.edu/static/public/350/default%2Bof%2Bcredit%2Bcard%2Bclients.zip",
+      "license": "CC BY 4.0",
+      "access": "automated-open",
+      "sha256": "30c6be3abd8dcfd3e6096c828bad8c2f011238620f5369220bd60cfc82700933",
+      "expected_source_rows": 30000,
+      "target": "subsequent-month default",
+      "target_horizon": "one month"
+    },
+    {
+      "id": "german_credit",
+      "role": "reference-only-duplicate-population",
+      "raw_file": "german.data",
+      "publisher_page": "https://archive.ics.uci.edu/dataset/144/statlog+german+credit+data",
+      "download_url": "https://archive.ics.uci.edu/static/public/144/statlog+german+credit+data.zip",
+      "archive_member": "german.data",
+      "license": "CC BY 4.0",
+      "access": "automated-open",
+      "sha256": "b21f3d81db8071257d5ff1deaeba1fd4303b62712e6fcc9715c7a86202cb5871",
+      "expected_source_rows": 1000,
+      "target": "bad-credit class",
+      "target_horizon": "not disclosed"
+    },
+    {
+      "id": "south_german_credit",
+      "role": "training",
+      "raw_file": "SouthGermanCredit.asc",
+      "publisher_page": "https://archive.ics.uci.edu/dataset/573/south+german+credit+update",
+      "download_url": "https://archive.ics.uci.edu/static/public/573/south+german+credit+update.zip",
+      "archive_member": "SouthGermanCredit.asc",
+      "license": "CC BY 4.0",
+      "access": "automated-open",
+      "sha256": "5f363343f356ca38a0236baab849e472846399b2176ccc5bd686483dd8a7562f",
+      "expected_source_rows": 1000,
+      "target": "corrected bad-credit class",
+      "target_horizon": "not disclosed"
+    },
+    {
+      "id": "give_me_some_credit",
+      "role": "transportability-research",
+      "raw_file": "give_me_some_credit.arff",
+      "publisher_page": "https://www.openml.org/search?type=data&id=45577",
+      "mirror_url": "https://api.openml.org/data/download/22116561/dataset",
+      "license": "Original competition terms apply; publication relies on the repository owner's 2026-08-14 clearance attestation",
+      "access": "manual-terms-review",
+      "sha256": "1d1a66d10042a3ff8ed4f7712f52c2701ccef1924509cc11420188f512af327a",
+      "expected_source_rows": 150000,
+      "target": "serious delinquency",
+      "target_horizon": "two years"
+    },
+    {
+      "id": "fico_heloc",
+      "role": "transportability-research",
+      "raw_file": "heloc.arff",
+      "publisher_page": "https://investors.fico.com/news-releases/news-release-details/fico-announces-xml-challenge/",
+      "mirror_url": "https://api.openml.org/data/download/22116522/dataset",
+      "license": "FICO custom challenge terms; publication relies on the repository owner's 2026-08-14 clearance attestation",
+      "access": "manual-terms-review",
+      "sha256": "e2598f0b585e19a67eadc545ddfc659122b654be74c791e91c21a998404f0bcd",
+      "expected_source_rows": 10459,
+      "target": "RiskPerformance bad class",
+      "target_horizon": "not disclosed"
+    },
+    {
+      "id": "lending_club_full",
+      "role": "transportability-research",
+      "raw_file": "lending_club_full.csv",
+      "publisher_page": "https://huggingface.co/datasets/codesignal/lending-club-loan-accepted",
+      "mirror_url": "https://huggingface.co/datasets/codesignal/lending-club-loan-accepted/resolve/main/accepted_2007_to_2018Q4.csv",
+      "license": "Mirror declares CC0; upstream rights are not independently verified and publication relies on the repository owner's 2026-08-14 clearance attestation",
+      "access": "manual-terms-review-large-file",
+      "sha256": "3eae03c28fd9d2e8a076ebeb73507e8d4d0f44d90500decdb0936e0933d1f36a",
+      "expected_source_rows": 2260701,
+      "target": "status at extract",
+      "target_horizon": "variable"
+    },
+    {
+      "id": "home_credit",
+      "role": "transportability-research",
+      "raw_file": "home_credit_train.csv",
+      "publisher_page": "https://huggingface.co/cantalapiedra/poc_scoring_fair/blob/main/application_train.csv",
+      "license": "Competition and mirror terms are not independently established; publication relies on the repository owner's 2026-08-14 clearance attestation",
+      "access": "manual-terms-review",
+      "sha256": "52e96b895b1112e1c853f670e58372719c8441c5ed1c57ac2f7fad559d784f5f",
+      "expected_source_rows": 307511,
+      "target": "payment difficulty",
+      "target_horizon": "not disclosed"
+    }
+  ]
+}

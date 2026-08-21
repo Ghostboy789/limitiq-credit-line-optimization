@@ -2,6 +2,11 @@
 
 ## Status boundary
 
+The repository currently contains a **v3.0.0 release candidate** with primary
+model `limitiq-primary-3.0.0-89f9a2530bde` and dataset
+`uci-350-next-month-dc05bd56186a`. It is not described as deployed until the
+full suite, CI, Docker/Trivy, Render and production workflow gates pass.
+
 The URLs below serve the **v2.1.0 application**. Application code was
 release-gated at commit `c6154603da430b0eacb2d237a469f0843784557e` on 18
 August 2026. The live
@@ -52,6 +57,10 @@ docker build -t limitiq .
 docker run --rm -p 8000:8000 -e PORT=8000 limitiq
 curl http://localhost:8000/health
 ```
+
+V3 adds `/live`, `/ready` and aggregate-only `/ops`; release verification must
+check all four operational endpoints plus portfolio, account, simulator,
+committee memo, reports and transient batch workflows.
 
 The image runs a non-root user, one Uvicorn worker, no debug mode, capped numeric
 threads and a stdlib health check. Training and downloading never occur in the

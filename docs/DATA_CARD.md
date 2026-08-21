@@ -2,6 +2,10 @@
 
 ## Version boundary
 
+- **V3 primary decision data:** UCI Default of Credit Card Clients only;
+  30,000 Taiwan accounts, following-month default target, dataset version
+  `uci-350-next-month-dc05bd56186a`. This source drives the release-candidate
+  educational decision model.
 - **V1, verified public deployment:** UCI Default of Credit Card Clients only;
   dataset version `uci-350-30c6be3abd8d-inr297`.
 - **V2, deployed model and data:** six independent training cohorts plus one
@@ -13,10 +17,24 @@
   serves the unchanged v2 dataset and model. Application `2.1.0` does not imply
   a dataset or model retrain; tag `v2.1.0` identifies the evidence release.
 
-V2 is a multi-source adverse-credit-outcome benchmark. It is not a
-common-horizon regulatory PD dataset.
+V2 remains a multi-source adverse-credit-outcome **research benchmark**. It is
+not a common-horizon regulatory PD dataset and never drives v3 account decisions.
 
-## Training population
+## V3 primary population and fields
+
+The primary source contains observed limit, six repayment-status months, six
+bill amounts, six payment amounts and following-month default. The harmonized
+primary model uses delinquency count derived from repayment status and current
+utilization derived from the latest bill and limit. Region is constant Asia;
+debt to income, credit lines, income and credit age are explicitly unavailable
+in this primary contract. Demographics remain audit-only and excluded from
+inference.
+
+The split is fixed and stratified: 18,000 train, 6,000 validation and 6,000
+untouched test. This is within-source interpolation, not future-vintage or
+Indian-population validation.
+
+## V2 research population
 
 | Source | Role | Raw / harmonized rows | Geography and period | Label / horizon | Currency |
 |---|---|---:|---|---|---|
@@ -76,10 +94,12 @@ not out-of-time or unseen-country validation.
 
 ## Synthetic demonstration
 
-The app uses 1,200 deterministic synthetic profiles with `LIQ-*` identifiers and
-synthetic INR limit/balance fields. The profiles are shaped for demonstration;
-they are not source rows, customers or production outcomes. Published economics
-and recommendations are deterministic scenario outputs.
+The v3 app uses 1,200 deterministic Taiwan-contract synthetic profiles with
+`LIQ-*` identifiers and synthetic INR limit/balance fields. They match source
+field availability but use fixed simulated distributions that are not claimed
+to reproduce the empirical source population. They are not source rows,
+customers or production outcomes. Published economics and recommendations are
+deterministic scenario outputs scored by the primary model.
 
 ## Appropriate use
 

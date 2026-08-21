@@ -1,315 +1,256 @@
 # LimitIQ
 
-Dynamic credit-line management and exposure optimization for an existing credit
-portfolio. LimitIQ combines calibrated risk estimates with governed +10%, +20%,
-+30%, no-change, manual-review and early-warning-freeze actions, then explains
-the portfolio, account, financial and governance trade-offs in one working
-banking product.
+[![Live](https://img.shields.io/badge/live-Render-0b6e69)](https://limitiq-credit-line-optimization.onrender.com)
+[![CI](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/workflows/ci.yml/badge.svg)](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/workflows/codeql.yml/badge.svg)](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/badge/code%20license-MIT-blue.svg)](LICENSE)
 
-> **Educational-use disclaimer:** LimitIQ is an educational portfolio
-> demonstration using public and synthetic data. It is not a production
-> credit-decision system and must not be used to make real lending decisions.
+**Governed credit-line decision support: coherent risk, constrained actions, transparent economics.**
 
-## Release status
+LimitIQ evaluates +10%, +20%, +30%, hold, manual-review and early-warning-freeze
+actions for existing credit-card customers. It combines a calibrated next-month
+default model, deterministic candidate-limit optimization, customer-protection
+rules and a recruiter-ready banking workflow in one Dockerized FastAPI service.
 
-- **Live public application — v2.1.0** (verified 18 August 2026): application
-  code was release-gated at commit
-  `c6154603da430b0eacb2d237a469f0843784557e`. GitHub Actions run
-  [32117394757](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32117394757)
-  passed Ruff, format, 92 tests at 69.00% coverage, Bandit, dependency and secret
-  scans, Docker build/run and container health. The unchanged champion remains
-  model `limitiq-global-2.0.0-37a14c45a811`; the application release does not
-  relabel or retrain it. Tag `v2.1.0` identifies the final evidence release.
-- **Historical v2.0.0 release** (12 August 2026): the same 1,869,548-row global
-  benchmark was released from the then-current history as tag `v2.0.0` after
-  green CI and Render verification.
-- **Superseded v1:** Taiwan-only 30,000-row model, still verifiable via tag
-  `v1.0.0` and Git history. V1 evidence is intentionally kept separate from v2.
-- **Source terms:** the repository owner confirmed the four-source publication
-  gate resolved on 14 August 2026. This is an owner-cleared attestation, not an
-  independent legal opinion. The earlier findings, attestation and
-  source-by-source evidence are recorded in
-  [`NOTICE.md`](NOTICE.md).
-- **Repository identity:** every reachable commit author/committer and tagger
-  was rewritten to the GitHub identity `Ghostboy789`; commit hashes therefore
-  differ from the pre-rewrite historical references retained in this document.
+> LimitIQ is an educational portfolio demonstration using public and synthetic
+> data. It is not a production credit-decision system and must not be used to
+> make real lending decisions.
 
-## Product evidence
+## Review this project in five minutes
 
-![LimitIQ executive overview](docs/assets/overview.png)
+1. [Executive overview](https://limitiq-credit-line-optimization.onrender.com/) — portfolio posture and simulated economics.
+2. [Portfolio explorer](https://limitiq-credit-line-optimization.onrender.com/portfolio) — filters, reason codes and account traceability.
+3. [Policy simulator](https://limitiq-credit-line-optimization.onrender.com/simulator) — baseline-versus-scenario trade-offs.
+4. [Model governance](https://limitiq-credit-line-optimization.onrender.com/governance) — primary evidence, independent challenge and research benchmark.
+5. [Recruiter brief](docs/RECRUITER_BRIEF.md) — interview narrative, résumé bullets and role fit.
 
-![LimitIQ account decision](docs/assets/account-decision.png)
+## Product preview
 
-**Live v2.1.0 demo:** https://limitiq-credit-line-optimization.onrender.com
+![LimitIQ v3 executive overview with INR portfolio metrics and governed action summary](docs/assets/v3-overview.png)
 
-**Live v2.1.0 health:** https://limitiq-credit-line-optimization.onrender.com/health
-(verified 18 August 2026: application `2.1.0`, model
-`limitiq-global-2.0.0-37a14c45a811` and dataset `global-7-94bb4c0ad0f1`; the
-endpoint also exposes the exact deployed Git revision)
+![LimitIQ v3 primary-model governance evidence with untouched-test metrics, ROC and calibration](docs/assets/v3-primary-evidence.png)
 
-The free Render service may need about 50 seconds to wake after inactivity.
+[View the 390 px mobile capture](docs/assets/v3-overview-mobile.png) · [View the governance verdict](docs/assets/v3-governance.png)
 
-## What it delivers
+The public deployment currently serves verified **v2.1.0**. The repository
+contains the **v3.0.0 release candidate** described below; it is not called live
+until CI, Render and production workflow verification pass.
 
-- Executive exposure, loss, simulated contribution, return, risk and action view
-- Searchable/filterable/paginated portfolio with safe filtered CSV download
-- Synthetic-ID account decision with risk, loss proxy, value, reasons and checks
-- Adjustable policy/economics simulator with baseline deltas and action mix
-- Strict transient CSV batch scoring and downloadable decisions
-- Baseline/champion, calibration, confusion, feature, band and governance evidence
-- Executive HTML/PDF plus quality, model, policy and financial reports
-- Multi-currency display toggle (INR default, USD, EUR) with documented fixed
-  presentation rates; INR remains the canonical internal currency
+Current local v3 gate: **112 tests passed at 72.80% coverage**; Ruff, formatting,
+Bandit, dependency audit, source/demo/SBOM checks and local runtime smoke passed.
+Docker/Trivy, GitHub Actions and production verification remain pending.
+Coverage measures the primary/runtime package and explicitly omits the large
+offline multi-source and external-validation CLIs; their committed evidence is
+checked by artifact, provenance and schema tests rather than included in the headline.
 
-## Evidence boundary
+## The senior-level design decision
 
-| Layer | What LimitIQ uses | What it means |
-|---|---|---|
-| Observed | Source-specific behavior and adverse-outcome labels | Historical source data with different products, periods, events and horizons |
-| Model-estimated | Calibrated adverse-outcome probability and risk band | Within-source statistical interpolation; not a common-horizon regulatory PD |
-| Simulated | Response, EAD/LGD, revenue/cost, contribution and proposed line | Transparent scenario—not causal or realized impact |
+V3 separates two model tracks that v2 had combined:
 
-No source contains observed response to a line increase. Baseline risk is held
-constant across candidates and expected loss changes through simulated EAD. No
-simulated uplift or profit is presented as observed production impact.
+| Track | Purpose | Data and target | Decision use |
+|---|---|---|---|
+| **Primary** | Source-coherent application candidate | UCI Taiwan, 30,000 accounts, default in the following month | Drives only the educational synthetic demo |
+| **Research** | Cross-source transportability benchmark | 1,869,548 rows, six independent cohorts with different events and horizons | Governance evidence only; never drives account recommendations |
 
-For India-focused presentation, only source-disclosed currencies are converted
-to INR at documented fixed rates. FX localization does not make a historical
-population Indian or make cross-source amounts economically equivalent.
+This avoids pretending that heterogeneous public labels form one regulatory PD.
+The primary model still does **not** establish Indian-market, out-of-time,
+production, regulatory or fair-lending suitability.
 
-The live app can present the canonical INR portfolio in INR (default), USD or
-EUR via a display toggle; these are fixed presentation rates (reference date
-31 July 2026, 95.4 INR/USD, 110 INR/EUR) and never alter model scores, loss
-proxies or the batch schema, which stay INR-canonical.
+## Exact primary-model evidence
 
-## Data
+Model: `limitiq-primary-3.0.0-89f9a2530bde`
 
-### Verified deployed v1
+Champion: sigmoid-calibrated histogram gradient boosting
 
-V1 uses **Default of Credit Card Clients**, I-Cheng Yeh / UCI Machine Learning
-Repository: 30,000 Taiwan accounts, April–September 2005 behavior and a
-subsequent-month default target. DOI: https://doi.org/10.24432/C55S3H. Licence:
-CC BY 4.0. The source SHA-256 begins `30c6be3abd8d`.
+Split: 18,000 train / 6,000 validation / 6,000 untouched test
 
-Source TWD limits, bills and payments are converted before modelling to INR at a
-fixed ₹2.97 per TWD, derived from documented July 2026 USD reference rates. This
-is a deterministic presentation transform, not Indian borrower evidence.
+Active fields: delinquency count and utilization; protected attributes excluded
 
-### Deployed v2 source union (unchanged in the v2.1 application)
-
-V2 trains on six independent cohorts: Taiwan Credit, corrected South German
-Credit, Give Me Some Credit, cleaned FICO/HELOC, Lending Club accepted loans and
-Home Credit application data. Legacy Statlog German is reference-only because it
-represents the same 1,000-credit population as corrected South German.
-
-The training union contains 1,869,548 rows; Lending Club and Home Credit each
-contribute more than 200,000. Labels include next-month default, two-year serious
-delinquency, historical good/bad credit, status at extract and payment
-difficulty. They are not collapsed into a fictional common-horizon PD.
-
-Geography and currency are undisclosed for Give Me Some Credit and Home Credit.
-Home Credit monetary fields are not converted or presented as INR. Complete
-source, mirror, checksum and terms evidence is in [NOTICE.md](NOTICE.md) and the
-[data card](docs/DATA_CARD.md).
-
-## Model methodology and exact test evidence
-
-### Verified deployed v1
-
-Fixed stratified split: 18,000 train / 6,000 validation / 6,000 untouched test.
-An in-pipeline feature builder feeds sigmoid-calibrated regularized logistic
-regression and histogram gradient boosting. The champion is calibrated histogram
-gradient boosting. Untouched-test ROC-AUC is 0.781138, PR-AUC 0.567889, Brier
-0.133149 and log loss 0.426351 at threshold 0.173874. Model SHA-256:
-`284f9a7c8ca22ea2f8091dfea814796357f81014cfdbabecf62b7aaa0de14275`.
-
-### Deployed v2 benchmark (unchanged in the v2.1 application)
-
-The v2 champion is sigmoid-calibrated histogram gradient boosting, selected
-against a calibrated regularized-logistic baseline using source-macro validation
-evidence. Model version: `limitiq-global-2.0.0-37a14c45a811`; threshold:
-`0.16891891891891891`.
-
-| Metric | Source-macro test | Pooled row-weighted test |
+| Untouched-test metric | Result | Seeded 95% bootstrap interval |
 |---|---:|---:|
-| ROC-AUC | 0.684530 | 0.669891 |
-| PR-AUC | 0.402370 | 0.304965 |
-| Brier score | 0.138968 | 0.140629 |
-| Log loss | 0.433385 | 0.444856 |
-| Mean absolute calibration-bin gap | 0.026968 | See versioned evidence |
+| ROC-AUC | **0.757410** | 0.743319–0.773753 |
+| PR-AUC | **0.508729** | 0.480370–0.542755 |
+| Brier score | **0.141683** | 0.136133–0.146975 |
+| Log loss | **0.447444** | 0.433312–0.460640 |
 
-Macro evidence is primary. Pooled evidence is secondary because Lending Club
-supplies 1,371,166 rows. The seeded random split tests interpolation within each
-source; it does not establish unseen-country, future-vintage,
-leave-one-source-out or Indian-population generalization. Region is one-hot
-encoded, and region plus structural missingness may identify source and base rate.
+Threshold `0.163964` was frozen from validation data before the single test-set
+evaluation. The random within-source split is interpolation evidence, not a
+future-vintage study.
 
-### Additive diagnostic evidence
+The separate global research benchmark records source-macro ROC-AUC `0.684530`,
+PR-AUC `0.402370`, Brier `0.138968` and log loss `0.433385`. Pooled results are
+secondary because Lending Club dominates the row count and source outcomes are
+not equivalent.
 
-The Lending Club vintage-split robustness study fits the champion recipe on
-earlier issues and scores later issues. ROC-AUC is `0.6000` versus `0.6015` on
-the random within-source reference, while Brier score deteriorates from roughly
-`0.165` to `0.202`. Because the target is status at extract with unequal
-seasoning, this is not fixed-horizon out-of-time PD validation.
+## Simulated portfolio outcome
 
-The explicit-region ablation shows nearly identical pooled discrimination with
-and without region. It does not rule out source identification through structural
-missingness. Feature importance therefore shuffles values only within source
-cohorts, and fitted effect curves use deterministic samples only from cohorts
-that report each field. The monitoring page is a readiness baseline with
-illustrative investigation thresholds, not a live monitoring service.
+The v3 demo contains 1,200 deterministic **synthetic profiles** that match the
+Taiwan field-availability contract but use fixed simulated distributions. No
+public source row or personal identifier is exposed.
 
-## Simulated business results
+| Scenario result | Simulated value |
+|---|---:|
+| Current / proposed limits | ₹514.951M / ₹566.423M |
+| Current / proposed exposure proxy | ₹461.467M / ₹500.086M |
+| Current / proposed loss proxy | ₹53.140M / ₹55.904M |
+| Eligible increases | 270 profiles |
+| Manual review / freeze | 323 / 56 profiles |
+| Incremental contribution | **₹9.100M** |
+| Contribution / incremental exposure | **23.56%** |
 
-### Verified deployed v1
+These are deterministic scenario outputs under disclosed LGD, CCF, response,
+revenue and cost assumptions. They are not observed uplift, causal estimates,
+realized profit, IFRS 9 ECL or regulatory capital.
 
-Under documented assumptions, the 6,000-account scenario selects 1,904 +30%
-increases, 2,434 no-change actions, 546 manual reviews and 1,116 freezes.
-Proposed lines increase from ₹3.005016B to ₹3.255868B; simulated expected loss
-increases from ₹302.466M to ₹314.697M; simulated annual incremental contribution
-is ₹41.343M and simulated contribution / incremental EAD is 21.93%.
+## Product workflows
 
-### Deployed v2 synthetic demo
+- Executive exposure, loss, contribution, action and early-warning view
+- Searchable, sortable, filterable portfolio with safe CSV export
+- Account decision with synthetic history, policy checks and reason codes
+- Interactive policy/economics simulator with baseline deltas
+- Strict transient batch scoring: 5 MB / 5,000 rows, no retention
+- Two-track model governance, calibration, source stability and limitations
+- Printable credit-committee memo and downloadable evidence
+- `/health`, `/live`, `/ready` and aggregate-only `/ops` operational endpoints
+- INR-native simulation with presentation-only USD/EUR display conversion
 
-The deterministic 1,200-profile synthetic demonstration produces ₹567.613M
-current and ₹608.791M proposed credit limits, ₹500.023M current and ₹530.935M
-proposed exposure proxy, ₹75.984M current and ₹77.625M proposed expected-loss
-proxy, ₹6.412M simulated incremental contribution and 20.74% simulated
-contribution / incremental exposure. It routes 18 profiles to +10%, 18 to +20%,
-216 to +30%, 283 to no change, 619 to manual review and 46 to freeze automatic
-increases.
+## Decision logic
 
-All values in both sections are simulated scenario outputs—not source
-observations, causal forecasts, realized impact, IFRS 9 ECL or regulatory capital.
+For each profile, the optimizer evaluates the current line and +10%, +20%, +30%
+candidates, then maximizes simulated risk-adjusted contribution subject to:
+
+- maximum increase, account exposure and portfolio growth caps
+- expected-loss and profitability hurdles
+- delinquency and payment-history eligibility
+- overextension safeguards
+- manual-review and early-warning routing
+- application-level rollback via `AUTO_INCREASES_ENABLED=false`
+
+Expected loss proxy is `score × LGD × EAD`. Incremental contribution is simulated
+interchange + interest − incremental loss − funding − capital − servicing cost.
+No automatic punitive line decrease is recommended.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-  S[Gitignored public-source files] --> H[Deterministic harmonizers]
-  H --> M[Checksum-bound sklearn pipeline]
-  M --> E[Versioned model evidence]
-  M --> D[Synthetic 1,200-profile demo]
-  B[Browser] --> W[FastAPI + Jinja single process]
-  W --> M
-  W --> D
-  W --> O[Deterministic policy optimizer]
-  C[Transient CSV] --> V[Strict in-memory validation]
-  V --> M
-  M --> O
-  O --> X[Safe decision CSV]
+  U[UCI Taiwan<br>next-month target] --> P[Calibrated primary pipeline]
+  P --> D[1,200 synthetic profiles]
+  D --> O[Candidate-limit optimizer]
+  O --> W[FastAPI + Jinja application]
+  C[Transient CSV] --> V[Strict schema validation]
+  V --> P
+  G[Six-cohort research union] --> R[Transportability benchmark]
+  R --> Q[Governance evidence only]
+  Q --> W
+  M[Manifest + checksums + SBOM] --> W
 ```
 
 One Python process; no SPA, database service, feature store, LLM, paid API or
-runtime network dependency. The model checksum is verified before trusted
-joblib loading. Uploads are bounded CSV only and are never retained.
+runtime network dependency. Repository-built model bytes are checksum-verified
+before deserialization.
 
-## Setup
+## Reproduce locally
 
-Python 3.11 is the tested local, CI and Docker version. The package contract is
-Python `>=3.11,<3.14`.
+Python 3.11–3.13 is supported; CI and Docker use Python 3.11.
 
 ```bash
-py -3.11 -m venv .venv  # Windows; use python3.11 on Linux/macOS
-# Linux/macOS: source .venv/bin/activate
+python -m venv .venv
 # Windows PowerShell: .venv\Scripts\Activate.ps1
+# Linux/macOS: source .venv/bin/activate
 python -m pip install -r requirements-dev.txt
-```
-
-Start the application from the prepared artifacts:
-
-```bash
 python -m uvicorn limitiq.web:app --host 127.0.0.1 --port 8000
 ```
 
-Open http://127.0.0.1:8000. Health: http://127.0.0.1:8000/health.
-
-## Reproducible commands
+Prepared application artifacts are committed. Full raw datasets remain
+gitignored.
 
 ```bash
-# V1 official-source rebuild
-python -m limitiq.pipeline all
+# Inspect the source manifest and committed analytics/SBOM evidence
+python -m limitiq.sources manifest
+python -m limitiq.analytics --check
+python -m limitiq.sbom --check sbom/limitiq.cdx.json
 
-# Local v2 rebuild from already-downloaded, gitignored raw files
+# After obtaining the gitignored raw sources, verify every checksum
+python -m limitiq.sources verify
+
+# Rebuild coherent primary artifacts from the cached UCI source
+python -m limitiq.sources fetch-open
+python -m limitiq.primary
+
+# Exercise training code without raw data or release writes
+python -m limitiq.primary --smoke
+
+# Rebuild the research benchmark from existing gitignored sources
 python -m limitiq.multisource
-
-# External cross-dataset validation of the v1 modelling recipe
-python -m limitiq.external
-
-# V2 vintage, source-context, feature and monitoring diagnostics
 python -m limitiq.evidence
 
-# Unit and integration checks
-python -m pytest
-
-# Lint and formatting contract
-ruff check . && ruff format --check .
-
-# Production container
-docker build -t limitiq . && docker run --rm -p 8000:8000 limitiq
+# Quality gates
+python -m pytest --cov=limitiq --cov-report=term-missing
+ruff check .
+ruff format --check .
+bandit -q -r limitiq
+pip-audit -r requirements.txt
 ```
 
-Raw sources, environments and caches are intentionally gitignored. The source
-terms history and repository owner's 14 August 2026 resolution attestation are
-recorded in [`NOTICE.md`](NOTICE.md).
+```bash
+docker build -t limitiq .
+docker run --rm -p 8000:8000 limitiq
+```
 
-Set `AUTO_INCREASES_ENABLED=false` to activate the demonstrated rollback control:
-otherwise eligible automatic increases are routed to manual review and the
-control state is exposed by `/health`.
+## Engineering, security and operations evidence
 
-## Security and privacy
+- Pinned runtime and development dependencies
+- Deterministic source manifest with URLs, licence/terms, hashes and row counts
+- CycloneDX 1.6 direct-dependency [SBOM](sbom/limitiq.cdx.json)
+- Release [SHA-256 manifest](release/checksums-v3.0.0.sha256) covering the
+  primary model, metadata, schema, evidence, demo portfolio and SBOM
+- GitHub Actions for tests, coverage, Ruff, Bandit, dependency/secret scanning,
+  Docker build, Trivy image scan, health and concurrency smoke
+- Separate CodeQL workflow and Dependabot configuration
+- CSP, HSTS, frame denial, nosniff, permissions/referrer/opener headers
+- Formula-safe CSV export, allowlisted report paths and bounded validated uploads
+- Non-root one-worker container, kill switch, request IDs and server timing
+- Minimal SQLite [decision mart](analytics/README.md) that reconciles the primary
+  synthetic portfolio without adding a runtime database
 
-Strict upload schema/range/type/duplicate validation; 5 MB / 5,000-row caps;
-in-memory no-retention processing; formula-safe CSV exports; allowlisted sorts
-and report paths; Jinja autoescape; safe production errors; CSP, frame denial,
-nosniff, referrer/permissions/opener headers; non-root one-worker image; no
-debug, source secrets, personal data or uploaded deserialization.
+## Governance package
 
-## Documentation and reports
-
-- [Executive PDF](reports/executive_report.pdf) and [HTML](reports/executive_report.html)
-- [v2 model evidence](reports/global_model_report.html)
-- [v2 executive PDF](reports/global_executive_report.pdf) and [HTML](reports/global_executive_report.html)
-- [v2 policy sensitivity](reports/global_policy_simulation_report.html)
-- [v2 financial-impact analysis](reports/global_financial_impact_analysis.html)
+- [Recruiter brief](docs/RECRUITER_BRIEF.md)
+- [Independent validation-style review](docs/INDEPENDENT_VALIDATION.md)
+- [Validation issue ledger](docs/VALIDATION_ISSUES.md)
+- [Model and decision-component inventory](docs/MODEL_INVENTORY.md)
+- [Randomized pilot design](docs/EXPERIMENT_DESIGN.md)
+- [India readiness assessment](docs/INDIA_READINESS.md)
+- [Model card](docs/MODEL_CARD.md) and [data card](docs/DATA_CARD.md)
 - [Methodology](docs/METHODOLOGY.md), [PRD](docs/PRD.md), [architecture](docs/ARCHITECTURE.md)
-- [Data card](docs/DATA_CARD.md), [model card](docs/MODEL_CARD.md), [dictionary](docs/DATA_DICTIONARY.md)
-- [Assumptions](docs/ASSUMPTIONS.md), [case study](docs/CASE_STUDY.md), [five-minute walkthrough](docs/INTERVIEW_WALKTHROUGH.md)
-- [Career targeting guide](docs/CAREER_TARGETING.md) for India-based risk, analytics, model-governance and risk-technology roles
-- [Deployment runbook](docs/DEPLOYMENT.md), [dataset attribution and terms](NOTICE.md)
-- [Verified v1, v2.0 and v2.1 QA evidence](docs/QA_REPORT.md)
+- [Career targeting guide](docs/CAREER_TARGETING.md)
+- [Dataset attribution and terms record](NOTICE.md)
 
-## Limitations and roadmap
+The validation review is validation-**style**, not organizationally independent
+bank validation. Publication clearance for four research sources relies on the
+repository owner's dated attestation and is not an independent legal opinion.
 
-V1 is old and single-market. V2 adds scale and source diversity but combines
-different products, sampling frames, event definitions and horizons. Its random
-within-source split is not an out-of-time or unseen-market test; Lending Club
-dominates pooled metrics; region and missingness can reveal source. The repository
-owner attested that the earlier four-source terms issue was resolved, but the
-project has not independently verified that legal conclusion. Both versions lack verified production
-affordability, macro scenarios, observed line treatments, causal response and
-profit economics. Segment diagnostics cannot prove fair-lending compliance.
+## Known limitations and next steps
 
-Roadmap: obtain independent source-terms validation; add current, independently
-terms-cleared multi-market behavior;
-perform leave-one-source-out and out-of-time evaluation; assess source-balanced
-training; add verified affordability inputs and causal line experiments;
-independent model/legal validation; shadow mode, monitored pilot and rollback.
+- Primary source is Taiwan, 2005; India and temporal portability are unproven.
+- Primary evidence uses a random within-source split, not a mature future vintage.
+- Only utilization and delinquency count are active in the harmonized primary contract.
+- No dataset observes treatment response to a limit increase.
+- Fairness diagnostics cannot establish jurisdiction-specific legal compliance.
+- Monitoring thresholds are illustrative; no live outcome feed exists.
+- The multi-source benchmark has heterogeneous targets and weak source cohorts.
 
-SBA loan data and Polish Companies Bankruptcy are separate-validation research
-candidates. PAKDD 2009 and Freddie/Fannie data are not accepted into the public
-union because source/terms/access or product-fit requirements are not satisfied.
+The correct next step is representative local data, a future-vintage holdout,
+organizationally independent validation and a governed randomized pilot—not a
+larger decorative model.
 
-## Career positioning
+## Release history
 
-For J.P. Morgan, UBS, Morgan Stanley and State Street, lead with model
-governance, provenance, calibration, portfolio controls and production-shaped
-risk technology. Never imply that an employer endorsed, reviewed or uses
-LimitIQ. See the [career guide](docs/CAREER_TARGETING.md).
+- **v3.0.0 release candidate:** coherent primary model, research separation,
+  confidence intervals, validation package, committee memo, SQL/SBOM/ops gates.
+- **v2.1.0:** verified live application and multi-source research benchmark.
+- **v1.0.0:** archived Taiwan-only original pipeline.
 
-## Licence
-
-Code: [MIT](LICENSE). Dataset terms differ by source; attribution, the historical
-review findings and the owner's resolution attestation are recorded in
-[NOTICE.md](NOTICE.md). MIT does not
+Code is [MIT licensed](LICENSE). Dataset terms differ by source; MIT does not
 relicense third-party data or derived-artifact rights.

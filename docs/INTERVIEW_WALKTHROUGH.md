@@ -2,19 +2,19 @@
 
 ## 0:00–0:40 — Frame the decision and status
 
-State that v2 is the current multi-source adverse-credit-outcome benchmark and
-that its terms gate was cleared by a dated repository-owner attestation, not an
-independent legal opinion. Open Executive Overview and explain the governed
-increase/hold/refer/freeze decision. Point to the boundary: source facts
-observed, adverse-outcome probability modelled, economics simulated.
+State that v3 uses one UCI Taiwan following-month default target for the decision
+demo and keeps the 1.87M-row heterogeneous model as research only. Until final
+release, say the live site is verified v2.1 and v3 is the repository candidate.
+Open Executive Overview and explain increase/hold/refer/freeze plus the boundary:
+source facts observed, risk modelled, profiles and economics simulated.
 
-## 0:40–1:25 — Explain the multi-source evidence
+## 0:40–1:25 — Explain primary and research evidence
 
-Open Governance. Show 1,869,548 rows across six independent cohorts and explain
-why legacy Statlog German is reference-only. Lead with macro ROC-AUC 0.6845,
-PR-AUC 0.4024 and Brier 0.1390; then explain why pooled metrics are secondary and
-Lending Club dominated. State that labels/horizons differ, the split is random
-within source, and missingness plus one-hot region may identify source.
+Open Governance. Lead with primary ROC-AUC 0.7574 (95% CI 0.7433–0.7738),
+PR-AUC 0.5087 and Brier 0.1417 on 6,000 untouched rows. Then show the
+1,869,548-row research benchmark and explain why its labels/horizons differ,
+macro metrics are preferred, pooled metrics are Lending-Club-dominated and the
+benchmark never drives decisions.
 
 ## 1:25–2:10 — Show the portfolio and account
 

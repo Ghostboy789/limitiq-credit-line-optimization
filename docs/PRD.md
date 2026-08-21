@@ -2,22 +2,22 @@
 
 ## Version status
 
-V1 is the verified Taiwan-model archive. V2 is the current multi-source
-adverse-credit-outcome benchmark over 1,869,548 rows; it is not a common-horizon
-regulatory PD. The repository owner attested on 14 August 2026 that the previously
-documented source-terms issue was resolved. That attestation is not a legal opinion;
-the dated history remains in `NOTICE.md`.
+V3 is the source-coherent release candidate: a UCI Taiwan next-month default
+model drives the educational synthetic decision portfolio. The v2 1,869,548-row
+multi-source model remains transportability research only because it is not a
+common-horizon regulatory PD. The public deployment remains verified v2.1 until
+v3 release gates pass. The source-terms attestation in `NOTICE.md` is not a legal
+opinion.
 
 ## Product
 
 LimitIQ is a dynamic credit-line management and exposure-optimization platform
-for an existing card portfolio. It translates calibrated PD, behavior, simulated
+for an existing card portfolio. It translates a calibrated next-month score, behavior, simulated
 economics and policy into explainable +10%, +20%, +30%, no-change, manual-review
 or freeze recommendations.
 
-For v2 UI compatibility, the legacy label `PD` means calibrated probability of
-the source-specific adverse outcome. Product copy and governance materials must
-explain that meaning and must not imply common event/horizon comparability.
+Internal APIs retain the field name `pd`, but v3 product copy calls it a
+next-month default score. It is not a production, regulatory or Indian-market PD.
 
 ## Users and jobs
 
@@ -38,8 +38,8 @@ explain that meaning and must not imply common event/horizon comparability.
    aggregate exposure, loss, return, eligibility and action distribution.
 5. Batch flow validates strict CSV schema/size/ranges, scores transiently and
    returns a safe decision CSV; no upload retention.
-6. Governance compares candidates and shows untouched-test metrics, calibration,
-   confusion, feature diagnostics, bands, segments, monitoring and rollback.
+6. Governance leads with primary candidate/test evidence and separately shows
+   multi-source research calibration, diagnostics, monitoring and rollback.
 7. Reports expose executive HTML/PDF, quality/EDA/model/policy/financial reports,
    product documentation and recruiter materials.
 

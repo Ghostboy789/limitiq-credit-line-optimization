@@ -223,6 +223,10 @@ document.querySelectorAll("[data-copy]").forEach((button) => {
   });
 });
 
+document.querySelectorAll("[data-print]").forEach((button) => {
+  button.addEventListener("click", () => window.print());
+});
+
 if (!prefersReducedMotion && "IntersectionObserver" in window) {
   const observer = new IntersectionObserver(
     (entries) => entries.forEach((entry) => entry.isIntersecting && entry.target.classList.add("is-visible")),
