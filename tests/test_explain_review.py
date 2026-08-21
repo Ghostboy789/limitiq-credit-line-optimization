@@ -1,20 +1,19 @@
 from __future__ import annotations
 
 import joblib
+import pandas as pd
 import pytest
 
-from limitiq.behavioral import CANDIDATE_MODEL_PATH
-from limitiq.config import RAW_DIR
+from limitiq.behavioral import BEHAVIORAL_DEMO_PATH, CANDIDATE_MODEL_PATH
 from limitiq.explain import explain_account
 from limitiq.features import TAIWAN_MODEL_INPUT_COLUMNS
-from limitiq.pipeline import load_source
 from limitiq.review import ReviewLedger
 
 
 def test_behavioral_explanation_has_distinct_model_sensitivities() -> None:
     model = joblib.load(CANDIDATE_MODEL_PATH)
-    source, _ = load_source(RAW_DIR / "default_of_credit_card_clients.xls")
-    result = explain_account(model, source[TAIWAN_MODEL_INPUT_COLUMNS].iloc[[0]])
+    source = pd.read_csv(BEHAVIORAL_DEMO_PATH, usecols=TAIWAN_MODEL_INPUT_COLUMNS, nrows=1)
+    result = explain_account(model, source)
     assert result["classification"].startswith("Local model sensitivity")
     assert len(result["sensitivities"]) == 4
     assert all(0 <= row["neutralized_score"] <= 1 for row in result["sensitivities"])
