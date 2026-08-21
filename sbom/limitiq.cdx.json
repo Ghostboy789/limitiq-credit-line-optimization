@@ -2,7 +2,7 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
-  "serialNumber": "urn:uuid:976fa0ae-91b0-557b-bc08-e998783df8f9",
+  "serialNumber": "urn:uuid:c1b581d7-81b6-5669-a6c9-3de2668961cf",
   "version": 1,
   "metadata": {
     "component": {
@@ -85,10 +85,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "pkg:pypi/scipy@1.18.0",
+      "bom-ref": "pkg:pypi/scipy@1.17.1",
       "name": "scipy",
-      "version": "1.18.0",
-      "purl": "pkg:pypi/scipy@1.18.0"
+      "version": "1.17.1",
+      "purl": "pkg:pypi/scipy@1.17.1"
     },
     {
       "type": "library",
