@@ -10,13 +10,14 @@ import secrets
 import time
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote_plus
 
 import joblib
 import numpy as np
 import pandas as pd
 from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from markdown_it import MarkdownIt
@@ -39,21 +40,42 @@ from limitiq.config import (
 )
 from limitiq.features import (
     BATCH_COLUMNS,
+    BILL_COLUMNS,
     EXPOSURE_COLUMNS,
     MODEL_INPUT_COLUMNS,
+    PAY_COLUMNS,
+    TAIWAN_MODEL_INPUT_COLUMNS,
     SchemaError,
-    validate_input,
+    validate_behavioral_input,
 )
+from limitiq.india import validate_india_contract
 from limitiq.optimizer import Decision, recommend_portfolio, summarize_portfolio
+from limitiq.review import DECISIONS, REASONS, ReviewLedger
 
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(5 * 1024 * 1024)))
 MAX_UPLOAD_REQUEST_BYTES = MAX_UPLOAD_BYTES + 64 * 1024
 MAX_UPLOAD_ROWS = 5_000
 ACCOUNT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{2,39}$")
-MONETARY_KEYS = ("servicing_cost", "max_account_exposure", "profitability_hurdle")
+MONETARY_KEYS = (
+    "servicing_cost",
+    "max_account_exposure",
+    "portfolio_capital_budget",
+    "profitability_hurdle",
+)
 PRIMARY_REPORT_FILES = {
-    "primary-model-evidence": "primary_model.json",
-    "primary-policy-simulation-evidence": "primary_policy_simulation.json",
+    "behavioral-primary-evidence": "behavioral_model.json",
+    "behavioral-policy-simulation": "behavioral_policy_simulation.json",
+    "behavioral-executive-html": "executive_report.html",
+    "behavioral-executive-pdf": "executive_report.pdf",
+}
+V4_SUPPORTING_REPORT_FILES = {
+    "temporal-validation-evidence": "temporal_validation.json",
+    "monitoring-replay-evidence": "monitoring_replay.json",
+    "experiment-replay-evidence": "experiment_replay.json",
+}
+V3_ARCHIVE_REPORT_FILES = {
+    "v3-primary-model-evidence": "primary_model.json",
+    "v3-primary-policy-simulation": "primary_policy_simulation.json",
 }
 RESEARCH_REPORT_FILES = {
     "global-data-quality": "global_data_quality_report.html",
@@ -69,8 +91,6 @@ RESEARCH_REPORT_FILES = {
     "global-monitoring-baseline": "global_monitoring_report.html",
 }
 LEGACY_REPORT_FILES = {
-    "executive-report-html": "executive_report.html",
-    "executive-report-pdf": "executive_report.pdf",
     "data-quality": "data_quality_report.html",
     "eda": "eda_report.html",
     "model-performance": "model_performance_report.html",
@@ -78,7 +98,13 @@ LEGACY_REPORT_FILES = {
     "financial-impact": "financial_impact_analysis.html",
     "external-validation": "external_validation_report.html",
 }
-REPORT_FILES = {**PRIMARY_REPORT_FILES, **RESEARCH_REPORT_FILES, **LEGACY_REPORT_FILES}
+REPORT_FILES = {
+    **PRIMARY_REPORT_FILES,
+    **V4_SUPPORTING_REPORT_FILES,
+    **V3_ARCHIVE_REPORT_FILES,
+    **RESEARCH_REPORT_FILES,
+    **LEGACY_REPORT_FILES,
+}
 DOCUMENT_FILES = {
     "methodology": "METHODOLOGY.md",
     "data-card": "DATA_CARD.md",
@@ -95,10 +121,11 @@ DOCUMENT_FILES = {
     "model-inventory": "MODEL_INVENTORY.md",
     "experiment-design": "EXPERIMENT_DESIGN.md",
     "india-readiness": "INDIA_READINESS.md",
+    "v4-workbench": "V4_WORKBENCH.md",
     "recruiter-brief": "RECRUITER_BRIEF.md",
 }
 MARKDOWN = MarkdownIt("commonmark", {"html": False, "linkify": False}).enable("table")
-RELEASE_MANIFEST_PATH = ROOT / "release" / "checksums-v3.0.0.sha256"
+RELEASE_MANIFEST_PATH = ROOT / "release" / "checksums-v4.0.0.sha256"
 
 
 class RequestBodyLimitMiddleware:
@@ -162,7 +189,7 @@ def _sha256(path: Path) -> str:
 
 def _verify_release_manifest(required_paths: list[Path]) -> None:
     if not RELEASE_MANIFEST_PATH.is_file():
-        raise RuntimeError("V3 release checksum manifest is missing")
+        raise RuntimeError("V4 release checksum manifest is missing")
     entries: dict[str, str] = {}
     for line in RELEASE_MANIFEST_PATH.read_text(encoding="utf-8").splitlines():
         if not line.strip():
@@ -170,7 +197,7 @@ def _verify_release_manifest(required_paths: list[Path]) -> None:
         checksum, relative = line.split(maxsplit=1)
         normalized = Path(relative).as_posix()
         if normalized in entries or len(checksum) != 64:
-            raise RuntimeError("V3 release checksum manifest is invalid")
+            raise RuntimeError("V4 release checksum manifest is invalid")
         entries[normalized] = checksum
     for path in required_paths:
         relative = path.relative_to(ROOT).as_posix()
@@ -192,13 +219,13 @@ def _load_artifacts() -> tuple[
     dict[str, Any],
     dict[str, Any],
 ]:
-    model_path = MODEL_DIR / "primary_champion.joblib"
-    metadata_path = MODEL_DIR / "primary_metadata.json"
-    report_path = REPORT_DIR / "primary_model.json"
-    portfolio_path = PROCESSED_DIR / "primary_demo_portfolio.csv"
-    simulation_path = REPORT_DIR / "primary_policy_simulation.json"
+    model_path = MODEL_DIR / "behavioral_candidate.joblib"
+    metadata_path = MODEL_DIR / "behavioral_metadata.json"
+    report_path = REPORT_DIR / "behavioral_model.json"
+    portfolio_path = PROCESSED_DIR / "behavioral_demo_portfolio.csv"
+    simulation_path = REPORT_DIR / "behavioral_policy_simulation.json"
     research_path = MODEL_DIR / "global_metadata.json"
-    schema_path = MODEL_DIR / "primary_feature_schema.json"
+    schema_path = MODEL_DIR / "behavioral_feature_schema.json"
     research_feature_path = REPORT_DIR / "global_feature_evidence.json"
     for path in (
         model_path,
@@ -212,7 +239,7 @@ def _load_artifacts() -> tuple[
     ):
         if not path.exists():
             raise RuntimeError(
-                f"Required artifact missing: {path.name}; run python -m limitiq.primary"
+                f"Required artifact missing: {path.name}; run python -m limitiq.behavioral"
             )
     _verify_release_manifest(
         [
@@ -228,10 +255,10 @@ def _load_artifacts() -> tuple[
     )
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     if _sha256(model_path) != metadata["model_checksum"]:
-        raise RuntimeError("Primary model checksum does not match trusted metadata")
+        raise RuntimeError("Behavioral model checksum does not match trusted metadata")
     report = json.loads(report_path.read_text(encoding="utf-8"))
     if _text_sha256(report_path) != metadata["artifact_checksums"][report_path.name]:
-        raise RuntimeError("Primary model report checksum does not match trusted metadata")
+        raise RuntimeError("Behavioral model report checksum does not match trusted metadata")
     model = joblib.load(model_path)  # noqa: S301 — repository-built artifact, checksum verified above.
     simulation = json.loads(simulation_path.read_text(encoding="utf-8"))
     expected_provenance = {
@@ -247,7 +274,8 @@ def _load_artifacts() -> tuple[
     portfolio = pd.read_csv(portfolio_path)
     if len(portfolio) != simulation.get("demo_rows"):
         raise RuntimeError("Synthetic demo row count does not match trusted simulation metadata")
-    portfolio["source_name"] = metadata["source"]["dataset"]
+    portfolio["missing_model_fields"] = portfolio["missing_model_fields"].fillna("")
+    portfolio["source_name"] = report["source"]["dataset"]
     portfolio["display_utilization"] = portfolio["utilization"].fillna(
         portfolio["current_balance_inr"] / portfolio["current_limit_inr"]
     )
@@ -418,19 +446,21 @@ def _safe_csv(frame: pd.DataFrame) -> str:
     return safe.to_csv(index=False, quoting=csv.QUOTE_MINIMAL)
 
 
-def _validate_primary_scope(frame: pd.DataFrame) -> None:
-    if not frame["region"].eq("taiwan").all():
-        raise SchemaError(
-            "The primary decision candidate accepts region=taiwan only; India and other "
-            "geographies require separate local development and validation"
-        )
-
-
 def _primary_model_frame(frame: pd.DataFrame) -> pd.DataFrame:
-    """Map the explicit external Taiwan contract to the model's fixed Asia context."""
-    model_frame = frame[MODEL_INPUT_COLUMNS].copy()
-    model_frame["region"] = "asia"
-    return model_frame
+    """Return the exact six-month behavioral fields used during training."""
+    return frame[TAIWAN_MODEL_INPUT_COLUMNS]
+
+
+def _optimizer_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """Derive the small policy contract from validated behavioral inputs."""
+    result = pd.DataFrame(index=frame.index, columns=MODEL_INPUT_COLUMNS)
+    result["delinquency_count"] = (frame[PAY_COLUMNS] > 0).sum(axis=1).astype(float)
+    result["utilization"] = (
+        frame[BILL_COLUMNS[0]].clip(lower=0) / frame["LIMIT_BAL"].clip(lower=1)
+    ).clip(upper=5)
+    result["region"] = "taiwan"
+    result[EXPOSURE_COLUMNS] = frame[EXPOSURE_COLUMNS]
+    return result[[*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]]
 
 
 def _decision_frame(decisions: list[Decision]) -> pd.DataFrame:
@@ -497,37 +527,21 @@ def _markdownish(text: str) -> str:
 
 
 def _synthetic_history(row: dict[str, Any]) -> list[dict[str, Any]]:
-    """Deterministic display-only history; never supplied to the model or optimizer."""
-    seed = int.from_bytes(hashlib.sha256(row["account_id"].encode()).digest()[:8], "big")
-    rng = np.random.default_rng(seed)
+    """Expose the deterministic synthetic months supplied to behavioral inference."""
     limit = float(row["current_limit_inr"])
-    current_balance = float(row["current_balance_inr"])
-    balances = [
-        min(limit * 1.5, max(0.0, current_balance * (0.78 + index * 0.045 + rng.normal(0, 0.04))))
-        for index in range(5)
-    ] + [current_balance]
-    raw_delinquency = row.get("delinquency_count")
-    delinquency: list[int | None] = [None] * 6
-    if pd.notna(raw_delinquency):
-        delinquency = [0] * 6
-        for index in rng.choice(6, size=min(int(raw_delinquency), 12), replace=True):
-            delinquency[int(index)] += 1
-    payments = [
-        balance * rng.uniform(0.03, 0.14)
-        if delinquency[index]
-        else balance * rng.uniform(0.12, 0.46)
-        for index, balance in enumerate(balances)
-    ]
-    return [
-        {
-            "period": f"M-{5 - index}" if index < 5 else "Current",
-            "bill": balance,
-            "payment": payments[index],
-            "utilization": balance / limit if limit else 0.0,
-            "delinquency": delinquency[index],
-        }
-        for index, balance in enumerate(balances)
-    ]
+    rows = []
+    for display_index, source_index in enumerate(reversed(range(6))):
+        bill = float(row[BILL_COLUMNS[source_index]])
+        rows.append(
+            {
+                "period": f"M-{5 - display_index}" if display_index < 5 else "Current",
+                "bill": bill,
+                "payment": float(row[f"PAY_AMT{source_index + 1}"]),
+                "utilization": bill / limit if limit else 0.0,
+                "delinquency": int(row[PAY_COLUMNS[source_index]] > 0),
+            }
+        )
+    return rows
 
 
 PALETTE_RESULTS = 8
@@ -579,6 +593,7 @@ PALETTE_PAGES = [
 
 def create_app() -> FastAPI:
     model, metadata, primary_report, portfolio, simulation, research_metadata = _load_artifacts()
+    review_ledger = ReviewLedger()
     app = FastAPI(
         title="LimitIQ",
         version=__version__,
@@ -617,8 +632,8 @@ def create_app() -> FastAPI:
             "dataset_version": metadata["dataset_version"],
             "benchmark_classification": metadata["classification"],
             "target_note": (
-                f"{metadata['source']['target_definition']} · "
-                f"{metadata['source']['prediction_horizon']} horizon"
+                f"{primary_report['source']['target_definition']} · "
+                f"{primary_report['source']['prediction_horizon']} horizon"
             ),
             "ccy": _resolve_ccy(
                 request.query_params.get("ccy") or request.cookies.get("limitiq_ccy")
@@ -711,7 +726,7 @@ def create_app() -> FastAPI:
             "version": __version__,
             "model_version": metadata["model_version"],
             "dataset_version": metadata["dataset_version"],
-            "model_role": "source-coherent-primary-decision-candidate",
+            "model_role": "source-coherent-behavioral-primary",
             "research_benchmark_version": research_metadata["model_version"],
             "automatic_increases_enabled": AUTO_INCREASES_ENABLED,
             "deployment_commit": os.getenv("RENDER_GIT_COMMIT", "not-provided"),
@@ -1100,8 +1115,7 @@ def create_app() -> FastAPI:
         if extra:
             raise HTTPException(422, f"Unexpected fields: {', '.join(extra)}")
         try:
-            clean = validate_input(pd.DataFrame([payload]), require_account_id=True)
-            _validate_primary_scope(clean)
+            clean = validate_behavioral_input(pd.DataFrame([payload]), require_account_id=True)
         except SchemaError as exc:
             raise HTTPException(422, str(exc)) from exc
         account_id = clean.loc[0, "ACCOUNT_ID"]
@@ -1111,7 +1125,7 @@ def create_app() -> FastAPI:
             )
         probability = model.predict_proba(_primary_model_frame(clean))[:, 1]
         decision = recommend_portfolio(
-            clean[[*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]],
+            _optimizer_frame(clean),
             probability,
             [account_id],
             automatic_increases_enabled=AUTO_INCREASES_ENABLED,
@@ -1153,8 +1167,7 @@ def create_app() -> FastAPI:
         if extra:
             raise HTTPException(422, f"Unexpected columns: {', '.join(extra)}")
         try:
-            clean = validate_input(frame, require_account_id=True)
-            _validate_primary_scope(clean)
+            clean = validate_behavioral_input(frame, require_account_id=True)
         except SchemaError as exc:
             raise HTTPException(422, str(exc)) from exc
         invalid_ids = [
@@ -1166,7 +1179,7 @@ def create_app() -> FastAPI:
             )
         probability = model.predict_proba(_primary_model_frame(clean))[:, 1]
         decisions = recommend_portfolio(
-            clean[[*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]],
+            _optimizer_frame(clean),
             probability,
             clean["ACCOUNT_ID"].tolist(),
             automatic_increases_enabled=AUTO_INCREASES_ENABLED,
@@ -1184,7 +1197,6 @@ def create_app() -> FastAPI:
     @app.get("/sample-input.csv")
     def sample_input() -> Response:
         sample = portfolio.head(5).rename(columns={"account_id": "ACCOUNT_ID"})[BATCH_COLUMNS]
-        sample["region"] = "taiwan"
         return Response(
             _safe_csv(sample),
             media_type="text/csv",
@@ -1279,10 +1291,91 @@ def create_app() -> FastAPI:
                 request,
                 title="Reports & methodology",
                 primary_reports=PRIMARY_REPORT_FILES,
+                supporting_reports=V4_SUPPORTING_REPORT_FILES,
+                v3_reports=V3_ARCHIVE_REPORT_FILES,
                 research_reports=RESEARCH_REPORT_FILES,
                 legacy_reports=LEGACY_REPORT_FILES,
                 documents=DOCUMENT_FILES,
             ),
+        )
+
+    @app.get("/v4-lab", response_class=HTMLResponse)
+    def v4_lab(request: Request, message: str = Query("", max_length=120)) -> HTMLResponse:
+        """Expose the executable decision-science and governance workbench."""
+        from limitiq.behavioral import (
+            CANDIDATE_METADATA_PATH,
+            CANDIDATE_MODEL_PATH,
+            synthetic_behavioral_account,
+        )
+        from limitiq.explain import explain_account
+
+        evidence = {}
+        for name, filename in V4_SUPPORTING_REPORT_FILES.items():
+            path = REPORT_DIR / filename
+            if path.exists():
+                evidence[name] = json.loads(path.read_text(encoding="utf-8"))
+        explanation = None
+        if CANDIDATE_MODEL_PATH.exists() and CANDIDATE_METADATA_PATH.exists():
+            candidate_metadata = json.loads(CANDIDATE_METADATA_PATH.read_text(encoding="utf-8"))
+            if _sha256(CANDIDATE_MODEL_PATH) == candidate_metadata["model_checksum"]:
+                candidate_model = joblib.load(CANDIDATE_MODEL_PATH)  # noqa: S301
+                explanation = explain_account(
+                    candidate_model, synthetic_behavioral_account("LIQ-000001")
+                )
+        return templates.TemplateResponse(
+            request,
+            "v4_lab.html",
+            context(
+                request,
+                title="V4 decision-science lab",
+                behavioral=primary_report,
+                temporal=evidence.get("temporal-validation-evidence"),
+                monitoring_replay=evidence.get("monitoring-replay-evidence"),
+                experiment_replay=evidence.get("experiment-replay-evidence"),
+                explanation=explanation,
+                review_events=review_ledger.events(),
+                review_decisions=sorted(DECISIONS),
+                review_reasons=sorted(REASONS),
+                message=message,
+            ),
+        )
+
+    @app.post("/v4-lab/reviews")
+    async def v4_review(request: Request) -> RedirectResponse:
+        form = await request.form()
+        try:
+            if form.get("operation") == "approve":
+                review_ledger.approve(str(form.get("review_id", "")), str(form.get("actor", "")))
+                message = "Checker approval recorded"
+            else:
+                review_ledger.submit(
+                    str(form.get("account_id", "")),
+                    str(form.get("actor", "")),
+                    str(form.get("decision", "")),
+                    str(form.get("reason", "")),
+                )
+                message = "Maker submission recorded"
+        except ValueError as exc:
+            message = f"Review rejected: {exc}"
+        return RedirectResponse(f"/v4-lab?message={quote_plus(message)}", status_code=303)
+
+    @app.post("/api/india-readiness")
+    def india_readiness(payload: dict[str, Any]) -> JSONResponse:
+        try:
+            result = validate_india_contract(payload)
+        except (TypeError, ValueError) as exc:
+            raise HTTPException(422, str(exc)) from exc
+        return JSONResponse(result, headers={"Cache-Control": "no-store"})
+
+    @app.get("/downloads/india-data-contract.json")
+    def india_contract_download() -> Response:
+        path = DOCS_DIR / "INDIA_DATA_CONTRACT.json"
+        return Response(
+            path.read_text(encoding="utf-8"),
+            media_type="application/schema+json",
+            headers={
+                "Content-Disposition": 'attachment; filename="limitiq-india-data-contract.json"'
+            },
         )
 
     @app.get("/downloads/reports/{slug}")

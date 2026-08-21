@@ -17,11 +17,12 @@ punitive decrease.
 
 ## Model development
 
-V3 uses UCI Taiwan's 30,000 accounts and explicit following-month default target
-for the decision candidate. Calibrated logistic regression is the baseline and
-calibrated histogram gradient boosting the champion. On 6,000 untouched test
-rows, the champion records ROC-AUC 0.7574 (95% bootstrap CI 0.7433–0.7738),
-PR-AUC 0.5087 and Brier 0.1417.
+V4 uses UCI Taiwan's 30,000 accounts, explicit following-month default target
+and six months of repayment, billing and payment behavior. Calibrated logistic
+regression is the baseline and calibrated histogram gradient boosting the
+champion. On 6,000 untouched test rows, it records ROC-AUC 0.7811 (95%
+bootstrap CI 0.7674–0.7961), PR-AUC 0.5679 and Brier 0.1331. On those same
+accounts it improves ROC by 0.0237 and Brier by 0.0085 versus v3.
 
 The 1,869,548-row, six-cohort v2 model is retained only as transportability
 research because its source labels have different events and horizons. Random
@@ -42,12 +43,12 @@ not represent that attestation as an independent legal opinion.
 
 ## Synthetic business scenario
 
-The v3 demo uses 1,200 deterministic Taiwan-contract synthetic profiles and INR
-exposures. Its base scenario recommends 2 +20% and 268 +30% increases, 551
-no-change actions, 323 manual reviews and 56 automatic-increase freezes. Credit
-limits move from ₹514.951M to ₹566.423M and exposure proxy from ₹461.467M to
-₹500.086M; loss proxy moves from ₹53.140M to ₹55.904M. Simulated incremental
-contribution is ₹9.100M at 23.56% contribution / incremental exposure.
+The v4 demo uses 1,200 deterministic Taiwan-contract synthetic histories and
+INR exposures. Its base scenario recommends 288 +30% increases, 115 no-change
+actions, 455 manual reviews and 342 automatic-increase freezes. Credit limits
+move from ₹478.947M to ₹513.032M and exposure proxy from ₹401.899M to
+₹427.463M; loss proxy moves from ₹48.712M to ₹50.340M. Simulated incremental
+contribution is ₹2.980M at 11.66% contribution / incremental exposure.
 
 No source observes a line-increase treatment. These values are synthetic,
 simulated, non-causal and not realized impact, IFRS 9 ECL or regulatory capital.
@@ -73,10 +74,10 @@ work as restricted research is more credible than an inflated “global PD” cl
   primary model, a separate 1.87M-row research benchmark, checksum-bound
   provenance and governed increase/hold/refer/freeze actions.
 - Selected a calibrated histogram-gradient-boosting champion against logistic
-  regression; achieved 0.757 ROC-AUC (95% CI 0.743–0.774), 0.509 PR-AUC and
-  0.142 Brier on 6,000 untouched test rows.
+  regression; achieved 0.781 ROC-AUC (95% CI 0.767–0.796), 0.568 PR-AUC and
+  0.133 Brier on 6,000 untouched test rows.
 - Designed deterministic INR exposure and contribution simulation; a 1,200-
-  profile scenario produced ₹9.10M simulated—not causal or realized—incremental
+  profile scenario produced ₹2.98M simulated—not causal or realized—incremental
   contribution with explicit terms, model-risk and human-review controls.
 
 See the [career targeting guide](CAREER_TARGETING.md) for J.P. Morgan, UBS,

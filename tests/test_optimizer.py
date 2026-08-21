@@ -141,6 +141,19 @@ def test_assumption_validation() -> None:
         PolicyAssumptions(max_account_exposure=0).validate()
 
 
+def test_global_optimizer_respects_loss_cap_and_is_not_greedy(healthy_row: pd.Series) -> None:
+    frame = pd.DataFrame([healthy_row, healthy_row], columns=DECISION_COLUMNS)
+    assumptions = PolicyAssumptions(
+        portfolio_growth_cap=0.30,
+        portfolio_loss_growth_cap=0.02,
+        portfolio_capital_budget=1_000_000,
+    )
+    decisions = recommend_portfolio(frame, np.array([0.04, 0.08]), ["LOW", "HIGH"], assumptions)
+    summary = summarize_portfolio(decisions)
+    assert summary["proposed_expected_loss"] <= summary["current_expected_loss"] * 1.02 + 1e-6
+    assert any("Portfolio" in reason for item in decisions for reason in item.reason_codes)
+
+
 def test_governance_switch_disables_automatic_increases(healthy_row: pd.Series) -> None:
     decision = recommend_account(
         healthy_row,

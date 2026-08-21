@@ -17,19 +17,19 @@ is recommended.
 - **Synthetic:** 1,200 demonstration profiles, limit/balance fields, response,
   EAD, LGD, revenue, cost, expected-loss proxy, contribution and action.
 
-The v3 decision model has one event and one-month horizon. The v2 research labels
+The v4 behavioral decision model has one event and one-month horizon. The v2 research labels
 have different events and horizons and do not form a common-horizon regulatory
 PD. Synthetic values are transparent scenario mechanics, not causal estimates,
 forecasts or realized outcomes.
 
 ## Primary source selection and provenance
 
-The application candidate uses UCI Default of Credit Card Clients: 30,000
+The application primary uses UCI Default of Credit Card Clients: 30,000
 Taiwan accounts with April–September 2005 behavior and following-month default,
 CC BY 4.0. The source is checksum-bound and monetary fields are deterministically
-converted from TWD to INR for scenario presentation. Only delinquency count and
-current utilization have semantically direct harmonized mappings; other contract
-fields remain explicitly missing.
+converted from TWD to INR for scenario presentation. V4 uses 17 engineered
+features from the six-month repayment-status, bill and payment history. Customer
+ID and demographic attributes remain excluded from inference.
 
 ## Research source selection and provenance
 
@@ -72,10 +72,21 @@ the challenger. Selection minimizes validation Brier among candidates within
 defaults weighted five times false positives. Champion and threshold are frozen
 before the single test read.
 
-The primary champion is `limitiq-primary-3.0.0-89f9a2530bde`, threshold
-0.1639639640. Test ROC-AUC is 0.757410 (95% bootstrap CI 0.743319–0.773753),
-PR-AUC 0.508729, Brier 0.141683 and log loss 0.447444. The split does not
+The primary champion is `limitiq-behavioral-4.0.0-21234ab33f78`, threshold
+0.1738738739. Test ROC-AUC is 0.781138 (95% bootstrap CI 0.767398–0.796055),
+PR-AUC 0.567889, Brier 0.133149 and log loss 0.426351. Against the frozen v3
+model on identical test rows, paired intervals show material improvement in
+all four metrics. The split does not
 establish future-vintage or geographic portability.
+
+## Separate temporal study
+
+A US Lending Club research track uses only application-time features and
+terminal 36-month loans. Training vintages end in 2013, 2014 is calibration and
+2015 is an untouched test. The deterministic 249,999-row sample records test
+ROC-AUC 0.647084, PR-AUC 0.229972, Brier 0.122924 and log loss 0.404746.
+This is installment-loan temporal evidence with unavailable within-term event
+timing; it never feeds card decisions or claims India portability.
 
 ## Research split, model and selection
 
@@ -125,10 +136,10 @@ elasticity and current utilization, then annualized. Interest uses simulated
 revolving-rate and APR assumptions. Funding and capital costs apply to
 incremental EAD. All assumptions are visible, editable and deterministic.
 
-The v3 1,200-profile base scenario produces ₹514.951M current and ₹566.423M
-proposed credit limits, ₹461.467M current and ₹500.086M proposed exposure proxy,
-₹53.140M current and ₹55.904M proposed expected-loss proxy, ₹9.100M simulated
-incremental contribution and 23.56% contribution / incremental exposure. These
+The v4 1,200-profile base scenario produces ₹478.947M current and ₹513.032M
+proposed credit limits, ₹401.899M current and ₹427.463M proposed exposure proxy,
+₹48.712M current and ₹50.340M proposed expected-loss proxy, ₹2.980M simulated
+incremental contribution and 11.66% contribution / incremental exposure. These
 are not causal forecasts or production impact.
 
 ## Policy order
@@ -143,8 +154,10 @@ are not causal forecasts or production impact.
 5. Reject candidates below the profitability hurdle.
 6. Select maximum eligible simulated contribution; ties prefer the smaller
    increase.
-7. Enforce the portfolio growth cap by reverting the lowest-contribution
-   increases first.
+7. Solve one candidate per account jointly with a mixed-integer program under
+   portfolio growth, loss-growth, capital-budget and higher-risk concentration
+   caps. If the solver cannot return a feasible allocation, fail closed rather
+   than silently weakening a constraint.
 
 ## Governance interpretation
 

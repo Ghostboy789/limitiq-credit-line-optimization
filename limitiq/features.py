@@ -24,7 +24,9 @@ MODEL_INPUT_COLUMNS = [
     "region",
 ]
 EXPOSURE_COLUMNS = ["current_limit_inr", "current_balance_inr"]
-BATCH_COLUMNS = ["ACCOUNT_ID", *MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]
+HARMONIZED_BATCH_COLUMNS = ["ACCOUNT_ID", *MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]
+BEHAVIORAL_BATCH_COLUMNS = ["ACCOUNT_ID", *TAIWAN_MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]
+BATCH_COLUMNS = BEHAVIORAL_BATCH_COLUMNS
 REGION_CATEGORIES = {"asia", "europe", "north_america", "taiwan", "undisclosed"}
 FEATURE_NAMES = [
     "limit_bal",
@@ -57,7 +59,11 @@ def _missing(columns: Iterable[str], frame: pd.DataFrame) -> list[str]:
 
 def validate_input(frame: pd.DataFrame, *, require_account_id: bool = False) -> pd.DataFrame:
     """Validate the harmonized model and simulated-exposure application contract."""
-    required = BATCH_COLUMNS if require_account_id else [*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]
+    required = (
+        HARMONIZED_BATCH_COLUMNS
+        if require_account_id
+        else [*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]
+    )
     missing = _missing(required, frame)
     if missing:
         raise SchemaError(f"Missing required columns: {', '.join(missing)}")
@@ -117,8 +123,10 @@ def validate_taiwan_input(frame: pd.DataFrame, *, require_account_id: bool = Fal
     clean = frame.loc[:, required].copy()
     if require_account_id:
         clean["ACCOUNT_ID"] = clean["ACCOUNT_ID"].astype(str).str.strip()
-        if clean["ACCOUNT_ID"].eq("").any() or clean["ACCOUNT_ID"].duplicated().any():
-            raise SchemaError("ACCOUNT_ID values must be non-blank and unique")
+        if clean["ACCOUNT_ID"].eq("").any():
+            raise SchemaError("ACCOUNT_ID cannot be blank")
+        if clean["ACCOUNT_ID"].duplicated().any():
+            raise SchemaError("Duplicate ACCOUNT_ID values are not allowed")
     converted = clean[TAIWAN_MODEL_INPUT_COLUMNS].apply(pd.to_numeric, errors="coerce")
     if converted.isna().any().any() or not np.isfinite(converted.to_numpy()).all():
         raise SchemaError("Legacy Taiwan model inputs must be finite numeric values with no blanks")
@@ -129,6 +137,39 @@ def validate_taiwan_input(frame: pd.DataFrame, *, require_account_id: bool = Fal
         raise SchemaError("Repayment status must be between -2 and 9")
     if (clean[PAYMENT_COLUMNS] < 0).any().any():
         raise SchemaError("Payment amounts cannot be negative")
+    return clean
+
+
+def validate_behavioral_input(
+    frame: pd.DataFrame, *, require_account_id: bool = False
+) -> pd.DataFrame:
+    """Validate the v4 raw-history inference contract plus simulated INR exposure fields."""
+    required = (
+        BEHAVIORAL_BATCH_COLUMNS
+        if require_account_id
+        else [*TAIWAN_MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]
+    )
+    missing = _missing(required, frame)
+    if missing:
+        raise SchemaError(f"Missing required columns: {', '.join(missing)}")
+    clean = frame.loc[:, required].copy()
+    history = validate_taiwan_input(clean, require_account_id=require_account_id)
+    clean[history.columns] = history
+    exposure_values = clean[EXPOSURE_COLUMNS].apply(pd.to_numeric, errors="coerce")
+    invalid = exposure_values.isna() & clean[EXPOSURE_COLUMNS].notna()
+    if invalid.any().any():
+        raise SchemaError("Current limit and balance must be numeric values")
+    if exposure_values.isna().any().any():
+        raise SchemaError("current_limit_inr and current_balance_inr cannot be blank")
+    if not np.isfinite(exposure_values.to_numpy()).all():
+        raise SchemaError("Current limit and balance must be finite numeric values")
+    clean[EXPOSURE_COLUMNS] = exposure_values
+    if (clean["current_limit_inr"] <= 0).any() or (clean["current_limit_inr"] > 10_000_000).any():
+        raise SchemaError("current_limit_inr must be greater than zero and at most 10,000,000")
+    if (clean["current_balance_inr"] < 0).any() or (
+        clean["current_balance_inr"] > clean["current_limit_inr"] * 2
+    ).any():
+        raise SchemaError("current_balance_inr must be between zero and twice the current limit")
     return clean
 
 

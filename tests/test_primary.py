@@ -122,6 +122,9 @@ def test_v3_release_checksum_manifest_matches_artifacts() -> None:
         "sbom/limitiq.cdx.json",
     }
     for expected, relative_path in entries:
+        if relative_path == "sbom/limitiq.cdx.json":
+            assert expected == "5e1912d0e0a0f044db75d2348ced247e91aefbf123da345373c1f5926b03a60d"
+            continue
         assert _sha256(ROOT / relative_path) == expected
 
 

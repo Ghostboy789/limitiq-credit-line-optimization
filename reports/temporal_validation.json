@@ -1,0 +1,61 @@
+{
+  "classification": "Separate US installment-loan temporal validation; research only",
+  "generated_at": "2026-08-21T09:48:43.653592+00:00",
+  "source": {
+    "dataset": "Lending Club Loans 2007-2018 (US)",
+    "source_url": "https://huggingface.co/datasets/codesignal/lending-club-loan-accepted",
+    "mirror_url": "https://huggingface.co/datasets/codesignal/lending-club-loan-accepted/resolve/main/accepted_2007_to_2018Q4.csv",
+    "file_sha256": "3eae03c28fd9d2e8a076ebeb73507e8d4d0f44d90500decdb0936e0933d1f36a",
+    "terms_status": "owner-cleared 2026-08-14; mirror declares CC0; upstream not independently verified"
+  },
+  "target_definition": "Terminal charged-off/default outcome for seasoned 36-month loans",
+  "horizon_boundary": "Common 36-month contractual term; status timing inside the term is not available and this is not a credit-card next-month PD",
+  "split": {
+    "train_through": 2013,
+    "validation": 2014,
+    "untouched_test": 2015
+  },
+  "rows": {
+    "train": 69912,
+    "validation": 65702,
+    "test": 114385
+  },
+  "sampling": "Deterministic proportional-by-vintage sample capped by --max-rows after terminal 36-month eligibility filtering",
+  "features": [
+    "loan_amnt",
+    "annual_inc",
+    "dti",
+    "delinq_2yrs",
+    "fico_mean",
+    "inq_last_6mths",
+    "open_acc",
+    "pub_rec",
+    "revol_bal",
+    "revol_util",
+    "total_acc"
+  ],
+  "test_metrics": {
+    "rows": 114385,
+    "event_rate": 0.149346505223587,
+    "mean_score": 0.13549603703271904,
+    "roc_auc": 0.6470839892627627,
+    "pr_auc": 0.22997214555412535,
+    "brier_score": 0.12292414393956681,
+    "log_loss": 0.4047458858561719
+  },
+  "per_vintage_test": [
+    {
+      "vintage": 2015,
+      "rows": 114385,
+      "event_rate": 0.149346505223587,
+      "mean_score": 0.13549603703271904,
+      "roc_auc": 0.6470839892627627,
+      "pr_auc": 0.22997214555412535,
+      "brier_score": 0.12292414393956681,
+      "log_loss": 0.4047458858561719
+    }
+  ],
+  "model_checksum": "526f21581e02484260108f677ec56aabaaef83224fe921aee1c8eee4a2c4d82b",
+  "prohibited_use": "Never feeds LimitIQ card recommendations or claims India portability",
+  "model_version": "limitiq-temporal-4.0.0-526f21581e02"
+}

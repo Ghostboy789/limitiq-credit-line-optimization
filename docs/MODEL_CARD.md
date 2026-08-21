@@ -1,4 +1,52 @@
-# Model card — LimitIQ v3 primary candidate
+# Model card — LimitIQ v4 behavioral primary
+
+## Current model identity and use boundary
+
+- **Version:** `limitiq-behavioral-4.0.0-21234ab33f78`
+- **Role:** source-coherent behavioral primary for synthetic educational decisions
+- **Source:** UCI Default of Credit Card Clients, Taiwan, 30,000 rows, CC BY 4.0
+- **Target / horizon:** default payment in the following month / one month
+- **Champion:** three-fold sigmoid-calibrated histogram gradient boosting
+- **Raw contract:** current limit plus six repayment-status, bill and payment periods
+- **Engineered contract:** 17 behavioral features; customer ID and protected attributes excluded
+- **Model SHA-256:** `21234ab33f782a5a4d12e6e9050ccbcd812c2b1f324ae91d1a2f4bbd07648115`
+- **Dataset version:** `uci-350-behavioral-6ba3a746be13`
+- **Split:** 18,000 train / 6,000 validation / 6,000 untouched test; fixed seed 42
+- **Selected threshold:** `0.173874`, selected on validation before the single test read
+
+| Untouched-test metric | V4 result | Seeded 95% bootstrap interval |
+|---|---:|---:|
+| ROC-AUC | 0.781138 | 0.767398–0.796055 |
+| PR-AUC | 0.567889 | 0.540125–0.599004 |
+| Brier score | 0.133149 | 0.127508–0.138953 |
+| Log loss | 0.426351 | 0.412325–0.441232 |
+
+At the frozen threshold: precision 0.398640, recall 0.706858 and F1 0.509783;
+confusion matrix TN 3,258, FP 1,415, FN 389, TP 938.
+
+The exact paired 500-repeat bootstrap on the same test accounts shows v4 minus
+v3 ROC-AUC `+0.023728` (`0.017680–0.030144`), PR-AUC `+0.059160`
+(`0.044466–0.075197`), Brier `-0.008533` (`-0.010342–-0.006640`) and
+log loss `-0.021093` (`-0.025538–-0.016470`). This supports application-level
+promotion for the educational demo; it does not establish India, temporal,
+regulatory or production suitability.
+
+## Current limitations and controls
+
+- random within-source interpolation on Taiwan 2005 behavior, not out-of-time validation;
+- no Indian borrowers, verified affordability, external obligations or current-vintage evidence;
+- no observed response to a line increase and no causal profit or customer-outcome evidence;
+- management expected-loss and economics are simulated, not Ind AS 109/IFRS 9 allowances;
+- fairness diagnostics cannot establish jurisdiction-specific compliance;
+- automatic increases can be disabled with `AUTO_INCREASES_ENABLED=false`;
+- monitoring and experiment outputs are executable deterministic replays, not live results.
+
+The separate 2015 US installment-loan vintage study and heterogeneous 1.87M-row
+global benchmark never feed card recommendations.
+
+---
+
+## Archived v3 model record
 
 ## Identity and use boundary
 

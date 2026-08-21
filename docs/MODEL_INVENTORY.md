@@ -1,16 +1,17 @@
 # Model and decision-component inventory
 
-Inventory date: 18 August 2026. This deliberately small register reflects the
-actual v3 architecture. An institution must apply its own approved model
+Inventory date: 21 August 2026. This deliberately small register reflects the
+actual v4 architecture. An institution must apply its own approved model
 definition, materiality and ownership framework before any real use.
 
 | ID | Component | Version | Current role | Status |
 |---|---|---|---|---|
-| MOD-001 | UCI Taiwan next-month default model | `limitiq-primary-3.0.0-89f9a2530bde` | Primary candidate for the educational synthetic decision demo | Conditional demonstration approval only |
+| MOD-001 | UCI Taiwan behavioral next-month default model | `limitiq-behavioral-4.0.0-21234ab33f78` | Primary for the educational synthetic decision demo | Conditional demonstration approval only |
 | MOD-002 | Multi-source adverse-credit-outcome model | `limitiq-global-2.0.0-37a14c45a811` | Transportability research and governance comparison only | Explicitly prohibited from account decisioning |
-| MOD-003 | Original Taiwan model | SHA starts `284f9a7c8ca2` | Archived v1 reproducibility reference | Superseded |
-| CALC-001 | Candidate-limit optimizer and policy rules | v3.0.0 | +10%, +20%, +30%, hold, review and freeze simulation | Model-adjacent; high materiality if real |
-| SIM-001 | Line-response and financial simulation | v3.0.0 assumptions | Synthetic EAD, loss, revenue, cost and contribution | Not causal or observed |
+| MOD-003 | US terminal 36-month loan temporal model | `limitiq-temporal-4.0.0-526f21581e02` | Ordered-vintage research only | Prohibited from card decisioning |
+| MOD-004 | V3 two-feature Taiwan model | `limitiq-primary-3.0.0-89f9a2530bde` | Exact paired benchmark | Superseded |
+| CALC-001 | Candidate-limit optimizer and policy rules | v4.0.0 | Mixed-integer +10%, +20%, +30%, hold, review and freeze allocation | Model-adjacent; high materiality if real |
+| SIM-001 | Line-response and financial simulation | v4.0.0 assumptions | Synthetic EAD, loss, revenue, cost and contribution | Not causal or observed |
 
 ## MOD-001 — primary application candidate
 
@@ -23,13 +24,14 @@ definition, materiality and ownership framework before any real use.
 - **Method:** histogram gradient boosting with sigmoid calibration
 - **Benchmark:** calibrated regularized logistic regression
 - **Split:** 18,000 train / 6,000 validation / 6,000 untouched test
-- **Active inputs:** delinquency count and utilization
-- **Test evidence:** ROC-AUC 0.757410 (95% CI 0.743319–0.773753), PR-AUC
-  0.508729, Brier 0.141683 and log loss 0.447444
+- **Active inputs:** 17 engineered features from six months of limit, repayment,
+  bill and payment history
+- **Test evidence:** ROC-AUC 0.781138 (95% CI 0.767398–0.796055), PR-AUC
+  0.567889, Brier 0.133149 and log loss 0.426351
 - **Prohibited use:** any real lending, India scoring, regulatory PD, IFRS 9,
   pricing, provisioning, capital or automatic customer treatment
 - **Key limitations:** 2005 Taiwan source, random rather than future-vintage
-  split, narrow active feature set, no Indian population and no observed line
+  split, no Indian population and no observed line
   response
 - **Rollback:** `AUTO_INCREASES_ENABLED=false` routes otherwise eligible
   increases to manual review
@@ -42,7 +44,7 @@ definition, materiality and ownership framework before any real use.
   across six independent public credit cohorts
 - **Population:** 1,869,548 training rows; 373,910 test rows
 - **Primary evidence view:** source-macro metrics; pooled metrics secondary
-- **Decision boundary:** never loaded for account, batch or policy decisions in v3
+- **Decision boundary:** never loaded for account, batch or policy decisions in v4
 - **Key limitations:** incompatible events and horizons, source dominance,
   structural missingness, weak source cohorts, no future-vintage or unseen-market
   claim

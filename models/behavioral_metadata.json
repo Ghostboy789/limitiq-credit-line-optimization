@@ -1,0 +1,76 @@
+{
+  "model_version": "limitiq-behavioral-4.0.0-21234ab33f78",
+  "dataset_version": "uci-350-behavioral-6ba3a746be13",
+  "classification": "Source-coherent v4 behavioral primary; educational use only",
+  "trained_at": "2026-08-21T11:39:43.156063+00:00",
+  "champion": "Histogram gradient boosting",
+  "selected_threshold": 0.17387387387387387,
+  "model_checksum": "21234ab33f782a5a4d12e6e9050ccbcd812c2b1f324ae91d1a2f4bbd07648115",
+  "dataset_checksum": "6ba3a746be1359edeedc86fd33c32e61124bab6507a8ab023370b3e963ecf562",
+  "schema_checksum": "37f2126393f59cfeedef0d9935630d3ca7f696e75822bbe6664203a84d7428e4",
+  "schema": {
+    "raw_input_columns": [
+      "LIMIT_BAL",
+      "PAY_0",
+      "PAY_2",
+      "PAY_3",
+      "PAY_4",
+      "PAY_5",
+      "PAY_6",
+      "BILL_AMT1",
+      "BILL_AMT2",
+      "BILL_AMT3",
+      "BILL_AMT4",
+      "BILL_AMT5",
+      "BILL_AMT6",
+      "PAY_AMT1",
+      "PAY_AMT2",
+      "PAY_AMT3",
+      "PAY_AMT4",
+      "PAY_AMT5",
+      "PAY_AMT6"
+    ],
+    "engineered_features": [
+      "limit_bal",
+      "current_utilization",
+      "average_utilization",
+      "maximum_utilization",
+      "utilization_trend",
+      "recent_payment_ratio",
+      "average_payment_ratio",
+      "payment_consistency",
+      "delinquent_month_count",
+      "maximum_delinquency_severity",
+      "recent_payment_deterioration",
+      "revolving_balance_proxy",
+      "limit_headroom",
+      "balance_volatility",
+      "payment_volatility",
+      "recent_balance_growth",
+      "inactive_month_count"
+    ],
+    "protected_attributes_excluded": [
+      "SEX",
+      "EDUCATION",
+      "MARRIAGE",
+      "AGE"
+    ],
+    "target": "default",
+    "target_definition": "Default payment in the following month",
+    "prediction_horizon": "One month"
+  },
+  "promotion_gate": {
+    "status": "application_primary",
+    "rule": "Promoted from v3 after paired improvement, inference-contract migration, governance review and full local release gates; production lending remains prohibited"
+  },
+  "limitations": [
+    "Random within-source splitting is not future-vintage validation.",
+    "The 2005 Taiwan source does not establish India or current-population portability.",
+    "Limit response and economics remain simulated rather than causal observations."
+  ],
+  "artifact_checksums": {
+    "behavioral_candidate.joblib": "21234ab33f782a5a4d12e6e9050ccbcd812c2b1f324ae91d1a2f4bbd07648115",
+    "behavioral_feature_schema.json": "d4c1c51013b0e064bb6ccf060515dcecc5f655108b67b961b51b36118f13a9a7",
+    "behavioral_model.json": "91fd6496754822171c9559a51eca852d12d1c41e1a53c8d7632f4f1e5e4de29c"
+  }
+}

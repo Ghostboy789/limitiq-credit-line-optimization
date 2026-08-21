@@ -13,9 +13,9 @@ import pandas as pd
 
 from limitiq.config import PROCESSED_DIR, REPORT_DIR, ROOT
 
-PORTFOLIO_PATH = PROCESSED_DIR / "primary_demo_portfolio.csv"
+PORTFOLIO_PATH = PROCESSED_DIR / "behavioral_demo_portfolio.csv"
 SQL_PATH = ROOT / "analytics" / "portfolio_mart.sql"
-SIMULATION_PATH = REPORT_DIR / "primary_policy_simulation.json"
+SIMULATION_PATH = REPORT_DIR / "behavioral_policy_simulation.json"
 
 REQUIRED_COLUMNS = {
     "account_id",
@@ -70,7 +70,7 @@ def build_snapshot(
         reconciliation = _records(connection, "portfolio_reconciliation", "accounts")[0]
         return {
             "classification": "Deterministic synthetic portfolio SQL reconciliation",
-            "model_track": "Source-coherent UCI Taiwan primary decision candidate",
+            "model_track": "Source-coherent UCI Taiwan behavioral primary",
             "generated_at": datetime.now(UTC).isoformat(),
             "portfolio_file": portfolio_path.name,
             "sql_file": sql_path.name,

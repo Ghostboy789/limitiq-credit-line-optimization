@@ -32,28 +32,26 @@ rules and a recruiter-ready banking workflow in one Dockerized FastAPI service.
 
 [View the 390 px mobile capture](docs/assets/v3-overview-mobile.png) · [View the governance verdict](docs/assets/v3-governance.png)
 
-The public deployment serves verified **v3.0.1**. The annotated release tag is
-the immutable source revision; Render [`/health`](https://limitiq-credit-line-optimization.onrender.com/health)
-exposes the exact deployed commit, primary model and dataset. The linked CI and
-CodeQL badges report the current branch gates. The release passed Docker, a zero
-HIGH/CRITICAL Trivy scan, container health, concurrency smoke, production
-workflows and responsive-browser verification on 21 August 2026.
+The repository contains the **v4.0.0 release candidate**. Until its exact commit
+passes CI, Render deployment and live workflow verification, the public URL may
+still serve verified v3.0.1. The health endpoint exposes the deployed application,
+model, dataset and commit so this boundary is machine-checkable.
 
-The v3 gate is **112 tests passed at 72.82% coverage**; Ruff, formatting,
-Bandit, dependency audit, secret scan, source/demo/SBOM checks, Docker/Trivy,
-runtime smoke and public HTTPS verification passed.
-Coverage measures the primary/runtime package and explicitly omits the large
-offline multi-source and external-validation CLIs; their committed evidence is
-checked by artifact, provenance and schema tests rather than included in the headline.
+The v4 local gate is **127 tests passed at 71.60% coverage**. Ruff lint and
+format, Bandit, dependency audit, secret scan, source/demo/SBOM checks and PDF
+rendering pass. Container/Trivy, CI/CodeQL and live browser receipts remain tied
+to the exact release commit and are not claimed early.
 
 ## The senior-level design decision
 
-V3 separates two model tracks that v2 had combined:
+V4 keeps the two-track boundary introduced in v3 and adds a separate temporal
+loan study:
 
 | Track | Purpose | Data and target | Decision use |
 |---|---|---|---|
-| **Primary** | Source-coherent application candidate | UCI Taiwan, 30,000 accounts, default in the following month | Drives only the educational synthetic demo |
+| **Primary** | Source-coherent behavioral application model | UCI Taiwan, 30,000 accounts, default in the following month | Drives only the educational synthetic demo |
 | **Research** | Cross-source transportability benchmark | 1,869,548 rows, six independent cohorts with different events and horizons | Governance evidence only; never drives account recommendations |
+| **Temporal study** | Ordered-vintage robustness research | 249,999 seasoned US installment loans; terminal 36-month outcome | Never feeds card recommendations |
 
 This avoids pretending that heterogeneous public labels form one regulatory PD.
 The primary model still does **not** establish Indian-market, out-of-time,
@@ -61,24 +59,30 @@ production, regulatory or fair-lending suitability.
 
 ## Exact primary-model evidence
 
-Model: `limitiq-primary-3.0.0-89f9a2530bde`
+Model: `limitiq-behavioral-4.0.0-21234ab33f78`
 
 Champion: sigmoid-calibrated histogram gradient boosting
 
 Split: 18,000 train / 6,000 validation / 6,000 untouched test
 
-Active fields: delinquency count and utilization; protected attributes excluded
+Active fields: 17 engineered measures from six months of limits, repayment
+status, bills and payments; customer ID and protected attributes excluded
 
 | Untouched-test metric | Result | Seeded 95% bootstrap interval |
 |---|---:|---:|
-| ROC-AUC | **0.757410** | 0.743319–0.773753 |
-| PR-AUC | **0.508729** | 0.480370–0.542755 |
-| Brier score | **0.141683** | 0.136133–0.146975 |
-| Log loss | **0.447444** | 0.433312–0.460640 |
+| ROC-AUC | **0.781138** | 0.767398–0.796055 |
+| PR-AUC | **0.567889** | 0.540125–0.599004 |
+| Brier score | **0.133149** | 0.127508–0.138953 |
+| Log loss | **0.426351** | 0.412325–0.441232 |
 
-Threshold `0.163964` was frozen from validation data before the single test-set
+Threshold `0.173874` was frozen from validation data before the single test-set
 evaluation. The random within-source split is interpolation evidence, not a
 future-vintage study.
+
+Against the frozen v3 two-feature model on those same 6,000 accounts, v4 gains
+`0.023728` ROC-AUC (paired 95% interval `0.017680–0.030144`) and reduces Brier
+score by `0.008533` (`0.006640–0.010342` improvement). These are measured
+within-source model results, not production impact.
 
 The separate global research benchmark records source-macro ROC-AUC `0.684530`,
 PR-AUC `0.402370`, Brier `0.138968` and log loss `0.433385`. Pooled results are
@@ -87,19 +91,18 @@ not equivalent.
 
 ## Simulated portfolio outcome
 
-The v3 demo contains 1,200 deterministic **synthetic profiles** that match the
-Taiwan field-availability contract but use fixed simulated distributions. No
+The v4 demo contains 1,200 deterministic **synthetic six-month histories**. No
 public source row or personal identifier is exposed.
 
 | Scenario result | Simulated value |
 |---|---:|
-| Current / proposed limits | ₹514.951M / ₹566.423M |
-| Current / proposed exposure proxy | ₹461.467M / ₹500.086M |
-| Current / proposed loss proxy | ₹53.140M / ₹55.904M |
-| Eligible increases | 270 profiles |
-| Manual review / freeze | 323 / 56 profiles |
-| Incremental contribution | **₹9.100M** |
-| Contribution / incremental exposure | **23.56%** |
+| Current / proposed limits | ₹478.947M / ₹513.032M |
+| Current / proposed exposure proxy | ₹401.899M / ₹427.463M |
+| Current / proposed loss proxy | ₹48.712M / ₹50.340M |
+| Eligible increases | 288 profiles |
+| Manual review / freeze | 455 / 342 profiles |
+| Incremental contribution | **₹2.980M** |
+| Contribution / incremental exposure | **11.66%** |
 
 These are deterministic scenario outputs under disclosed LGD, CCF, response,
 revenue and cost assumptions. They are not observed uplift, causal estimates,
@@ -137,7 +140,7 @@ No automatic punitive line decrease is recommended.
 
 ```mermaid
 flowchart LR
-  U[UCI Taiwan<br>next-month target] --> P[Calibrated primary pipeline]
+  U[UCI Taiwan<br>next-month target] --> P[Calibrated 17-feature behavioral pipeline]
   P --> D[1,200 synthetic profiles]
   D --> O[Candidate-limit optimizer]
   O --> W[FastAPI + Jinja application]
@@ -177,9 +180,9 @@ python -m limitiq.sbom --check sbom/limitiq.cdx.json
 # After obtaining the gitignored raw sources, verify every checksum
 python -m limitiq.sources verify
 
-# Rebuild coherent primary artifacts from the cached UCI source
+# Rebuild the v4 behavioral primary from the cached UCI source
 python -m limitiq.sources fetch-open
-python -m limitiq.primary
+python -m limitiq.behavioral --bootstrap-repeats 500
 
 # Exercise training code without raw data or release writes
 python -m limitiq.primary --smoke
@@ -206,8 +209,9 @@ docker run --rm -p 8000:8000 limitiq
 - Pinned runtime and development dependencies
 - Deterministic source manifest with URLs, licence/terms, hashes and row counts
 - CycloneDX 1.6 direct-dependency [SBOM](sbom/limitiq.cdx.json)
-- Release [SHA-256 manifest](release/checksums-v3.0.0.sha256) covering the
-  primary model, metadata, schema, evidence, demo portfolio and SBOM
+- Release [SHA-256 manifest](release/checksums-v4.0.0.sha256) covering the
+  behavioral and temporal models, metadata, schema, evidence, demo portfolio,
+  executive report, India contract and SBOM
 - GitHub Actions for tests, coverage, Ruff, Bandit, dependency/secret scanning,
   Docker build, Trivy image scan, health and concurrency smoke
 - Separate CodeQL workflow and Dependabot configuration
@@ -238,7 +242,7 @@ repository owner's dated attestation and is not an independent legal opinion.
 
 - Primary source is Taiwan, 2005; India and temporal portability are unproven.
 - Primary evidence uses a random within-source split, not a mature future vintage.
-- Only utilization and delinquency count are active in the harmonized primary contract.
+- Rich repayment behavior improves within-source metrics but does not prove portability.
 - No dataset observes treatment response to a limit increase.
 - Fairness diagnostics cannot establish jurisdiction-specific legal compliance.
 - Monitoring thresholds are illustrative; no live outcome feed exists.
@@ -248,8 +252,17 @@ The correct next step is representative local data, a future-vintage holdout,
 organizationally independent validation and a governed randomized pilot—not a
 larger decorative model.
 
+## V4 decision-science workbench
+
+The [v4 decision-science workbench](docs/V4_WORKBENCH.md) adds a 17-feature Taiwan behavioral primary,
+ordered US loan-vintage validation, mixed-integer portfolio allocation, executable
+monitoring and experiment replays, model-linked sensitivities, a maker-checker demo
+and a machine-readable India readiness contract.
+
 ## Release history
 
+- **v4.0.0:** rich behavioral primary, constrained portfolio allocation,
+  temporal research, monitoring/experiment replays, maker-checker and India contract.
 - **v3.0.1:** documentation-consistency patch; model and simulation unchanged.
 - **v3.0.0:** coherent primary model, research separation,
   confidence intervals, validation package, committee memo, SQL/SBOM/ops gates.

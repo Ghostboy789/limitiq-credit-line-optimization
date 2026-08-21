@@ -2,15 +2,15 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
-  "serialNumber": "urn:uuid:a001a6ca-9d17-5b73-8d13-d415158fd3af",
+  "serialNumber": "urn:uuid:976fa0ae-91b0-557b-bc08-e998783df8f9",
   "version": 1,
   "metadata": {
     "component": {
       "type": "application",
-      "bom-ref": "pkg:pypi/limitiq-credit-line-optimization@3.0.0",
+      "bom-ref": "pkg:pypi/limitiq-credit-line-optimization@4.0.0",
       "name": "limitiq-credit-line-optimization",
-      "version": "3.0.0",
-      "purl": "pkg:pypi/limitiq-credit-line-optimization@3.0.0"
+      "version": "4.0.0",
+      "purl": "pkg:pypi/limitiq-credit-line-optimization@4.0.0"
     },
     "properties": [
       {
@@ -82,6 +82,13 @@
       "name": "scikit-learn",
       "version": "1.7.1",
       "purl": "pkg:pypi/scikit-learn@1.7.1"
+    },
+    {
+      "type": "library",
+      "bom-ref": "pkg:pypi/scipy@1.18.0",
+      "name": "scipy",
+      "version": "1.18.0",
+      "purl": "pkg:pypi/scipy@1.18.0"
     },
     {
       "type": "library",

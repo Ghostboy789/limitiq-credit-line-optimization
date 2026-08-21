@@ -6,9 +6,10 @@
 a calibrated next-month default model, constrained actions, model-risk controls
 and a separately governed 1.87M-row transportability benchmark.
 
-Be precise about version status: v3 is the verified live application. It uses
-one Taiwan next-month target for account decisions and never uses the
-heterogeneous global benchmark for individual recommendations.
+Be precise about version status: v4 is the release candidate and must be checked
+against live `/health` before being called deployed. It uses one Taiwan
+next-month target for account decisions and never uses the heterogeneous global
+or US loan-vintage models for individual recommendations.
 
 The project demonstrates credit-risk modelling, model governance, ML
 engineering, decision policy, security and product delivery. It does not
@@ -66,11 +67,11 @@ Use these bullets:
   coherent UCI Taiwan next-month default model to governed candidate actions,
   with a separate 1.87M-row research benchmark for transportability evidence.
 - Selected a calibrated histogram-gradient-boosting champion against logistic
-  regression; achieved 0.757 ROC-AUC (95% CI 0.743–0.774), 0.509 PR-AUC and
-  0.142 Brier on a 6,000-row untouched test set.
+  regression; achieved 0.781 ROC-AUC (95% CI 0.767–0.796), 0.568 PR-AUC and
+  0.133 Brier on a 6,000-row untouched test set.
 - Implemented a deterministic INR exposure optimizer with loss, profitability,
   overextension, early-warning and human-review controls; the 1,200-profile
-  synthetic scenario produced ₹9.10M simulated—not causal or realized—
+  synthetic scenario produced ₹2.98M simulated—not causal or realized—
   incremental contribution, with a USD/INR/EUR display toggle over the
   INR-canonical portfolio.
 
@@ -83,7 +84,7 @@ If the role values deployment more than multi-source modelling, substitute:
 
 ## LinkedIn/GitHub summary
 
-LimitIQ shows how risk modelling becomes a governed product. V3 joins a
+LimitIQ shows how risk modelling becomes a governed product. V4 joins a rich
 source-coherent calibrated next-month model to candidate-line policy,
 portfolio/account views, transient batch scoring and synthetic INR economics.
 The heterogeneous 1.87M-row model remains visible as transportability research,
@@ -97,7 +98,7 @@ governed action: increase, hold, refer or freeze. Model-risk review showed that
 my 1.87-million-row benchmark combined different adverse events and horizons,
 so I changed the architecture. A calibrated next-month Taiwan model now drives
 only the synthetic decision demo; the global model is research evidence only.
-The primary test ROC-AUC is 0.757 with a 0.743–0.774 bootstrap interval, and the
+The primary test ROC-AUC is 0.781 with a 0.767–0.796 bootstrap interval, and the
 economics remain explicitly simulated.”
 
 ## Evidence to discuss by interviewer
@@ -118,9 +119,9 @@ economics remain explicitly simulated.”
 
 ## Application checklist
 
-1. Label the link “verified v3 educational live demo.”
+1. Label the link “educational live demo” and confirm its `/health` version.
 2. Match the first bullet to the job family.
-3. Lead with primary 0.757 ROC-AUC and explain why the multi-source benchmark is research only.
+3. Lead with primary 0.781 ROC-AUC, its paired improvement over v3, and explain why the other model tracks are research only.
 4. Label every financial result “synthetic and simulated.”
 5. Link the model/data cards for validation roles and architecture for technology
    roles.

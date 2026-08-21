@@ -82,6 +82,10 @@ class PolicyAssumptions:
     max_increase: float = 0.30
     max_account_exposure: float = 3_000_000.0
     portfolio_growth_cap: float = 0.10
+    portfolio_loss_growth_cap: float = 0.08
+    capital_allocation_rate: float = 0.08
+    portfolio_capital_budget: float = 25_000_000.0
+    max_higher_risk_increase_share: float = 0.25
     expected_loss_ceiling: float = 0.12
     profitability_hurdle: float = 300.0
 
@@ -97,14 +101,17 @@ class PolicyAssumptions:
             "response_elasticity",
             "max_increase",
             "portfolio_growth_cap",
+            "portfolio_loss_growth_cap",
+            "capital_allocation_rate",
+            "max_higher_risk_increase_share",
             "expected_loss_ceiling",
         )
         for name in rates:
             value = getattr(self, name)
             if not 0 <= value <= 1:
                 raise ValueError(f"{name} must be between 0 and 1")
-        if self.max_account_exposure <= 0:
-            raise ValueError("max_account_exposure must be positive")
+        if self.max_account_exposure <= 0 or self.portfolio_capital_budget <= 0:
+            raise ValueError("exposure and capital budgets must be positive")
         if self.servicing_cost < 0 or self.profitability_hurdle < 0:
             raise ValueError("cost and hurdle values cannot be negative")
 

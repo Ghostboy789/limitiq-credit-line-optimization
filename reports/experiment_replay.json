@@ -1,0 +1,65 @@
+{
+  "classification": "Deterministic synthetic experiment-analysis demonstration",
+  "generated_at": "2026-08-21T09:37:31.923770+00:00",
+  "estimand": "Intent-to-treat effect by assigned credit-line arm",
+  "arms": {
+    "control": {
+      "rows": 4943,
+      "mean_contribution": 2323.74043410269,
+      "cuped_mean_contribution": 2376.71926059315,
+      "delinquency_rate": 0.2108031559781509,
+      "acceptance_rate": 0.14586283633421
+    },
+    "increase_10": {
+      "rows": 5165,
+      "mean_contribution": 2972.7396506655946,
+      "cuped_mean_contribution": 2907.904920616285,
+      "delinquency_rate": 0.20174249757986448,
+      "acceptance_rate": 0.23020329138431753
+    },
+    "increase_20": {
+      "rows": 4918,
+      "mean_contribution": 3433.8681238831764,
+      "cuped_mean_contribution": 3454.4629597364356,
+      "delinquency_rate": 0.2112647417649451,
+      "acceptance_rate": 0.30418869459129727
+    },
+    "increase_30": {
+      "rows": 4974,
+      "mean_contribution": 3987.719353873726,
+      "cuped_mean_contribution": 3982.0321079219757,
+      "delinquency_rate": 0.2143144350623241,
+      "acceptance_rate": 0.3856051467631685
+    }
+  },
+  "comparisons_to_control": {
+    "increase_10": {
+      "itt_contribution_delta": 648.9992165629046,
+      "cuped_contribution_delta": 531.1856600231349,
+      "delinquency_delta": -0.00906065839828643
+    },
+    "increase_20": {
+      "itt_contribution_delta": 1110.1276897804864,
+      "cuped_contribution_delta": 1077.7436991432855,
+      "delinquency_delta": 0.0004615857867941997
+    },
+    "increase_30": {
+      "itt_contribution_delta": 1663.978919771036,
+      "cuped_contribution_delta": 1605.3128473288257,
+      "delinquency_delta": 0.0035112790841731745
+    }
+  },
+  "cuped_theta": 0.12749600021869026,
+  "guardrail": "Stop review if delinquency harm exceeds the independently approved bound",
+  "limitations": [
+    "Synthetic outcomes prove analysis plumbing only and are not causal business evidence.",
+    "A real pilot requires consent, eligibility, harm monitoring and independent approval."
+  ],
+  "power_example": {
+    "baseline_rate": 0.1,
+    "absolute_mde": 0.01,
+    "power": 0.8,
+    "alpha": 0.05,
+    "required_rows_per_arm": 14751
+  }
+}

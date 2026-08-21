@@ -6,9 +6,11 @@ import pytest
 
 from limitiq.features import (
     BATCH_COLUMNS,
+    BEHAVIORAL_BATCH_COLUMNS,
     DEMOGRAPHIC_COLUMNS,
     EXPOSURE_COLUMNS,
     FEATURE_NAMES,
+    HARMONIZED_BATCH_COLUMNS,
     MODEL_INPUT_COLUMNS,
     REGION_CATEGORIES,
     TAIWAN_MODEL_INPUT_COLUMNS,
@@ -17,6 +19,7 @@ from limitiq.features import (
     SchemaError,
     clean_source,
     engineer_features,
+    validate_behavioral_input,
     validate_input,
     validate_taiwan_input,
 )
@@ -38,7 +41,19 @@ def test_global_batch_identifier_and_schema_are_strict(healthy_row: pd.Series) -
         validate_input(frame, require_account_id=True)
     with pytest.raises(SchemaError, match="credit_age_months"):
         validate_input(frame.drop(columns="credit_age_months"), require_account_id=True)
-    assert BATCH_COLUMNS == ["ACCOUNT_ID", *MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]
+    assert HARMONIZED_BATCH_COLUMNS == ["ACCOUNT_ID", *MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]
+
+
+def test_behavioral_batch_contract_is_strict(healthy_taiwan_row: pd.Series) -> None:
+    frame = pd.DataFrame([healthy_taiwan_row])
+    frame.insert(0, "ACCOUNT_ID", ["TEST-001"])
+    frame["current_limit_inr"] = frame["LIMIT_BAL"]
+    frame["current_balance_inr"] = frame["BILL_AMT1"]
+    clean = validate_behavioral_input(frame, require_account_id=True)
+    assert list(clean.columns) == BEHAVIORAL_BATCH_COLUMNS
+    assert BATCH_COLUMNS == BEHAVIORAL_BATCH_COLUMNS
+    with pytest.raises(SchemaError, match="PAY_6"):
+        validate_behavioral_input(frame.drop(columns="PAY_6"), require_account_id=True)
 
 
 @pytest.mark.parametrize(

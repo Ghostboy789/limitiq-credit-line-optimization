@@ -3,16 +3,15 @@
 ## Decision
 
 **Conditional approval for educational research and synthetic policy
-demonstration only.** LimitIQ release v3.0.1 (runtime/model 3.0.0) is not approved for lending decisions,
+demonstration only.** LimitIQ v4.0.0 is not approved for lending decisions,
 regulatory probability of default (PD), pricing, provisioning, capital,
 customer treatment, Indian-customer decisions or automated credit-line changes.
 
-V3 materially improves conceptual soundness by using one UCI Taiwan next-month
-default target for the application candidate and moving the heterogeneous
-multi-source score to a research-only track. Production interpretation remains
-blocked because the source is old and Taiwan-only, validation is random rather
-than out-of-time, active features are narrow, and all line-response and
-financial outcomes are simulated.
+V4 retains one UCI Taiwan next-month target, adds a richer six-month behavioral
+contract and keeps heterogeneous multi-source and temporal-loan evidence outside
+decisioning. Production interpretation remains blocked because the source is
+old and Taiwan-only, primary validation is random rather than out-of-time, and
+all line-response and financial outcomes are simulated.
 
 This is an independent-validation **style** review written for a portfolio
 project. It is not organizationally independent model validation: no separate
@@ -25,13 +24,13 @@ Review date: 21 August 2026.
 
 | Item | Reviewed evidence |
 |---|---|
-| Primary model | `limitiq-primary-3.0.0-89f9a2530bde` |
+| Primary model | `limitiq-behavioral-4.0.0-21234ab33f78` |
 | Primary dataset | UCI 350 next-month default; 30,000 rows |
 | Research benchmark | `limitiq-global-2.0.0-37a14c45a811`; 1,869,548 rows |
-| Implementation | v3.0.1 verified educational deployment; model artifacts unchanged from 3.0.0 |
-| Development evidence | `reports/primary_model.json`, `reports/global_model.json`, calibration, source diagnostics and checksum metadata |
+| Implementation | v4.0.0 release candidate; production status must be verified against `/health` and the exact deployed commit |
+| Development evidence | `reports/behavioral_model.json`, `reports/temporal_validation.json`, `reports/global_model.json`, calibration, paired comparison and checksum metadata |
 | Controls | policy constraints, reason codes, manual review, early-warning freeze, `AUTO_INCREASES_ENABLED` rollback |
-| Verification | 112 tests at 72.82% scoped coverage; Ruff/format/Bandit/pip-audit/secret/provenance checks, CodeQL, Docker, zero HIGH/CRITICAL Trivy scan, container smoke, exact-commit Render and responsive production-browser QA passed |
+| Verification | Local v4 release gates are recorded in `docs/V4_WORKBENCH.md`; CI, container and live evidence must bind the exact release commit before the tag is issued |
 | Documentation | methodology, data card, model card, assumptions, provenance notice and monitoring baseline |
 
 The review follows the risk-based themes in the US interagency [Revised
@@ -73,11 +72,10 @@ only +10%, +20%, +30% and no-change candidates, then applies exposure, expected
 loss, profitability, payment-history, overextension and review constraints.
 The system does not automatically prescribe punitive limit decreases.
 
-The v3 decision construct uses one explicit target—default payment in the
+The v4 decision construct uses one explicit target—default payment in the
 following month—and one source. This closes the v2 target-coherence finding for
 the current educational scope. It does not make the model a production PD: the
-source is Taiwan-only and historical, only two harmonized fields are active,
-and the split is not a future vintage.
+source is Taiwan-only and historical, and the split is not a future vintage.
 
 The six-cohort global score remains separate research. Its targets include
 next-month default, two-year serious delinquency, historical good/bad credit,
@@ -93,10 +91,10 @@ discrimination and Brier score. On 6,000 untouched test rows it records:
 
 | Metric | Result | Seeded 95% bootstrap interval |
 |---|---:|---:|
-| ROC-AUC | 0.757410 | 0.743319–0.773753 |
-| PR-AUC | 0.508729 | 0.480370–0.542755 |
-| Brier score | 0.141683 | 0.136133–0.146975 |
-| Log loss | 0.447444 | 0.433312–0.460640 |
+| ROC-AUC | 0.781138 | 0.767398–0.796055 |
+| PR-AUC | 0.567889 | 0.540125–0.599004 |
+| Brier score | 0.133149 | 0.127508–0.138953 |
+| Log loss | 0.426351 | 0.412325–0.441232 |
 
 The 500-repeat intervals quantify sampling uncertainty on this test population;
 they do not cover temporal, geographic or model-selection uncertainty.
@@ -182,9 +180,9 @@ Training and inference share serialized preprocessing. Dataset and model
 checksums, source provenance, fixed seeds, bootstrap evidence and artifact
 consistency checks are recorded. Strict upload validation, transient processing,
 security headers, safe production errors, liveness/readiness and aggregate-only
-operations telemetry are implemented. The full local suite passed 112 tests at
-72.82% scoped coverage with clean lint, format, Bandit and dependency audit. CI,
-container and live deployment evidence remains a release gate. These controls
+operations telemetry are implemented. The full v4 local suite passed 127 tests
+at 71.60% scoped coverage with clean lint, format, Bandit, dependency and secret
+audits. CI, container and live deployment evidence remains a release gate. These controls
 support the educational scope and do not certify a bank production environment.
 
 ## Validation findings

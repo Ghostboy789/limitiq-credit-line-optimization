@@ -1,17 +1,17 @@
 # Financial and policy assumptions
 
-## Current v3 evidence and currency boundary
+## Current v4 evidence and currency boundary
 
 The primary model output is a Taiwan-source probability of default in the
 following month. It is not an Indian-market, regulatory or IFRS 9 PD. The
 expected-loss display is an educational proxy: `score × LGD × EAD`.
 
-V3 operates on 1,200 deterministic synthetic profiles matching the primary
-field-availability contract. Limits, balances and economics are generated in
+V4 operates on 1,200 deterministic synthetic six-month histories matching the
+behavioral primary contract. Limits, balances and economics are generated in
 INR; the USD/EUR control is presentation-only. No source customer, causal line
 response, realized profit or Indian borrower outcome is represented.
 
-The v3 base policy uses LGD 65%, CCF 75%, interchange 1.8%, APR 18%, revolving
+The v4 base policy uses LGD 65%, CCF 75%, interchange 1.8%, APR 18%, revolving
 rate 45%, funding cost 4.5%, capital cost 2.5%, servicing cost ₹180, response
 elasticity 35%, maximum increase 30%, maximum account exposure ₹3,000,000,
 portfolio growth cap 10%, expected-loss ceiling 12% and profitability hurdle

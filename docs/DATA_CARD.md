@@ -2,6 +2,11 @@
 
 ## Version boundary
 
+- **V4 primary decision data:** UCI Default of Credit Card Clients only;
+  30,000 Taiwan accounts, following-month default target, dataset version
+  `uci-350-behavioral-6ba3a746be13`. The raw inference contract uses current
+  limit plus six repayment-status, bill and payment periods; 17 engineered
+  behavioral fields drive the current educational model.
 - **V3 primary decision data:** UCI Default of Credit Card Clients only;
   30,000 Taiwan accounts, following-month default target, dataset version
   `uci-350-next-month-dc05bd56186a`. This source drives the release-candidate
@@ -18,7 +23,22 @@
   a dataset or model retrain; tag `v2.1.0` identifies the evidence release.
 
 V2 remains a multi-source adverse-credit-outcome **research benchmark**. It is
-not a common-horizon regulatory PD dataset and never drives v3 account decisions.
+not a common-horizon regulatory PD dataset and never drives v4 account decisions.
+
+## V4 primary population and fields
+
+The source contains observed limits, six repayment-status periods, six bill
+amounts, six payment amounts and the following-month default outcome. LimitIQ
+derives utilization level/trend, payment ratios/consistency, delinquency count
+and severity, revolving balance, headroom, volatility, balance growth and
+inactive-month indicators. Customer ID and the demographic fields sex,
+education, marital status and age are excluded from inference.
+
+The split remains fixed and stratified at 18,000 / 6,000 / 6,000. This is
+within-source interpolation rather than a future-vintage or Indian-population
+test. The committed 1,200-account demo contains newly generated deterministic
+synthetic histories with `LIQ-######` identifiers; it contains no public source
+row or real customer data.
 
 ## V3 primary population and fields
 
@@ -94,12 +114,11 @@ not out-of-time or unseen-country validation.
 
 ## Synthetic demonstration
 
-The v3 app uses 1,200 deterministic Taiwan-contract synthetic profiles with
-`LIQ-*` identifiers and synthetic INR limit/balance fields. They match source
-field availability but use fixed simulated distributions that are not claimed
+The v4 app uses 1,200 deterministic Taiwan-contract synthetic histories with
+`LIQ-*` identifiers and synthetic INR limit/balance fields. They are not claimed
 to reproduce the empirical source population. They are not source rows,
 customers or production outcomes. Published economics and recommendations are
-deterministic scenario outputs scored by the primary model.
+deterministic scenario outputs scored by the behavioral primary.
 
 ## Appropriate use
 

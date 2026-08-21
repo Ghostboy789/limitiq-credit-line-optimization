@@ -265,34 +265,137 @@ def recommend_portfolio(
             frame.iterrows(), probabilities, account_ids, strict=True
         )
     ]
-    current_total = sum(item.current_limit for item in decisions)
-    cap = current_total * (1 + assumptions.portfolio_growth_cap)
-    proposed_total = sum(item.proposed_limit for item in decisions)
-    if proposed_total <= cap:
-        return decisions
-    ranked = sorted(
-        (item for item in decisions if item.increase_pct > 0),
-        key=lambda item: (item.incremental_contribution, item.account_id),
-    )
-    by_id = {item.account_id: item for item in decisions}
-    for item in ranked:
-        if proposed_total <= cap:
-            break
-        proposed_total -= item.proposed_limit - item.current_limit
-        base = item.candidate_results[0]
-        by_id[item.account_id] = replace(
-            item,
-            action="No change",
-            increase_pct=0.0,
-            proposed_limit=item.current_limit,
-            proposed_ead=item.current_ead,
-            proposed_expected_loss=item.current_expected_loss,
-            incremental_contribution=0.0,
-            risk_adjusted_return=0.0,
-            reason_codes=tuple(dict.fromkeys((*item.reason_codes, "Exposure limit reached"))),
-            policy_checks=base["checks"],
+    return _optimize_candidate_allocation(decisions, assumptions)
+
+
+def _optimize_candidate_allocation(
+    decisions: list[Decision], assumptions: PolicyAssumptions
+) -> list[Decision]:
+    """Select one candidate per account under portfolio-wide linear constraints."""
+    from scipy.optimize import Bounds, LinearConstraint, milp
+    from scipy.sparse import coo_matrix
+
+    options: list[tuple[int, dict[str, Any]]] = []
+    restricted_actions = {"Manual review", "Freeze automatic increases"}
+    for account_index, decision in enumerate(decisions):
+        candidates = (
+            [decision.candidate_results[0]]
+            if decision.action in restricted_actions
+            else [candidate for candidate in decision.candidate_results if candidate["eligible"]]
         )
-    return [by_id[account_id] for account_id in account_ids]
+        options.extend((account_index, candidate) for candidate in candidates)
+
+    row_indexes: list[int] = []
+    column_indexes: list[int] = []
+    values: list[float] = []
+    lower: list[float] = []
+    upper: list[float] = []
+    for account_index in range(len(decisions)):
+        row = len(lower)
+        for option_index, (owner, _) in enumerate(options):
+            if owner == account_index:
+                row_indexes.append(row)
+                column_indexes.append(option_index)
+                values.append(1.0)
+        lower.append(1.0)
+        upper.append(1.0)
+
+    current_limit = sum(decision.current_limit for decision in decisions)
+    current_loss = sum(decision.current_expected_loss for decision in decisions)
+    global_constraints = (
+        (
+            [candidate["proposed_limit"] for _, candidate in options],
+            current_limit * (1 + assumptions.portfolio_growth_cap),
+        ),
+        (
+            [candidate["proposed_expected_loss"] for _, candidate in options],
+            current_loss * (1 + assumptions.portfolio_loss_growth_cap),
+        ),
+        (
+            [
+                max(candidate["proposed_ead"] - decisions[owner].current_ead, 0.0)
+                * assumptions.capital_allocation_rate
+                for owner, candidate in options
+            ],
+            assumptions.portfolio_capital_budget,
+        ),
+        (
+            [
+                float(
+                    candidate["increase_pct"] > 0
+                    and decisions[owner].risk_band in {"Moderate", "High", "Very high"}
+                )
+                for owner, candidate in options
+            ],
+            len(decisions) * assumptions.max_higher_risk_increase_share,
+        ),
+    )
+    for coefficients, cap in global_constraints:
+        row = len(lower)
+        for option_index, coefficient in enumerate(coefficients):
+            if coefficient:
+                row_indexes.append(row)
+                column_indexes.append(option_index)
+                values.append(float(coefficient))
+        lower.append(-np.inf)
+        upper.append(float(cap))
+
+    matrix = coo_matrix(
+        (values, (row_indexes, column_indexes)), shape=(len(lower), len(options))
+    ).tocsr()
+    objective = np.asarray(
+        [
+            -candidate["incremental_contribution"] + option_index * 1e-8
+            for option_index, (_, candidate) in enumerate(options)
+        ]
+    )
+    result = milp(
+        objective,
+        integrality=np.ones(len(options)),
+        bounds=Bounds(0, 1),
+        constraints=LinearConstraint(matrix, np.asarray(lower), np.asarray(upper)),
+        options={"time_limit": 15},
+    )
+    if not result.success or result.x is None:
+        raise RuntimeError(f"Portfolio optimization failed: {result.message}")
+
+    selected = {
+        owner: candidate
+        for chosen, (owner, candidate) in zip(result.x > 0.5, options, strict=True)
+        if chosen
+    }
+    optimized: list[Decision] = []
+    for account_index, decision in enumerate(decisions):
+        candidate = selected[account_index]
+        if decision.action in restricted_actions:
+            optimized.append(decision)
+            continue
+        increase_pct = float(candidate["increase_pct"])
+        portfolio_reasons = (
+            (
+                "Portfolio allocation optimized under exposure, loss, capital and concentration constraints",
+            )
+            if increase_pct
+            else (
+                "Exposure limit reached",
+                "Portfolio constraints retained current limit",
+            )
+        )
+        optimized.append(
+            replace(
+                decision,
+                action=ACTION_LABELS[increase_pct],
+                increase_pct=increase_pct,
+                proposed_limit=float(candidate["proposed_limit"]),
+                proposed_ead=float(candidate["proposed_ead"]),
+                proposed_expected_loss=float(candidate["proposed_expected_loss"]),
+                incremental_contribution=float(candidate["incremental_contribution"]),
+                risk_adjusted_return=float(candidate["risk_adjusted_return"]),
+                reason_codes=tuple(dict.fromkeys((*decision.reason_codes, *portfolio_reasons))),
+                policy_checks=candidate["checks"],
+            )
+        )
+    return optimized
 
 
 SENSITIVITY_ASSUMPTIONS = (

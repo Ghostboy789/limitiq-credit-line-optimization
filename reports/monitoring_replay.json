@@ -1,0 +1,69 @@
+{
+  "classification": "Deterministic synthetic monitoring replay",
+  "stable": {
+    "classification": "Monitoring output; demonstration unless sourced from approved outcomes",
+    "generated_at": "2026-08-21T11:40:13.475200+00:00",
+    "model_version": "limitiq-behavioral-4.0.0-21234ab33f78",
+    "dataset_version": "uci-350-behavioral-6ba3a746be13",
+    "rows": 2000,
+    "status": "green",
+    "required_response": "Continue monitoring",
+    "signals": {
+      "score_psi": 0.006334999564013059,
+      "roc_auc": 0.7705765396171481,
+      "brier_score": 0.1375030537240519,
+      "brier_delta": 0.004353675960426767,
+      "calibration_gap": 0.019172663253530207,
+      "max_missing_rate": 0.0,
+      "override_rate": 0.021
+    },
+    "action_mix": {
+      "Increase 10%": 655,
+      "Manual review": 671,
+      "No change": 674
+    },
+    "thresholds": {
+      "psi_amber": 0.1,
+      "psi_red": 0.25,
+      "brier_delta_amber": 0.01,
+      "brier_delta_red": 0.02,
+      "calibration_gap_amber": 0.03,
+      "calibration_gap_red": 0.05,
+      "missing_rate_red": 0.01
+    },
+    "report_sha256": "9fd14129399514b63629f5c9c24fa18e77e240b234dfc690f41f8a36ef2c7c81"
+  },
+  "degraded": {
+    "classification": "Monitoring output; demonstration unless sourced from approved outcomes",
+    "generated_at": "2026-08-21T11:40:13.554196+00:00",
+    "model_version": "limitiq-behavioral-4.0.0-21234ab33f78",
+    "dataset_version": "uci-350-behavioral-6ba3a746be13",
+    "rows": 2000,
+    "status": "red",
+    "required_response": "Disable automatic increases and initiate rollback review",
+    "signals": {
+      "score_psi": 8.539212854549222,
+      "roc_auc": 0.7549006651689353,
+      "brier_score": 0.20016931996645626,
+      "brier_delta": 0.06701994220283114,
+      "calibration_gap": 0.0906312551005562,
+      "max_missing_rate": 0.0,
+      "override_rate": 0.1255
+    },
+    "action_mix": {
+      "Increase 10%": 651,
+      "Manual review": 644,
+      "No change": 705
+    },
+    "thresholds": {
+      "psi_amber": 0.1,
+      "psi_red": 0.25,
+      "brier_delta_amber": 0.01,
+      "brier_delta_red": 0.02,
+      "calibration_gap_amber": 0.03,
+      "calibration_gap_red": 0.05,
+      "missing_rate_red": 0.01
+    },
+    "report_sha256": "bb3fda4d7d02b20597b181ac38c8744d36b6866da8bd649cf4bee7be449a40a1"
+  }
+}

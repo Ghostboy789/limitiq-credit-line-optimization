@@ -2,16 +2,18 @@
 
 ## 0:00–0:40 — Frame the decision and status
 
-State that verified v3.0.1 uses one UCI Taiwan following-month default target for
-the decision demo and keeps the 1.87M-row heterogeneous model as research only.
-Describe v2.1 as historical. Open Executive Overview and explain
+State that v4 uses one UCI Taiwan following-month default target and six months
+of behavior for the decision demo, while keeping the 1.87M-row heterogeneous
+model and the US loan-vintage model as research only. Verify `/health` before
+claiming the v4 deployment is live. Open Executive Overview and explain
 increase/hold/refer/freeze plus the boundary:
 source facts observed, risk modelled, profiles and economics simulated.
 
 ## 0:40–1:25 — Explain primary and research evidence
 
-Open Governance. Lead with primary ROC-AUC 0.7574 (95% CI 0.7433–0.7738),
-PR-AUC 0.5087 and Brier 0.1417 on 6,000 untouched rows. Then show the
+Open Governance. Lead with primary ROC-AUC 0.7811 (95% CI 0.7674–0.7961),
+PR-AUC 0.5679 and Brier 0.1331 on 6,000 untouched rows. The exact paired
+comparison improves ROC by 0.0237 and Brier by 0.0085 versus v3. Then show the
 1,869,548-row research benchmark and explain why its labels/horizons differ,
 macro metrics are preferred, pooled metrics are Lending-Club-dominated and the
 benchmark never drives decisions.

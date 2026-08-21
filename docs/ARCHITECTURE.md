@@ -7,7 +7,7 @@ checksum-bound sklearn pipeline and prepared synthetic portfolio, and runs the
 deterministic optimizer. There is no SPA, database, queue, feature store, LLM or
 paid API. Charts are server-side SVG and compatible with the restrictive CSP.
 
-## V3 data and model flow
+## V4 data and model flow
 
 ```mermaid
 flowchart LR
@@ -16,16 +16,18 @@ flowchart LR
   S --> C[Calibrated histogram-GB challenger]
   B --> V[Validation selection]
   C --> V
-  V --> P[Checksum-bound primary champion]
-  P --> D[1,200 Taiwan-contract synthetic profiles]
-  D --> O[Policy optimizer]
+  V --> P[Checksum-bound 17-feature behavioral primary]
+  P --> D[1,200 synthetic six-month histories]
+  D --> O[Mixed-integer policy allocator]
   O --> W[FastAPI/Jinja/SVG application]
   R[Six-cohort research union] --> G[Global transportability benchmark]
   G --> E[Pooled, macro and source evidence]
   E --> W
+  T[Ordered US loan vintages] --> X[Separate temporal research]
+  X --> W
 ```
 
-The primary model uses only delinquency count and utilization from one coherent
+The primary model derives 17 features from six months of behavior in one coherent
 source and target. The research harmonizers share six narrow proxies plus region
 context; source identification can occur through region and missingness. Both
 tracks use random within-source splits, so neither tests future vintages or

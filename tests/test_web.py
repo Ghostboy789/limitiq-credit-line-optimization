@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
+from limitiq.behavioral import synthetic_behavioral_profiles
 from limitiq.config import PROCESSED_DIR
 from limitiq.features import BATCH_COLUMNS
 from limitiq.web import (
@@ -32,7 +33,16 @@ def test_text_artifact_checksum_is_platform_newline_stable(tmp_path: Path) -> No
 
 @pytest.mark.parametrize(
     "path",
-    ["/", "/portfolio", "/simulator", "/batch", "/governance", "/monitoring", "/reports"],
+    [
+        "/",
+        "/portfolio",
+        "/simulator",
+        "/batch",
+        "/governance",
+        "/monitoring",
+        "/v4-lab",
+        "/reports",
+    ],
 )
 def test_major_pages_render(path: str) -> None:
     response = client.get(path)
@@ -45,9 +55,9 @@ def test_health_contract_and_security_headers() -> None:
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
-    assert response.json()["model_version"].startswith("limitiq-primary-3.0.0-")
-    assert response.json()["dataset_version"].startswith("uci-350-next-month-")
-    assert response.json()["model_role"] == "source-coherent-primary-decision-candidate"
+    assert response.json()["model_version"].startswith("limitiq-behavioral-4.0.0-")
+    assert response.json()["dataset_version"].startswith("uci-350-behavioral-")
+    assert response.json()["model_role"] == "source-coherent-behavioral-primary"
     assert response.json()["research_benchmark_version"].startswith("limitiq-global-2.0.0-")
     assert response.json()["automatic_increases_enabled"] is True
     assert "frame-ancestors 'none'" in response.headers["content-security-policy"]
@@ -84,7 +94,7 @@ def test_runtime_probes_and_privacy_safe_operations_metrics() -> None:
 
 
 def test_portfolio_filter_search_sort_and_pagination() -> None:
-    demo = pd.read_csv(PROCESSED_DIR / "primary_demo_portfolio.csv", nrows=1)
+    demo = pd.read_csv(PROCESSED_DIR / "behavioral_demo_portfolio.csv", nrows=1)
     account_id = demo.loc[0, "account_id"]
     response = client.get(
         "/portfolio",
@@ -147,18 +157,18 @@ def test_portfolio_utilization_filters_and_sort_links() -> None:
 
 
 def test_account_decision_and_missing_account() -> None:
-    account_id = pd.read_csv(PROCESSED_DIR / "primary_demo_portfolio.csv", nrows=1).loc[
+    account_id = pd.read_csv(PROCESSED_DIR / "behavioral_demo_portfolio.csv", nrows=1).loc[
         0, "account_id"
     ]
     response = client.get(f"/accounts/{account_id}")
     assert response.status_code == 200
     assert account_id in response.text
     assert "Reason codes" in response.text
-    assert "Harmonized source profile" in response.text
+    assert "Derived decision profile" in response.text
     assert "Source cohort" in response.text
     assert "Illustrative six-period behavior" in response.text
     assert "Synthetic history" in response.text
-    assert "never used by the model or optimizer" in response.text
+    assert "used by the behavioral model" in response.text
     assert response.text == client.get(f"/accounts/{account_id}").text
     missing = client.get("/accounts/LIQ-0000000000")
     assert missing.status_code == 404
@@ -168,6 +178,8 @@ def test_account_decision_and_missing_account() -> None:
 def test_policy_simulator_recalculates_and_validates_extremes() -> None:
     baseline = client.get("/simulator")
     assert baseline.text.count('step="0.001"') >= 10
+    assert 'name="portfolio_capital_budget"' in baseline.text
+    assert "/downloads/reports/behavioral-policy-simulation" in baseline.text
     for label in (
         "Current / proposed exposure proxy",
         "Current / proposed loss proxy",
@@ -205,10 +217,9 @@ def test_policy_simulator_recalculates_and_validates_extremes() -> None:
 
 
 def _sample_frame(rows: int = 2) -> pd.DataFrame:
-    demo = pd.read_csv(PROCESSED_DIR / "primary_demo_portfolio.csv", nrows=rows)
-    sample = demo.rename(columns={"account_id": "ACCOUNT_ID"})[BATCH_COLUMNS]
-    sample["region"] = "taiwan"
-    return sample
+    return synthetic_behavioral_profiles(rows).rename(columns={"account_id": "ACCOUNT_ID"})[
+        BATCH_COLUMNS
+    ]
 
 
 def _upload(frame: pd.DataFrame):
@@ -227,10 +238,6 @@ def test_batch_valid_upload_returns_decisions_without_retention() -> None:
     assert len(result) == 2
     assert {"PD", "RECOMMENDATION", "PROPOSED_EXPECTED_LOSS", "REASON_CODES"} <= set(result.columns)
 
-    nullable = _sample_frame(1)
-    nullable.loc[0, ["utilization", "income_inr", "credit_age_months"]] = np.nan
-    assert _upload(nullable).status_code == 200
-
 
 def test_single_prediction_api_validates_and_returns_no_store_decision() -> None:
     payload = json.loads(_sample_frame(1).to_json(orient="records"))[0]
@@ -244,17 +251,14 @@ def test_single_prediction_api_validates_and_returns_no_store_decision() -> None
 
     assert client.post("/api/predict", json={**payload, "UNEXPECTED": 1}).status_code == 422
     missing = dict(payload)
-    missing.pop("region")
+    missing.pop("PAY_6")
     assert client.post("/api/predict", json=missing).status_code == 422
-    out_of_scope = client.post("/api/predict", json={**payload, "region": "asia"})
-    assert out_of_scope.status_code == 422
-    assert "region=taiwan only" in out_of_scope.text
 
 
 def test_batch_missing_extra_duplicate_invalid_types_and_ranges() -> None:
     sample = _sample_frame()
     cases = []
-    cases.append((sample.drop(columns=["credit_age_months"]), "Missing required columns"))
+    cases.append((sample.drop(columns=["PAY_AMT6"]), "Missing required columns"))
     extra = sample.copy()
     extra["UNEXPECTED"] = 1
     cases.append((extra, "Unexpected columns"))
@@ -262,18 +266,12 @@ def test_batch_missing_extra_duplicate_invalid_types_and_ranges() -> None:
     duplicate.loc[1, "ACCOUNT_ID"] = duplicate.loc[0, "ACCOUNT_ID"]
     cases.append((duplicate, "Duplicate ACCOUNT_ID"))
     invalid_type = sample.copy()
-    invalid_type["utilization"] = invalid_type["utilization"].astype(object)
-    invalid_type.loc[0, "utilization"] = "not-a-number"
-    cases.append((invalid_type, "Numeric values required"))
+    invalid_type["BILL_AMT1"] = invalid_type["BILL_AMT1"].astype(object)
+    invalid_type.loc[0, "BILL_AMT1"] = "not-a-number"
+    cases.append((invalid_type, "finite numeric values"))
     invalid_range = sample.copy()
-    invalid_range.loc[0, "debt_to_income"] = 1.1
-    cases.append((invalid_range, "debt_to_income"))
-    invalid_region = sample.copy()
-    invalid_region.loc[0, "region"] = "antarctica"
-    cases.append((invalid_region, "Unsupported region"))
-    out_of_scope = sample.copy()
-    out_of_scope.loc[0, "region"] = "north_america"
-    cases.append((out_of_scope, "region=taiwan only"))
+    invalid_range.loc[0, "PAY_0"] = 10
+    cases.append((invalid_range, "Repayment status"))
     missing_exposure = sample.copy()
     missing_exposure.loc[0, "current_limit_inr"] = np.nan
     cases.append((missing_exposure, "cannot be blank"))
@@ -283,7 +281,7 @@ def test_batch_missing_extra_duplicate_invalid_types_and_ranges() -> None:
     )
     cases.append((excessive_balance, "current_balance_inr"))
     non_finite = sample.copy()
-    non_finite.loc[0, "income_inr"] = np.inf
+    non_finite.loc[0, "current_limit_inr"] = np.inf
     cases.append((non_finite, "finite"))
     for frame, message in cases:
         response = _upload(frame)
@@ -333,7 +331,7 @@ def test_palette_search_endpoint() -> None:
     pages = client.get("/api/search").json()["results"]
     assert any(item["label"] == "Portfolio explorer" for item in pages)
     assert any(item["label"] == "Monitoring readiness" for item in pages)
-    account_id = pd.read_csv(PROCESSED_DIR / "primary_demo_portfolio.csv", nrows=1).loc[
+    account_id = pd.read_csv(PROCESSED_DIR / "behavioral_demo_portfolio.csv", nrows=1).loc[
         0, "account_id"
     ]
     matches = client.get("/api/search", params={"q": account_id}).json()["results"]
@@ -355,7 +353,7 @@ def test_governance_feature_and_monitoring_sections_render() -> None:
     monitoring = client.get("/monitoring")
     assert monitoring.status_code == 200
     assert "Monitoring readiness" in monitoring.text
-    assert "Active-feature reference ranges" in monitoring.text
+    assert "Behavioral-feature reference ranges" in monitoring.text
     assert "Primary untouched-test diagnostics" in monitoring.text
     assert "Separate research evidence" in monitoring.text
     assert "Proposed thresholds" in monitoring.text
@@ -374,8 +372,10 @@ def test_sample_and_filtered_csv_downloads_are_valid() -> None:
 @pytest.mark.parametrize(
     "path",
     [
-        "/downloads/reports/executive-report-pdf",
-        "/downloads/reports/executive-report-html",
+        "/downloads/reports/behavioral-executive-pdf",
+        "/downloads/reports/behavioral-executive-html",
+        "/downloads/reports/behavioral-primary-evidence",
+        "/downloads/reports/behavioral-policy-simulation",
         "/downloads/reports/data-quality",
         "/downloads/reports/global-model",
         "/downloads/reports/global-data-quality",
@@ -419,8 +419,8 @@ def test_report_and_document_allowlists_block_unknown_paths() -> None:
 def test_document_pages_render_safe_markdown() -> None:
     response = client.get("/documents/model-card")
     assert response.status_code == 200
-    assert "LimitIQ v3 primary candidate" in response.text
-    assert "<code>limitiq-primary-3.0.0-89f9a2530bde</code>" in response.text
+    assert "LimitIQ v4 behavioral primary" in response.text
+    assert "<code>limitiq-behavioral-4.0.0-21234ab33f78</code>" in response.text
     assert "<table>" in response.text
     assert "**source-coherent primary candidate**" not in response.text
     assert "| Candidate |" not in response.text
@@ -443,7 +443,7 @@ def test_static_assets_and_navigation_are_real() -> None:
         assert f'href="{path}"' in overview
 
     governance = client.get("/governance").text
-    assert "Two-track model governance" in governance
+    assert "Multi-track model governance" in governance
     assert "UCI Taiwan next-month default" in governance
     assert "Multi-source transportability benchmark" in governance
     assert "Pooled ROC curve" in governance
@@ -497,6 +497,56 @@ def test_accessible_search_and_single_portfolio_row_tab_stop() -> None:
 def test_reports_separate_current_and_superseded_evidence() -> None:
     response = client.get("/reports")
     assert response.status_code == 200
-    assert "V3 source-coherent evidence" in response.text
+    assert "V4 behavioral-primary evidence" in response.text
+    assert "V3 two-feature archive" in response.text
     assert "V2 multi-source transportability evidence" in response.text
     assert "V1 Taiwan archive" in response.text
+
+
+def test_v4_lab_review_and_india_readiness_workflows() -> None:
+    page = client.get("/v4-lab")
+    assert page.status_code == 200
+    assert "Six-month behavioral history" in page.text
+    assert "Local sensitivities" in page.text
+    submitted = client.post(
+        "/v4-lab/reviews",
+        data={
+            "operation": "submit",
+            "account_id": "LIQ-000001",
+            "actor": "Maker One",
+            "decision": "Hold current limit",
+            "reason": "Affordability concern",
+        },
+        follow_redirects=True,
+    )
+    assert submitted.status_code == 200
+    assert "Maker submission recorded" in submitted.text
+    approved = client.post(
+        "/v4-lab/reviews",
+        data={"operation": "approve", "review_id": "REV-000001", "actor": "Checker Two"},
+        follow_redirects=True,
+    )
+    assert "Checker approval recorded" in approved.text
+    contract = client.get("/downloads/india-data-contract.json")
+    assert contract.status_code == 200
+    payload = {
+        "customer_reference": "TOKEN-0001",
+        "as_of_date": "2026-08-21T10:00:00+05:30",
+        "consent_reference": "CONSENT-1",
+        "consent_timestamp": "2026-08-20T10:00:00+05:30",
+        "bureau_report_date": "2026-08-15T10:00:00+05:30",
+        "bureau_dpd_30_12m": 0,
+        "bureau_dpd_90_24m": 0,
+        "open_trades": 4,
+        "total_monthly_obligation_inr": 25_000,
+        "verified_monthly_income_inr": 100_000,
+        "income_verified_at": "2026-08-01T10:00:00+05:30",
+        "current_limit_inr": 300_000,
+        "current_balance_inr": 120_000,
+        "statement_months": 12,
+        "data_lineage_id": "LINEAGE-0001",
+    }
+    readiness = client.post("/api/india-readiness", json=payload)
+    assert readiness.status_code == 200
+    assert readiness.json()["foir_proxy"] == pytest.approx(0.25)
+    assert "no PD" in readiness.json()["classification"]

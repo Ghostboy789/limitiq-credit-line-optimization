@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LimitIQ India readiness input contract",
+  "description": "A readiness and lineage contract only. It is not an Indian PD model or lending-decision schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "customer_reference",
+    "as_of_date",
+    "consent_reference",
+    "consent_timestamp",
+    "bureau_report_date",
+    "bureau_dpd_30_12m",
+    "bureau_dpd_90_24m",
+    "open_trades",
+    "total_monthly_obligation_inr",
+    "verified_monthly_income_inr",
+    "income_verified_at",
+    "current_limit_inr",
+    "current_balance_inr",
+    "statement_months",
+    "data_lineage_id"
+  ],
+  "properties": {
+    "customer_reference": {"type": "string", "pattern": "^[A-Za-z0-9_-]{6,80}$", "description": "Tokenized internal reference; never PAN, Aadhaar or name."},
+    "as_of_date": {"type": "string", "format": "date-time"},
+    "consent_reference": {"type": "string", "minLength": 6, "maxLength": 120},
+    "consent_timestamp": {"type": "string", "format": "date-time"},
+    "bureau_report_date": {"type": "string", "format": "date-time"},
+    "bureau_dpd_30_12m": {"type": "integer", "minimum": 0},
+    "bureau_dpd_90_24m": {"type": "integer", "minimum": 0},
+    "open_trades": {"type": "integer", "minimum": 0},
+    "total_monthly_obligation_inr": {"type": "number", "minimum": 0},
+    "verified_monthly_income_inr": {"type": "number", "exclusiveMinimum": 0},
+    "income_verified_at": {"type": "string", "format": "date-time"},
+    "current_limit_inr": {"type": "number", "exclusiveMinimum": 0},
+    "current_balance_inr": {"type": "number", "minimum": 0},
+    "statement_months": {"type": "integer", "minimum": 6},
+    "data_lineage_id": {"type": "string", "minLength": 8, "maxLength": 120}
+  }
+}

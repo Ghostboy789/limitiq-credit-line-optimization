@@ -159,11 +159,82 @@ def _executive_pdf(summary: dict[str, Any], model: dict[str, Any], directory: Pa
     ]
 
     def metadata(canvas: Any, _document: Any) -> None:
-        canvas.setTitle("LimitIQ v1 executive decision brief")
+        canvas.setTitle("LimitIQ v4 executive decision brief")
         canvas.setAuthor("LimitIQ")
         canvas.setSubject("Educational credit-line optimization evidence and governance")
 
     doc.build(story, onFirstPage=metadata, onLaterPages=metadata)
+
+
+def build_behavioral_reports(report_dir: Path, model_dir: Path) -> None:
+    """Write the current behavioral-primary executive HTML and PDF."""
+    model = _load(report_dir / "behavioral_model.json")
+    simulation = _load(report_dir / "behavioral_policy_simulation.json")
+    test = model["untouched_test_metrics"]
+    summary = simulation["summary"]
+    paired = model["paired_comparison"]
+    metrics = "".join(
+        f'<div class="metric"><small>{html.escape(label)}</small><br><strong>{value}</strong></div>'
+        for label, value in (
+            ("Untouched-test ROC-AUC", f"{test['roc_auc']:.3f}"),
+            ("Untouched-test PR-AUC", f"{test['pr_auc']:.3f}"),
+            ("Brier score", f"{test['brier_score']:.3f}"),
+            ("Simulated eligible increases", f"{summary['eligible_increases']:,}"),
+            ("Simulated incremental contribution", _money(summary["incremental_contribution"])),
+            ("Simulated risk-adjusted return", _pct(summary["risk_adjusted_return"])),
+        )
+    )
+    _write_html(
+        report_dir,
+        "executive_report.html",
+        "LimitIQ v4 Executive Report",
+        "Observed source, model estimates and simulated economics",
+        [
+            (
+                "Decision product",
+                "<p>LimitIQ evaluates current, +10%, +20% and +30% line candidates and selects one governed action under account and portfolio constraints. No automatic punitive decrease is recommended.</p>",
+            ),
+            ("Evidence snapshot", metrics),
+            (
+                "Measured model improvement",
+                f"<p>On the same untouched 6,000 Taiwan accounts, the 17-feature behavioral primary improves ROC-AUC by {paired['roc_auc']['candidate_minus_v3']:.4f} and Brier score by {paired['brier_score']['candidate_minus_v3']:.4f} versus v3. Seeded paired 95% intervals exclude zero. This is within-source evidence, not temporal or Indian-market validation.</p>",
+            ),
+            (
+                "Portfolio simulation",
+                _table(
+                    ["Measure", "Value"],
+                    [
+                        ["Synthetic profiles", f"{summary['accounts']:,}"],
+                        [
+                            "Current / proposed limits",
+                            f"{_money(summary['current_limit'])} / {_money(summary['proposed_limit'])}",
+                        ],
+                        [
+                            "Current / proposed loss proxy",
+                            f"{_money(summary['current_expected_loss'])} / {_money(summary['proposed_expected_loss'])}",
+                        ],
+                        [
+                            "Manual review / freeze",
+                            f"{summary['action_counts'].get('Manual review', 0):,} / {summary['action_counts'].get('Freeze automatic increases', 0):,}",
+                        ],
+                    ],
+                ),
+            ),
+            (
+                "Governance boundary",
+                "<p>The source is Taiwan 2005, the split is random within source, and no public record observes response to a line increase. Scores are model estimates; exposure, loss, contribution, monitoring and experiment outputs are deterministic simulations. Real use requires representative local data, verified affordability, independent validation, approved experiments and monitored rollback.</p>",
+            ),
+        ],
+    )
+    _executive_pdf(
+        simulation,
+        {
+            "test_metrics": test,
+            "champion": model["champion"],
+            "selected_threshold": model["selected_threshold"],
+        },
+        report_dir,
+    )
 
 
 def _global_executive_pdf(
@@ -779,6 +850,10 @@ def build_reports(report_dir: Path | None = None, model_dir: Path | None = None)
         report_dir / "global_policy_simulation.json"
     ).exists():
         build_global_reports(report_dir, model_dir)
+    if (report_dir / "behavioral_model.json").exists() and (
+        report_dir / "behavioral_policy_simulation.json"
+    ).exists():
+        build_behavioral_reports(report_dir, model_dir)
 
 
 if __name__ == "__main__":

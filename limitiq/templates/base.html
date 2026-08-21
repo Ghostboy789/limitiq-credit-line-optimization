@@ -7,8 +7,8 @@
   <meta name="description" content="LimitIQ educational next-month credit-risk and credit-line optimization platform">
   <meta name="theme-color" content="#f5f5f7">
   <title>{{ title }} · LimitIQ</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=3.0.0">
-  <script src="{{ url_for('static', path='/app.js') }}?v=3.0.0" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=4.0.0">
+  <script src="{{ url_for('static', path='/app.js') }}?v=4.0.0" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -22,6 +22,7 @@
       <a href="/batch" {% if request.url.path == '/batch' %}aria-current="page"{% endif %}>Batch</a>
       <a href="/governance" {% if request.url.path == '/governance' %}aria-current="page"{% endif %}>Governance</a>
       <a href="/monitoring" {% if request.url.path == '/monitoring' %}aria-current="page"{% endif %}>Monitoring</a>
+      <a href="/v4-lab" {% if request.url.path.startswith('/v4-lab') %}aria-current="page"{% endif %}>V4 lab</a>
       <a href="/reports" {% if request.url.path == '/reports' %}aria-current="page"{% endif %}>Reports</a>
     </nav>
     <button class="search-trigger" type="button" data-palette-open aria-haspopup="dialog" aria-label="Search or jump to"><span class="search-word">Search</span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.5" y2="16.5"></line></svg><kbd>Ctrl K</kbd></button>

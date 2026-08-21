@@ -1,7 +1,7 @@
 # SQL decision mart
 
 `portfolio_mart.sql` creates four read-only SQLite views over the committed,
-deterministic Taiwan-contract synthetic primary-model portfolio. It demonstrates portfolio
+deterministic rich-history Taiwan synthetic primary-model portfolio. It demonstrates portfolio
 reconciliation, action aggregation, development-source analysis and risk-band
 concentration without adding a runtime database or retaining uploaded data.
 
