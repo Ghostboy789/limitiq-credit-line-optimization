@@ -31,7 +31,7 @@ Review date: 18 August 2026.
 | Implementation | v3.0.0 release candidate; not yet live at review time |
 | Development evidence | `reports/primary_model.json`, `reports/global_model.json`, calibration, source diagnostics and checksum metadata |
 | Controls | policy constraints, reason codes, manual review, early-warning freeze, `AUTO_INCREASES_ENABLED` rollback |
-| Verification | 112 local tests passed at 72.80% scoped coverage; Ruff/format/Bandit/pip-audit/provenance/runtime smoke passed. CI, container and live v3 gates remain pending |
+| Verification | 112 local tests passed at 72.82% scoped coverage; Ruff/format/Bandit/pip-audit/provenance/runtime smoke passed. CI, container and live v3 gates remain pending |
 | Documentation | methodology, data card, model card, assumptions, provenance notice and monitoring baseline |
 
 The review follows the risk-based themes in the US interagency [Revised
@@ -183,7 +183,7 @@ checksums, source provenance, fixed seeds, bootstrap evidence and artifact
 consistency checks are recorded. Strict upload validation, transient processing,
 security headers, safe production errors, liveness/readiness and aggregate-only
 operations telemetry are implemented. The full local suite passed 112 tests at
-72.80% scoped coverage with clean lint, format, Bandit and dependency audit. CI,
+72.82% scoped coverage with clean lint, format, Bandit and dependency audit. CI,
 container and live deployment evidence remains a release gate. These controls
 support the educational scope and do not certify a bank production environment.
 

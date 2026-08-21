@@ -174,7 +174,8 @@ def _verify_release_manifest(required_paths: list[Path]) -> None:
         entries[normalized] = checksum
     for path in required_paths:
         relative = path.relative_to(ROOT).as_posix()
-        if entries.get(relative) != _sha256(path):
+        actual = _sha256(path) if path.suffix == ".joblib" else _text_sha256(path)
+        if entries.get(relative) != actual:
             raise RuntimeError(f"Release checksum mismatch: {relative}")
 
 
@@ -229,7 +230,7 @@ def _load_artifacts() -> tuple[
     if _sha256(model_path) != metadata["model_checksum"]:
         raise RuntimeError("Primary model checksum does not match trusted metadata")
     report = json.loads(report_path.read_text(encoding="utf-8"))
-    if _sha256(report_path) != metadata["artifact_checksums"][report_path.name]:
+    if _text_sha256(report_path) != metadata["artifact_checksums"][report_path.name]:
         raise RuntimeError("Primary model report checksum does not match trusted metadata")
     model = joblib.load(model_path)  # noqa: S301 — repository-built artifact, checksum verified above.
     simulation = json.loads(simulation_path.read_text(encoding="utf-8"))

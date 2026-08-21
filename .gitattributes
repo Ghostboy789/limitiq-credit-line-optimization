@@ -1,4 +1,7 @@
 * text=auto
+*.csv text eol=lf
+*.json text eol=lf
+*.sha256 text eol=lf
 *.joblib binary
 *.pdf binary
 *.png binary

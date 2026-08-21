@@ -459,8 +459,8 @@ def train_primary(
     }
     metadata["artifact_checksums"] = {
         model_path.name: _sha256(model_path),
-        schema_path.name: _sha256(schema_path),
-        report_path.name: _sha256(report_path),
+        schema_path.name: _text_sha256(schema_path),
+        report_path.name: _text_sha256(report_path),
     }
     _write_json(model_dir / PRIMARY_METADATA_PATH.name, metadata)
     return payload

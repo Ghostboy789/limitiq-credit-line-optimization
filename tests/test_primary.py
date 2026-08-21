@@ -54,7 +54,10 @@ def _provenance() -> dict[str, object]:
 
 
 def _sha256(path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    content = (
+        path.read_bytes() if path.suffix == ".joblib" else path.read_text(encoding="utf-8").encode()
+    )
+    return hashlib.sha256(content).hexdigest()
 
 
 def test_cached_primary_source_has_one_explicit_target_and_horizon() -> None:

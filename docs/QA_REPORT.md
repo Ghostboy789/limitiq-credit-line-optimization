@@ -7,7 +7,7 @@ Taiwan-contract synthetic demo, two-track governance, operational endpoints,
 committee memo, source manifest, SQL reconciliation, SBOM, CodeQL and container
 scan gates.
 
-- Full suite: **112 passed**, **72.80%** scoped statement coverage (65% required).
+- Full suite: **112 passed**, **72.82%** scoped statement coverage (65% required).
 - Ruff lint and format: pass. Bandit: no findings. Pip-audit: no known
   vulnerabilities in pinned runtime dependencies.
 - Secret scan: 85 publishable source/config/document files, zero findings;

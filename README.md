@@ -36,7 +36,7 @@ The public deployment currently serves verified **v2.1.0**. The repository
 contains the **v3.0.0 release candidate** described below; it is not called live
 until CI, Render and production workflow verification pass.
 
-Current local v3 gate: **112 tests passed at 72.80% coverage**; Ruff, formatting,
+Current local v3 gate: **112 tests passed at 72.82% coverage**; Ruff, formatting,
 Bandit, dependency audit, source/demo/SBOM checks and local runtime smoke passed.
 Docker/Trivy, GitHub Actions and production verification remain pending.
 Coverage measures the primary/runtime package and explicitly omits the large

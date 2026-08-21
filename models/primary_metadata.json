@@ -65,7 +65,7 @@
   ],
   "artifact_checksums": {
     "primary_champion.joblib": "89f9a2530bde4fbae25974255d5de5963b1ae8ec392042287dad17356c98df33",
-    "primary_feature_schema.json": "81d1da2b6aca9c70e53e730466ddd13b5cb3d314219fb72cd50498f69150e930",
-    "primary_model.json": "92cafa02838112d0bdcb2c204321925e4086f4afdbdf91b9e1845463d38f35d5"
+    "primary_feature_schema.json": "e5200156b1999958b0043452b642c92bfbc4cfd24ddfa2378abc09e513fd7e8e",
+    "primary_model.json": "3f60e71cf4492f3067b3a5e70e89152dbfa1e5e8711bd342b8c98ab50f586872"
   }
 }
