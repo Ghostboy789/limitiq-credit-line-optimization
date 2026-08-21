@@ -43,7 +43,7 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           severity: HIGH,CRITICAL
-      - run: docker run -d --rm --name limitiq -p 8000:8000 limitiq:test
+      - run: docker run -d --name limitiq -p 8000:8000 limitiq:test
       - run: |
           for i in {1..30}; do
             python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)" && exit 0
@@ -52,3 +52,6 @@ jobs:
           docker logs limitiq
           exit 1
       - run: python -m limitiq.benchmark http://127.0.0.1:8000/ --requests 50 --concurrency 5
+      - name: Remove smoke-test container
+        if: always()
+        run: docker rm -f limitiq || true

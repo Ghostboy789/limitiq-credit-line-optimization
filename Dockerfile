@@ -18,7 +18,7 @@ RUN apt-get update && apt-get upgrade --yes && \
 COPY limitiq ./limitiq
 COPY models ./models
 COPY release ./release
-COPY data/processed/primary_demo_portfolio.csv ./data/processed/primary_demo_portfolio.csv
+COPY data/processed/behavioral_demo_portfolio.csv ./data/processed/behavioral_demo_portfolio.csv
 COPY reports ./reports
 COPY docs ./docs
 COPY LICENSE README.md ./
