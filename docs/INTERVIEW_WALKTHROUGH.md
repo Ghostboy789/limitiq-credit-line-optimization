@@ -2,10 +2,10 @@
 
 ## 0:00–0:40 — Frame the decision and status
 
-State that v3 uses one UCI Taiwan following-month default target for the decision
-demo and keeps the 1.87M-row heterogeneous model as research only. Until final
-release, say the live site is verified v2.1 and v3 is the repository candidate.
-Open Executive Overview and explain increase/hold/refer/freeze plus the boundary:
+State that verified v3.0.1 uses one UCI Taiwan following-month default target for
+the decision demo and keeps the 1.87M-row heterogeneous model as research only.
+Describe v2.1 as historical. Open Executive Overview and explain
+increase/hold/refer/freeze plus the boundary:
 source facts observed, risk modelled, profiles and economics simulated.
 
 ## 0:40–1:25 — Explain primary and research evidence

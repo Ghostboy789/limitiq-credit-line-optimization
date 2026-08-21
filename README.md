@@ -32,14 +32,12 @@ rules and a recruiter-ready banking workflow in one Dockerized FastAPI service.
 
 [View the 390 px mobile capture](docs/assets/v3-overview-mobile.png) · [View the governance verdict](docs/assets/v3-governance.png)
 
-The public deployment serves verified **v3.0.0** application code from
-`1dc6257f96617b3618527446203c96d55ae75568`. GitHub Actions
-[run 32455018502](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32455018502)
-passed the full release gate, including Docker, a zero HIGH/CRITICAL Trivy scan,
-container health and concurrency smoke; matching CodeQL
-[run 32455018503](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32455018503)
-also passed. Render `/health` reported the exact commit, primary model and dataset
-before production workflow and responsive-browser verification on 21 August 2026.
+The public deployment serves verified **v3.0.1**. The annotated release tag is
+the immutable source revision; Render [`/health`](https://limitiq-credit-line-optimization.onrender.com/health)
+exposes the exact deployed commit, primary model and dataset. The linked CI and
+CodeQL badges report the current branch gates. The release passed Docker, a zero
+HIGH/CRITICAL Trivy scan, container health, concurrency smoke, production
+workflows and responsive-browser verification on 21 August 2026.
 
 The v3 gate is **112 tests passed at 72.82% coverage**; Ruff, formatting,
 Bandit, dependency audit, secret scan, source/demo/SBOM checks, Docker/Trivy,
@@ -252,6 +250,7 @@ larger decorative model.
 
 ## Release history
 
+- **v3.0.1:** documentation-consistency patch; model and simulation unchanged.
 - **v3.0.0:** coherent primary model, research separation,
   confidence intervals, validation package, committee memo, SQL/SBOM/ops gates.
 - **v2.1.0:** verified live application and multi-source research benchmark.

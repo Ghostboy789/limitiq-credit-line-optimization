@@ -3,7 +3,7 @@
 ## Decision
 
 **Conditional approval for educational research and synthetic policy
-demonstration only.** LimitIQ v3.0.0 is not approved for lending decisions,
+demonstration only.** LimitIQ release v3.0.1 (runtime/model 3.0.0) is not approved for lending decisions,
 regulatory probability of default (PD), pricing, provisioning, capital,
 customer treatment, Indian-customer decisions or automated credit-line changes.
 
@@ -28,7 +28,7 @@ Review date: 21 August 2026.
 | Primary model | `limitiq-primary-3.0.0-89f9a2530bde` |
 | Primary dataset | UCI 350 next-month default; 30,000 rows |
 | Research benchmark | `limitiq-global-2.0.0-37a14c45a811`; 1,869,548 rows |
-| Implementation | v3.0.0 verified educational deployment |
+| Implementation | v3.0.1 verified educational deployment; model artifacts unchanged from 3.0.0 |
 | Development evidence | `reports/primary_model.json`, `reports/global_model.json`, calibration, source diagnostics and checksum metadata |
 | Controls | policy constraints, reason codes, manual review, early-warning freeze, `AUTO_INCREASES_ENABLED` rollback |
 | Verification | 112 tests at 72.82% scoped coverage; Ruff/format/Bandit/pip-audit/secret/provenance checks, CodeQL, Docker, zero HIGH/CRITICAL Trivy scan, container smoke, exact-commit Render and responsive production-browser QA passed |

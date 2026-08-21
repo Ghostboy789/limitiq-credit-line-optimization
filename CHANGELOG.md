@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.1 — 2026-08-21
+
+- Reconciled final deployment, interview and assumptions documentation after
+  the v3.0.0 post-release audit; model bytes, metrics and simulation are unchanged.
+
 ## 3.0.0 — 2026-08-21
 
 - Separate a coherent single-definition primary decision model from the

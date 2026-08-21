@@ -1,6 +1,6 @@
 # QA report
 
-## V3.0.0 verified release — 21 August 2026
+## V3.0.1 verified release — 21 August 2026
 
 The working tree contains a coherent UCI Taiwan next-month primary model,
 Taiwan-contract synthetic demo, two-track governance, operational endpoints,
@@ -26,15 +26,18 @@ scan gates.
   research CLIs remain explicitly omitted and are checked through artifact,
   schema and provenance tests; the headline is not full rebuild-path coverage.
 - Local Docker is unavailable; GitHub Actions supplied the container evidence.
-- CI [run 32455018502](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32455018502)
+- The v3.0.0 implementation CI [run 32455018502](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32455018502)
   passed Docker build, zero HIGH/CRITICAL Trivy scanning, non-root container
   health and a 50-request/5-concurrency benchmark. CodeQL
   [run 32455018503](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32455018503)
   passed on the same commit.
-- Render `/health` reported application `3.0.0`, model
+- V3.0.1 corrected documentation drift found by the post-release audit without
+  changing code, model, evidence or simulation. The full CI, CodeQL, Render
+  exact-commit and production smoke gates were repeated before its tag.
+- Render `/health` reports application `3.0.0`, model
   `limitiq-primary-3.0.0-89f9a2530bde`, dataset
-  `uci-350-next-month-dc05bd56186a` and exact commit
-  `1dc6257f96617b3618527446203c96d55ae75568`.
+  `uci-350-next-month-dc05bd56186a` and the exact deployed commit; the immutable
+  release tag identifies the source.
 - Production HTTPS QA passed 21 GET/download/document routes, stressed simulator,
   valid/invalid batch, valid/out-of-scope prediction and security/observability
   header checks.

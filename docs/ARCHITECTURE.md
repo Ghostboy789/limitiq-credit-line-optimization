@@ -46,10 +46,10 @@ unseen markets.
 
 ## Deployment boundary
 
-The public Render service serves verified v3 application code from
-`1dc6257f96617b3618527446203c96d55ae75568`; CI, CodeQL, container security,
-exact-commit health, production workflows and 1440/768/390 px browser QA passed
-on 21 August 2026. Research-source publication proceeds under the
+The public Render service serves verified v3.0.1. The annotated release tag is
+the immutable revision and live `/health` exposes the exact deployed commit.
+CI, CodeQL, container security, production workflows and 1440/768/390 px
+browser QA passed on 21 August 2026. Research-source publication proceeds under the
 repository owner's 14 August 2026 resolution attestation in `NOTICE.md`; this
 record is not an independent legal opinion.
 

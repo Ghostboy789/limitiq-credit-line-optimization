@@ -2,12 +2,13 @@
 
 ## Status boundary
 
-The public service runs the verified **v3.0.0 application** with primary
+The public service runs the verified **v3.0.1 release** with primary
 model `limitiq-primary-3.0.0-89f9a2530bde` and dataset
-`uci-350-next-month-dc05bd56186a`. Application code was release-gated at commit
-`1dc6257f96617b3618527446203c96d55ae75568` on 21 August 2026. Live `/health`
-reports application `3.0.0`, that exact Git revision and the primary model and
-dataset identifiers. The v2 global model remains a research benchmark only.
+`uci-350-next-month-dc05bd56186a`. The annotated `v3.0.1` tag is the immutable
+source revision. Live `/health` reports runtime application `3.0.0`, the exact deployed
+Git revision and the primary model and dataset identifiers. Release v3.0.1
+is a documentation-only patch; model and simulation artifacts are unchanged.
+The v2 global model remains a research benchmark only.
 
 Publication proceeded under the repository owner's 14 August 2026 clearance
 attestation documented in [`NOTICE.md`](../NOTICE.md). This is an owner-cleared
@@ -21,14 +22,14 @@ Health endpoint: https://limitiq-credit-line-optimization.onrender.com/health
 The `limitiq-production` Blueprint deploys the Docker service from `main` on
 Render's free plan with a `$0` workspace spend limit.
 
-## V3.0 deployment verification — 21 August 2026
+## V3 release verification — 21 August 2026
 
-1. GitHub Actions
+1. The v3.0.0 implementation gate used GitHub Actions
    [run 32455018502](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32455018502)
    passed Ruff, format, 112 tests at 72.82% scoped coverage, primary smoke,
    source/analytics/SBOM checks, Bandit, pip-audit, secret scanning, Docker build,
    zero HIGH/CRITICAL Trivy scanning, container health and concurrency smoke.
-2. Matching CodeQL
+2. Matching v3.0.0 CodeQL
    [run 32455018503](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32455018503)
    passed.
 3. Render `/health`, `/live`, `/ready` and `/ops` returned 200; `/health` proved
@@ -41,6 +42,9 @@ Render's free plan with a `$0` workspace spend limit.
    monitoring, reports and committee views at 1440, 768 and 390 px. No page-level
    horizontal overflow or console warning/error was observed; the mobile menu
    expanded with accessible state.
+6. The post-release audit found documentation drift only. V3.0.1 corrected the
+   release boundary, interview script and current assumptions; the same CI,
+   CodeQL, Render exact-commit and live smoke gates were repeated before tagging.
 
 The runtime container uses the current official Python 3.11 slim Trixie base,
 applies published OS security updates during build, removes build-only packaging

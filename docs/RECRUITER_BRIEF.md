@@ -8,7 +8,7 @@ review and early-warning-freeze actions.
 
 - **Live application:** https://limitiq-credit-line-optimization.onrender.com
 - **Repository:** https://github.com/Ghostboy789/limitiq-credit-line-optimization
-- **Release state:** v3.0.0 verified live on 21 August 2026
+- **Release state:** v3.0.1 verified live on 21 August 2026
 
 ## Evidence at a glance
 
