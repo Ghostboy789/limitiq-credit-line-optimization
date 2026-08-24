@@ -436,7 +436,7 @@ def test_static_assets_and_navigation_are_real() -> None:
     assert css.status_code == js.status_code == motion.status_code == 200
     assert hero.status_code == gsap.status_code == scroll_trigger.status_code == 200
     overview = client.get("/").text
-    assert 'data-landing' in overview
+    assert "data-landing" in overview
     assert "Credit growth." in overview
     assert "From score to" in overview
     assert "Built for people" in overview
@@ -447,8 +447,8 @@ def test_static_assets_and_navigation_are_real() -> None:
     assert "Credit portfolio manager" in overview
     assert "Underwriter" in overview
     assert "Educational and research use only" in overview
-    assert 'data-review-next' in overview
-    assert 'data-card-stack' in overview
+    assert "data-review-next" in overview
+    assert "data-card-stack" in overview
     assert '<details class="track-card" open>' in overview
     assert "/static/vendor/gsap-3.13.0.min.js" in overview
     assert "/static/vendor/ScrollTrigger-3.13.0.min.js" in overview
