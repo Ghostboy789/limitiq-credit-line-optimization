@@ -48,12 +48,13 @@ unseen markets.
 
 ## Deployment boundary
 
-The public Render service serves verified v3.0.1. The annotated release tag is
-the immutable revision and live `/health` exposes the exact deployed commit.
-CI, CodeQL, container security, production workflows and 1440/768/390 px
-browser QA passed on 21 August 2026. Research-source publication proceeds under the
-repository owner's 14 August 2026 resolution attestation in `NOTICE.md`; this
-record is not an independent legal opinion.
+The public Render service serves verified v4.0.0. Live `/health` exposes the
+application, behavioral primary model, dataset and exact deployed commit. CI,
+CodeQL, container security, production workflows and 1440/768/390 px browser QA
+passed for implementation commit `621239c` on 21–24 August 2026. The annotated
+release tag is the immutable source boundary. Research-source publication
+proceeds under the repository owner's 14 August 2026 resolution attestation in
+`NOTICE.md`; this record is not an independent legal opinion.
 
 ## Failure behavior and rollback
 

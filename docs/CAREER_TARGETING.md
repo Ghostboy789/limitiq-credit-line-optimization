@@ -6,10 +6,10 @@
 a calibrated next-month default model, constrained actions, model-risk controls
 and a separately governed 1.87M-row transportability benchmark.
 
-Be precise about version status: v4 is the release candidate and must be checked
-against live `/health` before being called deployed. It uses one Taiwan
-next-month target for account decisions and never uses the heterogeneous global
-or US loan-vintage models for individual recommendations.
+Be precise about version status: v4 is verified live and `/health` exposes the
+exact deployed commit, model and dataset. It uses one Taiwan next-month target
+for account decisions and never uses the heterogeneous global or US
+loan-vintage models for individual recommendations.
 
 The project demonstrates credit-risk modelling, model governance, ML
 engineering, decision policy, security and product delivery. It does not

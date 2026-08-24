@@ -20,14 +20,14 @@ approved it.
 
 ## Scope and evidence
 
-Review date: 21 August 2026.
+Review date: 24 August 2026.
 
 | Item | Reviewed evidence |
 |---|---|
 | Primary model | `limitiq-behavioral-4.0.0-21234ab33f78` |
 | Primary dataset | UCI 350 next-month default; 30,000 rows |
 | Research benchmark | `limitiq-global-2.0.0-37a14c45a811`; 1,869,548 rows |
-| Implementation | v4.0.0 release candidate; production status must be verified against `/health` and the exact deployed commit |
+| Implementation | v4.0.0 verified on Render; `/health` binds the application, primary model, dataset and exact deployed commit |
 | Development evidence | `reports/behavioral_model.json`, `reports/temporal_validation.json`, `reports/global_model.json`, calibration, paired comparison and checksum metadata |
 | Controls | policy constraints, reason codes, manual review, early-warning freeze, `AUTO_INCREASES_ENABLED` rollback |
 | Verification | Local v4 release gates are recorded in `docs/V4_WORKBENCH.md`; CI, container and live evidence must bind the exact release commit before the tag is issued |
@@ -180,9 +180,10 @@ Training and inference share serialized preprocessing. Dataset and model
 checksums, source provenance, fixed seeds, bootstrap evidence and artifact
 consistency checks are recorded. Strict upload validation, transient processing,
 security headers, safe production errors, liveness/readiness and aggregate-only
-operations telemetry are implemented. The full v4 local suite passed 127 tests
-at 71.60% scoped coverage with clean lint, format, Bandit, dependency and secret
-audits. CI, container and live deployment evidence remains a release gate. These controls
+operations telemetry are implemented. Final CI collected 127 tests (126 passed,
+1 skipped) at 70.85% scoped coverage with clean lint, format, Bandit, dependency
+and secret audits. CI, CodeQL, container and live deployment verification passed
+for implementation commit `621239c`. These controls
 support the educational scope and do not certify a bank production environment.
 
 ## Validation findings

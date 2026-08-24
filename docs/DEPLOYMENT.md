@@ -2,13 +2,12 @@
 
 ## Status boundary
 
-The public service runs the verified **v3.0.1 release** with primary
-model `limitiq-primary-3.0.0-89f9a2530bde` and dataset
-`uci-350-next-month-dc05bd56186a`. The annotated `v3.0.1` tag is the immutable
-source revision. Live `/health` reports runtime application `3.0.0`, the exact deployed
-Git revision and the primary model and dataset identifiers. Release v3.0.1
-is a documentation-only patch; model and simulation artifacts are unchanged.
-The v2 global model remains a research benchmark only.
+The public service runs verified **v4.0.0** with behavioral primary model
+`limitiq-behavioral-4.0.0-21234ab33f78` and dataset
+`uci-350-behavioral-6ba3a746be13`. Live `/health` reports application `4.0.0`,
+the exact deployed Git revision and the primary model and dataset identifiers.
+The v2 global model and v4 temporal loan study remain research evidence only;
+neither drives card recommendations.
 
 Publication proceeded under the repository owner's 14 August 2026 clearance
 attestation documented in [`NOTICE.md`](../NOTICE.md). This is an owner-cleared
@@ -22,7 +21,37 @@ Health endpoint: https://limitiq-credit-line-optimization.onrender.com/health
 The `limitiq-production` Blueprint deploys the Docker service from `main` on
 Render's free plan with a `$0` workspace spend limit.
 
-## V3 release verification — 21 August 2026
+## V4 release verification — 21–24 August 2026
+
+1. Implementation commit `621239c39ce4b32f32aa1667a6aa4af8830889e2`
+   passed GitHub Actions
+   [run 32483007565](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32483007565):
+   127 collected tests (126 passed, 1 skipped) at 70.85% coverage, Ruff,
+   format, behavioral smoke, source/analytics/SBOM checks, Bandit, pip-audit,
+   secret scan, Docker build, zero HIGH/CRITICAL Trivy findings, container
+   health and 50/50 concurrency smoke requests (p50 4.54 ms; p95 107.56 ms).
+   These timings are point-in-time smoke evidence, not a capacity claim.
+2. Matching CodeQL
+   [run 32483007603](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32483007603)
+   passed for the same SHA.
+3. Render `/health` returned 200 with application `4.0.0`, the behavioral model
+   and dataset identifiers above, and exact deployed commit `621239c`. CSP,
+   HSTS, `nosniff` and strict referrer headers were present.
+4. Nineteen primary HTTPS routes, operational endpoints and report/CSV/schema
+   downloads returned 200. A five-row transient batch returned five decisions
+   with `no-store`; a missing-column batch returned a specific safe 422; single
+   prediction and the PDF `%PDF-` signature passed. A crawl checked 94 internal
+   links with zero failures.
+5. Production browser QA exercised overview, filtered portfolio, account
+   decision, extreme simulator, batch, governance, monitoring, v4 lab and
+   reports. Back/forward/refresh, search focus restoration and mobile navigation
+   passed. No page-level overflow was present at 1440, 768 or 390 px, and the
+   browser console had zero warning/error entries.
+6. The in-app browser screenshot operation was unavailable during this pass.
+   Existing README captures therefore remain honestly labelled v3; they are not
+   used as v4 verification evidence.
+
+## Historical v3 release verification — 21 August 2026
 
 1. The v3.0.0 implementation gate used GitHub Actions
    [run 32455018502](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32455018502)

@@ -1,6 +1,39 @@
 # QA report
 
-## V3.0.1 verified release — 21 August 2026
+## V4.0.0 verified release — 21–24 August 2026
+
+- Exact implementation commit:
+  `621239c39ce4b32f32aa1667a6aa4af8830889e2`.
+- GitHub Actions
+  [run 32483007565](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32483007565):
+  **127 collected, 126 passed, 1 skipped**, **70.85%** scoped statement
+  coverage (65% required). Ruff, format, primary smoke, source/analytics/SBOM
+  checks, Bandit, pip-audit and secret scan passed.
+- Docker build, zero HIGH/CRITICAL Trivy scan, non-root container health and the
+  50-request/5-concurrency smoke passed 50/50 (p50 4.54 ms, p95 107.56 ms).
+  This is point-in-time smoke evidence, not a capacity claim.
+- Matching CodeQL
+  [run 32483007603](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32483007603)
+  passed on the same commit.
+- Render `/health` returned application `4.0.0`, model
+  `limitiq-behavioral-4.0.0-21234ab33f78`, dataset
+  `uci-350-behavioral-6ba3a746be13` and the exact deployed SHA. CSP, HSTS,
+  `nosniff` and strict referrer headers were present.
+- Public HTTPS QA passed 19 primary routes/endpoints/downloads, five-row
+  transient batch scoring, specific invalid-schema rejection, single-account
+  prediction, PDF signature validation and 94/94 discovered internal links.
+- Production browser QA covered overview, portfolio filter, account detail,
+  extreme simulator, batch, governance, monitoring, v4 lab and reports.
+  Refresh/back/forward, search focus return and responsive navigation passed;
+  1440/768/390 px had no page-level overflow and console warning/error logs
+  were empty.
+- The in-app screenshot operation was unavailable. Existing committed captures
+  remain explicitly labelled v3 and are not presented as v4 evidence.
+- The v4 behavioral primary, global research benchmark and temporal loan study
+  remain separately labelled; only the source-coherent behavioral model drives
+  the deterministic synthetic card demonstration.
+
+## Historical V3.0.1 verified release — 21 August 2026
 
 The working tree contains a coherent UCI Taiwan next-month primary model,
 Taiwan-contract synthetic demo, two-track governance, operational endpoints,
@@ -80,9 +113,10 @@ scan gates.
 
 ## Version boundary
 
-This report separates current **v3 application evidence** from historical
-**v2.1, v2.0 and v1 release evidence**. V3 uses the coherent primary model for
-the educational demo while the v2 model remains research only. Pre-rewrite
+This report separates current **v4 application evidence** from historical
+**v3, v2.1, v2.0 and v1 release evidence**. V4 uses the 17-feature coherent
+behavioral primary model for the educational demo while the v2 global model and
+v4 temporal loan study remain research only. Pre-rewrite
 commit `7e4ca6e`, v2.0 tag and 12 August results below are
 retained as historical evidence; current identity is the rewritten
 `Ghostboy789` history. Publication proceeds under the owner's 14 August 2026

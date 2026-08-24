@@ -2,10 +2,10 @@
 
 ## Status and evidence boundary
 
-V4 is the application release candidate. The behavioral model has replaced v3
+V4 is the verified application release. The behavioral model has replaced v3
 inside the application after paired improvement and inference-contract migration;
-the public deployment is not claimed until CI, container and live production
-checks bind the exact release commit. No result below is production impact. Taiwan outcomes are
+CI, container and live production checks bind the deployed implementation
+commit. No result below is production impact. Taiwan outcomes are
 observed; candidate scores are model estimates; portfolio, monitoring and experiment
 outcomes are deterministic simulations.
 
@@ -83,7 +83,7 @@ income freshness, DPD, obligations, verified income, statement history, exposure
 lineage fields. The executable validator rejects direct identifiers including PAN and
 Aadhaar and returns readiness diagnostics only—never a PD or lending decision.
 
-## Reproduce the candidate evidence
+## Reproduce the evidence
 
 ```powershell
 python -m limitiq.behavioral --bootstrap-repeats 500
@@ -95,10 +95,10 @@ python -m pytest tests/test_behavioral.py tests/test_temporal.py tests/test_opti
 
 ## Release gate status
 
-Completed locally: rich-history portfolio rebuild; strict batch/API migration;
+Completed and release-verified: rich-history portfolio rebuild; strict batch/API migration;
 mixed-integer policy allocation; monitoring, experiment, explanation, review and
 India workbenches; executive report; checksum manifest; model/data cards and
-validation-style review; 127 tests at 71.60% coverage; Ruff/format, Bandit,
+validation-style review; 127 collected tests (126 passed, 1 skipped) at 70.85% coverage; Ruff/format, Bandit,
 dependency and secret scans; SQL/SBOM/artifact checks; and two-page PDF render
-inspection. Container/Trivy, CI/CodeQL, browser and production receipts are added
-only after those gates actually pass.
+inspection. Container/Trivy, CI/CodeQL, responsive browser and production HTTPS
+gates passed for implementation commit `621239c`.

@@ -32,15 +32,18 @@ rules and a recruiter-ready banking workflow in one Dockerized FastAPI service.
 
 [View the 390 px mobile capture](docs/assets/v3-overview-mobile.png) · [View the governance verdict](docs/assets/v3-governance.png)
 
-The repository contains the **v4.0.0 release candidate**. Until its exact commit
-passes CI, Render deployment and live workflow verification, the public URL may
-still serve verified v3.0.1. The health endpoint exposes the deployed application,
-model, dataset and commit so this boundary is machine-checkable.
+These historical v3 captures show the established interface system; the linked
+public service is the authoritative v4 experience. The in-app browser screenshot
+operation was unavailable during v4 release QA, so the images are not relabelled
+or presented as current evidence.
 
-The v4 local gate is **127 tests passed at 71.60% coverage**. Ruff lint and
-format, Bandit, dependency audit, secret scan, source/demo/SBOM checks and PDF
-rendering pass. Container/Trivy, CI/CodeQL and live browser receipts remain tied
-to the exact release commit and are not claimed early.
+The **v4.0.0 release is live**. Render `/health` exposes application `4.0.0`,
+model `limitiq-behavioral-4.0.0-21234ab33f78`, dataset
+`uci-350-behavioral-6ba3a746be13` and deployed implementation commit `621239c`.
+The exact-commit CI gate collected 127 tests (**126 passed, 1 skipped**) at
+**70.85% coverage** and passed Ruff, format, Bandit, dependency/secret scans,
+source/demo/SBOM checks, Docker, Trivy, container health and concurrency smoke.
+Matching CodeQL and production browser/workflow verification passed.
 
 ## The senior-level design decision
 

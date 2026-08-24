@@ -8,7 +8,7 @@ review and early-warning-freeze actions.
 
 - **Live application:** https://limitiq-credit-line-optimization.onrender.com
 - **Repository:** https://github.com/Ghostboy789/limitiq-credit-line-optimization
-- **Release state:** v4.0.0 release candidate; verify the live `/health` payload before claiming deployment
+- **Release state:** v4.0.0 verified live; `/health` exposes the exact deployed commit, behavioral model and dataset
 
 ## Evidence at a glance
 

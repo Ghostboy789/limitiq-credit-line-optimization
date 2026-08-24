@@ -2,12 +2,12 @@
 
 ## Version status
 
-V4 is the source-coherent release candidate: a 17-feature UCI Taiwan
+V4 is the verified source-coherent release: a 17-feature UCI Taiwan
 next-month-default behavioral model drives the educational synthetic decision
 portfolio. The v2 1,869,548-row
 multi-source model remains transportability research only because it is not a
 common-horizon regulatory PD. CI, container security, exact-commit Render and
-production-browser gates passed on 21 August 2026. The source-terms attestation
+production-browser gates passed on 21–24 August 2026. The source-terms attestation
 in `NOTICE.md` is not a legal opinion.
 
 ## Product
