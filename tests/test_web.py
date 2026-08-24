@@ -455,7 +455,14 @@ def test_static_assets_and_navigation_are_real() -> None:
     assert "/static/motion.js" in overview
     assert 'href="/committee-memo?download=true"' in overview
     assert "/static/vendor/gsap-3.13.0.min.js" not in client.get("/portfolio").text
-    for path in ("/portfolio", "/simulator", "/batch", "/governance", "/monitoring", "/reports"):
+    for path in (
+        "/portfolio",
+        "/simulator",
+        "/batch",
+        "/governance",
+        "/monitoring",
+        "/reports",
+    ):
         assert f'href="{path}"' in overview
 
     governance = client.get("/governance").text
