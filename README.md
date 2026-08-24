@@ -3,6 +3,8 @@
 [![Live](https://img.shields.io/badge/live-Render-0b6e69)](https://limitiq-credit-line-optimization.onrender.com)
 [![CI](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/workflows/ci.yml/badge.svg)](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/workflows/codeql.yml/badge.svg)](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/workflows/codeql.yml)
+[![Daily health](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/workflows/uptime.yml/badge.svg)](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/workflows/uptime.yml)
+[![Release](https://img.shields.io/github/v/release/Ghostboy789/limitiq-credit-line-optimization)](https://github.com/Ghostboy789/limitiq-credit-line-optimization/releases/latest)
 [![License: MIT](https://img.shields.io/badge/code%20license-MIT-blue.svg)](LICENSE)
 
 **Governed credit-line decision support: coherent risk, constrained actions, transparent economics.**
@@ -26,20 +28,24 @@ rules and a recruiter-ready banking workflow in one Dockerized FastAPI service.
 
 ## Product preview
 
-![LimitIQ v3 executive overview with INR portfolio metrics and governed action summary](docs/assets/v3-overview.png)
+![LimitIQ v4 walkthrough: overview, portfolio explorer, account decision, policy simulator and model governance](docs/assets/v4-walkthrough.gif)
 
-![LimitIQ v3 primary-model governance evidence with untouched-test metrics, ROC and calibration](docs/assets/v3-primary-evidence.png)
+![LimitIQ v4 executive overview with governed INR portfolio posture](docs/assets/v4-overview.png)
 
-[View the 390 px mobile capture](docs/assets/v3-overview-mobile.png) · [View the governance verdict](docs/assets/v3-governance.png)
+[Mobile at 390 px](docs/assets/v4-overview-mobile.png) ·
+[Portfolio explorer](docs/assets/v4-portfolio.png) ·
+[Account decision](docs/assets/v4-account.png) ·
+[Policy simulator](docs/assets/v4-simulator.png) ·
+[Governance verdict](docs/assets/v4-governance.png)
 
-These historical v3 captures show the established interface system; the linked
-public service is the authoritative v4 experience. The in-app browser screenshot
-operation was unavailable during v4 release QA, so the images are not relabelled
-or presented as current evidence.
+These captures show the actual v4 interface and synthetic demonstration data.
+They were rendered from the verified application on 24 August 2026; the linked
+public service remains authoritative.
 
-The **v4.0.0 release is live**. Render `/health` exposes application `4.0.0`,
-model `limitiq-behavioral-4.0.0-21234ab33f78`, dataset
-`uci-350-behavioral-6ba3a746be13` and deployed implementation commit `621239c`.
+The **v4.0.0 release is live** and its immutable tag resolves to `59842cb`.
+Render `/health` exposes application `4.0.0`, model
+`limitiq-behavioral-4.0.0-21234ab33f78`, dataset
+`uci-350-behavioral-6ba3a746be13` and the exact currently deployed commit.
 The exact-commit CI gate collected 127 tests (**126 passed, 1 skipped**) at
 **70.85% coverage** and passed Ruff, format, Bandit, dependency/secret scans,
 source/demo/SBOM checks, Docker, Trivy, container health and concurrency smoke.

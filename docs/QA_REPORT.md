@@ -1,5 +1,20 @@
 # QA report
 
+## V4 release-media and uptime polish — 24 August 2026
+
+- Fresh v4 captures cover the executive overview, portfolio explorer, account
+  decision, policy simulator, governance verdict and a true 390 CSS-pixel mobile
+  viewport. They are committed under `docs/assets/v4-*` and the README
+  walkthrough is generated only from those inspected frames.
+- The 390 px capture exposed a presentation edge at narrow widths. The shared
+  mobile hero sizing and top-bar spacing were tightened; the recaptured layout
+  contains the brand, menu, search, INR selector, hero copy, both calls to action
+  and the eligibility callout without clipping.
+- `.github/workflows/uptime.yml` checks the public `/health` response daily and
+  on manual dispatch. It tolerates free-tier cold starts, requires HTTP success,
+  and validates status, application version and behavioral model version without
+  credentials or a paid monitoring service.
+
 ## V4.0.0 verified release — 21–24 August 2026
 
 - Exact implementation commit:
@@ -27,8 +42,9 @@
   Refresh/back/forward, search focus return and responsive navigation passed;
   1440/768/390 px had no page-level overflow and console warning/error logs
   were empty.
-- The in-app screenshot operation was unavailable. Existing committed captures
-  remain explicitly labelled v3 and are not presented as v4 evidence.
+- The original in-app screenshot operation was unavailable. Fresh v4 captures
+  were subsequently produced from the same rendered application with explicit
+  desktop and mobile viewports and visually inspected before publication.
 - The v4 behavioral primary, global research benchmark and temporal loan study
   remain separately labelled; only the source-coherent behavioral model drives
   the deterministic synthetic card demonstration.

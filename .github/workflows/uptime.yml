@@ -1,0 +1,27 @@
+name: Daily health
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: limitiq-daily-health
+  cancel-in-progress: true
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Verify production health contract
+        env:
+          HEALTH_URL: https://limitiq-credit-line-optimization.onrender.com/health
+        run: |
+          curl --fail --silent --show-error \
+            --retry 5 --retry-all-errors --retry-delay 20 --max-time 60 \
+            "$HEALTH_URL" --output health.json
+          python -c 'import json; d=json.load(open("health.json", encoding="utf-8")); assert d["status"] == "ok"; assert d["version"] == "4.0.0"; assert d["model_version"].startswith("limitiq-behavioral-4.0.0-"); print(d["deployment_commit"])'
