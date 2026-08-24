@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <meta name="description" content="LimitIQ educational next-month credit-risk and credit-line optimization platform">
-  <meta name="theme-color" content="#f5f5f7">
+  <meta name="theme-color" content="#071923">
   <title>{{ title }} · LimitIQ</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=4.0.0">
-  <script src="{{ url_for('static', path='/app.js') }}?v=4.0.0" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=4.1.0">
+  {% block head_scripts %}{% endblock %}
+  <script src="{{ url_for('static', path='/app.js') }}?v=4.1.0" defer></script>
+  {% block page_scripts %}{% endblock %}
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>

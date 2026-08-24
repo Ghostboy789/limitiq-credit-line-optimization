@@ -1,5 +1,24 @@
 # QA report
 
+## Editorial overview refresh — 24 August 2026
+
+- The image-first interface pass was checked against four section-specific
+  design references, then implemented as server-rendered Jinja and scoped CSS.
+  Runtime figures still come from the existing source-bound application
+  context; generated reference values were not copied into the product.
+- Playwright 1.62.1 with installed Chrome exercised overview, portfolio,
+  simulator, batch, governance, monitoring, v4 lab and reports at 1440×1000,
+  768×1024 and 390×844 CSS pixels. Every route returned 200 with no page-level
+  overflow or browser-console errors.
+- Keyboard QA confirmed the skip link is the first tab stop. Reviewer carousel
+  controls and native governance disclosures were exercised. Reduced-motion
+  emulation confirmed scrubbed copy remains fully visible and stacked cards
+  return to normal document flow.
+- Fresh overview captures are stored as optimized WebP files under
+  `docs/assets/v5-overview-*`; the complete local Python suite passes 127 tests.
+  Production deployment evidence is recorded separately and is not implied by
+  these local checks.
+
 ## V4 release-media and uptime polish — 24 August 2026
 
 - Fresh v4 captures cover the executive overview, portfolio explorer, account

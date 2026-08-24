@@ -28,19 +28,26 @@ rules and a recruiter-ready banking workflow in one Dockerized FastAPI service.
 
 ## Product preview
 
+![LimitIQ current executive overview with governed INR portfolio posture](docs/assets/v5-overview-desktop.webp)
+
+[Tablet at 768 px](docs/assets/v5-overview-tablet.webp) ·
+[Mobile at 390 px](docs/assets/v5-overview-mobile.webp)
+
+The current overview uses self-hosted Outfit typography, a locally served pinned
+GSAP runtime, native disclosure controls and reduced-motion fallbacks. The
+captured values come from the same server-rendered observed, model-estimated and
+explicitly simulated evidence fields as the rest of the application.
+
 ![LimitIQ v4 walkthrough: overview, portfolio explorer, account decision, policy simulator and model governance](docs/assets/v4-walkthrough.gif)
 
-![LimitIQ v4 executive overview with governed INR portfolio posture](docs/assets/v4-overview.png)
-
-[Mobile at 390 px](docs/assets/v4-overview-mobile.png) ·
 [Portfolio explorer](docs/assets/v4-portfolio.png) ·
 [Account decision](docs/assets/v4-account.png) ·
 [Policy simulator](docs/assets/v4-simulator.png) ·
 [Governance verdict](docs/assets/v4-governance.png)
 
-These captures show the actual v4 interface and synthetic demonstration data.
-They were rendered from the verified application on 24 August 2026; the linked
-public service remains authoritative.
+The overview captures show the current interface and synthetic demonstration
+data. The workflow capture and linked secondary-route images record the verified
+v4 release; the linked public service remains authoritative.
 
 The **v4.0.0 release is live** and its immutable tag resolves to `59842cb`.
 Render `/health` exposes application `4.0.0`, model

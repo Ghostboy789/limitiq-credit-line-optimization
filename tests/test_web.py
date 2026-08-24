@@ -429,16 +429,32 @@ def test_document_pages_render_safe_markdown() -> None:
 def test_static_assets_and_navigation_are_real() -> None:
     css = client.get("/static/style.css")
     js = client.get("/static/app.js")
-    assert css.status_code == js.status_code == 200
+    motion = client.get("/static/motion.js")
+    hero = client.get("/static/hero-risk-horizon.webp")
+    gsap = client.get("/static/vendor/gsap-3.13.0.min.js")
+    scroll_trigger = client.get("/static/vendor/ScrollTrigger-3.13.0.min.js")
+    assert css.status_code == js.status_code == motion.status_code == 200
+    assert hero.status_code == gsap.status_code == scroll_trigger.status_code == 200
     overview = client.get("/").text
+    assert 'data-landing' in overview
+    assert "Credit growth." in overview
+    assert "From score to" in overview
+    assert "Built for people" in overview
     assert "Current loss proxy" in overview
     assert '<option value="INR" selected>' in overview
     assert "next-month default model" in overview
-    assert "Review in five minutes" in overview
-    assert "Executive" in overview
-    assert "Risk analyst" in overview
     assert "Model validator" in overview
-    assert 'href="/committee-memo"' in overview
+    assert "Credit portfolio manager" in overview
+    assert "Underwriter" in overview
+    assert "Educational and research use only" in overview
+    assert 'data-review-next' in overview
+    assert 'data-card-stack' in overview
+    assert '<details class="track-card" open>' in overview
+    assert "/static/vendor/gsap-3.13.0.min.js" in overview
+    assert "/static/vendor/ScrollTrigger-3.13.0.min.js" in overview
+    assert "/static/motion.js" in overview
+    assert 'href="/committee-memo?download=true"' in overview
+    assert "/static/vendor/gsap-3.13.0.min.js" not in client.get("/portfolio").text
     for path in ("/portfolio", "/simulator", "/batch", "/governance", "/monitoring", "/reports"):
         assert f'href="{path}"' in overview
 

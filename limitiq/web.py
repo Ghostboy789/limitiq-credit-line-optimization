@@ -801,6 +801,8 @@ def create_app() -> FastAPI:
                 actions=actions,
                 risks=risks,
                 assumptions=simulation["assumptions"],
+                primary=primary_report,
+                research=research_metadata,
             ),
         )
 

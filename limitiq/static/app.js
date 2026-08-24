@@ -227,6 +227,31 @@ document.querySelectorAll("[data-print]").forEach((button) => {
   button.addEventListener("click", () => window.print());
 });
 
+const reviewCarousel = document.querySelector("[data-review-carousel]");
+const reviewSlides = reviewCarousel ? [...reviewCarousel.querySelectorAll("[data-review-slide]")] : [];
+const reviewDots = reviewCarousel ? [...reviewCarousel.querySelectorAll(".review-dots i")] : [];
+const reviewPrevious = document.querySelector("[data-review-prev]");
+const reviewNext = document.querySelector("[data-review-next]");
+let reviewIndex = 0;
+
+function showReview(index) {
+  if (!reviewSlides.length) return;
+  reviewIndex = (index + reviewSlides.length) % reviewSlides.length;
+  reviewSlides.forEach((slide, position) => { slide.hidden = position !== reviewIndex; });
+  reviewDots.forEach((dot, position) => dot.classList.toggle("active", position === reviewIndex));
+  const role = reviewSlides[reviewIndex].querySelector("p")?.textContent || "Reviewer";
+  announce(`${role} question, ${reviewIndex + 1} of ${reviewSlides.length}`);
+}
+
+if (reviewCarousel && reviewPrevious && reviewNext && reviewSlides.length) {
+  reviewPrevious.addEventListener("click", () => showReview(reviewIndex - 1));
+  reviewNext.addEventListener("click", () => showReview(reviewIndex + 1));
+  reviewCarousel.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowLeft") showReview(reviewIndex - 1);
+    if (event.key === "ArrowRight") showReview(reviewIndex + 1);
+  });
+}
+
 if (!prefersReducedMotion && "IntersectionObserver" in window) {
   const observer = new IntersectionObserver(
     (entries) => entries.forEach((entry) => entry.isIntersecting && entry.target.classList.add("is-visible")),

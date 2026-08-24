@@ -32,7 +32,7 @@ jobs:
       - name: Secret scan
         run: |
           detect-secrets scan --all-files --no-verify --disable-plugin HexHighEntropyString \
-            --exclude-files '(^|/)(data/raw|data/processed/clean_source.csv|__pycache__|\.git)(/|$)|\.(png|pdf|joblib|xls)$' . > .secrets.json
+            --exclude-files '(^|/)(data/raw|data/processed/clean_source.csv|__pycache__|\.git)(/|$)|\.(png|webp|pdf|joblib|xls)$' . > .secrets.json
           python -c "import json; d=json.load(open('.secrets.json')); assert not any(d['results'].values()), d['results']"
       - run: docker build -t limitiq:test .
       - name: Scan container image

@@ -5,4 +5,7 @@
 *.joblib binary
 *.pdf binary
 *.png binary
+*.webp binary
+*.ttf binary
 *.xls binary
+limitiq/static/vendor/*.min.js binary

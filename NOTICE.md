@@ -189,3 +189,15 @@ harmonized row counts, target definitions, risk rates and missingness. The
 proceeds under the repository owner's 14 August 2026 resolution attestation.
 No source row, identifier or claimed production customer is intentionally
 redistributed.
+
+## Interface assets
+
+- Outfit variable font is bundled from Google Fonts under the SIL Open Font
+  License 1.1. The complete licence is stored at
+  `limitiq/static/fonts/OFL.txt`.
+- GSAP core and ScrollTrigger `3.13.0` are self-hosted under the GSAP standard
+  no-charge licence. Source and licence references are recorded in
+  `limitiq/static/vendor/NOTICE.md`.
+- `limitiq/static/hero-risk-horizon.webp` and the design references under
+  `docs/design/v5/` were generated specifically for this project. They contain
+  no customer data, third-party marks or claimed production outcomes.
