@@ -4,14 +4,48 @@ const announce = (message) => {
   if (liveStatus) liveStatus.textContent = message;
 };
 
+const markNavigating = () => document.documentElement.classList.add("is-navigating");
+const clearNavigationState = () => {
+  document.documentElement.classList.remove("is-navigating");
+  document.querySelectorAll("[data-busy-original]").forEach((button) => {
+    button.textContent = button.dataset.busyOriginal;
+    button.disabled = false;
+    button.removeAttribute("aria-busy");
+    button.classList.remove("is-busy");
+    delete button.dataset.busyOriginal;
+  });
+};
+window.addEventListener("pageshow", clearNavigationState);
+
 const toggle = document.querySelector(".nav-toggle");
 const nav = document.querySelector("#primary-nav");
 
 if (toggle && nav) {
+  const setNavOpen = (open) => {
+    toggle.setAttribute("aria-expanded", String(open));
+    toggle.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
+    toggle.querySelector("span").textContent = open ? "Close" : "Menu";
+    nav.classList.toggle("open", open);
+  };
   toggle.addEventListener("click", () => {
-    const open = toggle.getAttribute("aria-expanded") === "true";
-    toggle.setAttribute("aria-expanded", String(!open));
-    nav.classList.toggle("open", !open);
+    setNavOpen(toggle.getAttribute("aria-expanded") !== "true");
+  });
+  nav.addEventListener("click", (event) => {
+    if (event.target.closest("a")) setNavOpen(false);
+  });
+  document.addEventListener("click", (event) => {
+    if (toggle.getAttribute("aria-expanded") === "true" && !event.target.closest(".topbar")) {
+      setNavOpen(false);
+    }
+  });
+  window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") {
+      setNavOpen(false);
+      toggle.focus();
+    }
+  });
+  window.matchMedia("(min-width: 1181px)").addEventListener("change", (event) => {
+    if (event.matches) setNavOpen(false);
   });
 }
 
@@ -19,6 +53,7 @@ document.querySelectorAll("[data-ccy-select]").forEach((select) => {
   select.addEventListener("change", () => {
     const url = new URL(window.location.href);
     url.searchParams.set("ccy", select.value);
+    markNavigating();
     window.location.href = url.toString();
   });
 });
@@ -26,16 +61,52 @@ document.querySelectorAll("[data-ccy-select]").forEach((select) => {
 document.querySelectorAll('input[type="file"]').forEach((input) => {
   input.addEventListener("change", () => {
     const label = input.closest("label")?.querySelector("span");
+    const drop = input.closest(".file-drop");
     const file = input.files?.[0];
-    if (!label || !file) return;
-    const megabyte = 5 * 1024 * 1024;
-    let message = `${file.name} · ${(file.size / 1048576).toFixed(1)} MB`;
-    if (!/\.csv$/i.test(file.name) || file.size > megabyte) {
-      message += " · check the UTF-8 CSV format and 5 MB limit";
+    if (!label || !file) {
+      input.setCustomValidity("");
+      drop?.classList.remove("valid", "invalid");
+      return;
     }
+    const maxBytes = Number(input.dataset.maxBytes) || 5 * 1024 * 1024;
+    const invalid = !/\.csv$/i.test(file.name) || file.size > maxBytes;
+    let message = `${file.name} · ${(file.size / 1048576).toFixed(1)} MB`;
+    if (invalid) {
+      message += " · choose a CSV within the stated size limit";
+    }
+    input.setCustomValidity(invalid ? "Choose a CSV file within the stated size limit." : "");
+    drop?.classList.toggle("invalid", invalid);
+    drop?.classList.toggle("valid", !invalid);
     label.textContent = message;
     announce(message);
   });
+});
+
+document.querySelectorAll("form").forEach((form) => {
+  form.addEventListener("submit", () => {
+    if (!form.checkValidity()) return;
+    const button = form.querySelector("button[type='submit'][data-busy-label]");
+    if (button) {
+      button.dataset.busyOriginal = button.textContent;
+      button.textContent = button.dataset.busyLabel;
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+      button.classList.add("is-busy");
+    }
+    markNavigating();
+    if (form.hasAttribute("data-download-form")) window.setTimeout(clearNavigationState, 12000);
+  });
+});
+
+document.addEventListener("click", (event) => {
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const link = event.target.closest("a[href]");
+  if (!link || link.target || link.hasAttribute("download")) return;
+  const url = new URL(link.href, window.location.href);
+  if (url.origin !== window.location.origin) return;
+  if (url.pathname.startsWith("/downloads/") || url.pathname.endsWith(".csv") || url.searchParams.get("download") === "true") return;
+  if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash) return;
+  markNavigating();
 });
 
 const paletteTrigger = document.querySelector("[data-palette-open]");
@@ -49,8 +120,15 @@ const pageSiblings = palette
   )
   : [];
 
-function renderPalette(items) {
+function renderPalette(items, status = "ready") {
   paletteResults.textContent = "";
+  if (status !== "ready") {
+    const state = document.createElement("p");
+    state.className = "palette-empty";
+    state.textContent = status === "loading" ? "Searching…" : "Search is unavailable. Try again.";
+    paletteResults.appendChild(state);
+    return;
+  }
   if (!items.length) {
     const empty = document.createElement("p");
     empty.className = "palette-empty";
@@ -73,6 +151,7 @@ function renderPalette(items) {
     sublabel.textContent = item.sublabel;
     button.append(type, label, sublabel);
     button.addEventListener("click", () => {
+      markNavigating();
       window.location.href = item.href;
     });
     paletteResults.appendChild(button);
@@ -87,9 +166,12 @@ function searchPalette() {
   const q = paletteInput.value.trim();
   paletteController?.abort();
   paletteController = new AbortController();
+  paletteResults.setAttribute("aria-busy", "true");
+  renderPalette([], "loading");
   fetch(`/api/search?q=${encodeURIComponent(q)}`, { signal: paletteController.signal })
     .then((response) => response.json())
     .then((data) => {
+      paletteResults.setAttribute("aria-busy", "false");
       activeIndex = 0;
       const items = data.results || [];
       renderPalette(items);
@@ -97,7 +179,11 @@ function searchPalette() {
       announce(`${items.length} search result${items.length === 1 ? "" : "s"}`);
     })
     .catch((error) => {
-      if (error.name !== "AbortError") renderPalette([]);
+      if (error.name !== "AbortError") {
+        paletteResults.setAttribute("aria-busy", "false");
+        renderPalette([], "error");
+        announce("Search is unavailable. Try again.");
+      }
     });
 }
 
@@ -204,6 +290,7 @@ document.querySelectorAll("th[data-sort]").forEach((th) => {
 document.querySelectorAll("tr[data-href]").forEach((row) => {
   row.addEventListener("click", (event) => {
     if (event.target.closest("a, button, input, select")) return;
+    markNavigating();
     window.location.href = row.dataset.href;
   });
 });
@@ -251,6 +338,34 @@ if (reviewCarousel && reviewPrevious && reviewNext && reviewSlides.length) {
     if (event.key === "ArrowRight") showReview(reviewIndex + 1);
   });
 }
+
+const jumpLinks = [...document.querySelectorAll("[data-jump-nav] a[href^='#']")];
+if (jumpLinks.length && "IntersectionObserver" in window) {
+  const jumpSections = jumpLinks
+    .map((link) => document.querySelector(link.getAttribute("href")))
+    .filter(Boolean);
+  const jumpObserver = new IntersectionObserver(
+    (entries) => {
+      const current = entries.find((entry) => entry.isIntersecting);
+      if (!current) return;
+      jumpLinks.forEach((link) => {
+        if (link.getAttribute("href") === `#${current.target.id}`) link.setAttribute("aria-current", "location");
+        else link.removeAttribute("aria-current");
+      });
+    },
+    { rootMargin: "-28% 0px -62%", threshold: 0 },
+  );
+  jumpSections.forEach((section) => jumpObserver.observe(section));
+}
+
+document.querySelectorAll(".governance-tracks details").forEach((track) => {
+  track.addEventListener("toggle", () => {
+    if (!track.open) return;
+    track.parentElement.querySelectorAll("details[open]").forEach((sibling) => {
+      if (sibling !== track) sibling.open = false;
+    });
+  });
+});
 
 if (!prefersReducedMotion && "IntersectionObserver" in window) {
   const observer = new IntersectionObserver(

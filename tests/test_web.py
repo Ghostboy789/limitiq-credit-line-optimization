@@ -449,12 +449,24 @@ def test_static_assets_and_navigation_are_real() -> None:
     assert "Educational and research use only" in overview
     assert "data-review-next" in overview
     assert "data-card-stack" in overview
+    assert "data-jump-nav" in overview
+    assert 'class="route-progress"' in overview
     assert '<details class="track-card" open>' in overview
     assert "/static/vendor/gsap-3.13.0.min.js" in overview
     assert "/static/vendor/ScrollTrigger-3.13.0.min.js" in overview
     assert "/static/motion.js" in overview
     assert 'href="/committee-memo?download=true"' in overview
     assert "/static/vendor/gsap-3.13.0.min.js" not in client.get("/portfolio").text
+    portfolio = client.get("/portfolio").text
+    assert "portfolio-scroll-hint" in portfolio
+    assert 'data-busy-label="Applying filters…"' in portfolio
+    simulator = client.get("/simulator").text
+    assert "Restore baseline" in simulator
+    assert "0.45 means 45%" in simulator
+    assert 'data-busy-label="Running scenario…"' in simulator
+    batch = client.get("/batch").text
+    assert "data-download-form" in batch
+    assert 'data-busy-label="Validating and scoring…"' in batch
     for path in (
         "/portfolio",
         "/simulator",

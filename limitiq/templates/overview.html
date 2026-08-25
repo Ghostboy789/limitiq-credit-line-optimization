@@ -4,7 +4,7 @@
 <script src="{{ url_for('static', path='/vendor/gsap-3.13.0.min.js') }}" defer></script>
 <script src="{{ url_for('static', path='/vendor/ScrollTrigger-3.13.0.min.js') }}" defer></script>
 {% endblock %}
-{% block page_scripts %}<script src="{{ url_for('static', path='/motion.js') }}?v=4.1.0" defer></script>{% endblock %}
+{% block page_scripts %}<script src="{{ url_for('static', path='/motion.js') }}?v=4.2.0" defer></script>{% endblock %}
 {% block content %}
 <div class="landing" data-landing>
   <section class="landing-hero" aria-labelledby="landing-title">
@@ -20,6 +20,15 @@
 
   <div class="landing-boundary" role="note"><strong>Evidence boundary.</strong> Account decisions use the UCI Taiwan next-month default model on deterministic synthetic profiles matching its field contract. Limit response, exposure, expected loss and financial outcomes are simulations—not causal or realized results.</div>
   {% if not automatic_increases_enabled %}<div class="notice warning" role="alert"><strong>Governance control active.</strong> Automatic increases are disabled; otherwise eligible accounts are routed to manual review.</div>{% endif %}
+  <nav class="landing-jump-nav" aria-label="Overview sections" data-jump-nav>
+    <span>Explore the decision</span>
+    <div>
+      <a href="#decision-heading">Decision path</a>
+      <a href="#posture-heading">Economics</a>
+      <a href="#governance-heading">Governance</a>
+      <a href="#reviewer-heading">Reviewer views</a>
+    </div>
+  </nav>
 
   <section class="landing-chapter decision-chapter" aria-labelledby="decision-heading">
     <header class="chapter-heading">

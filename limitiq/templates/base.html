@@ -7,16 +7,17 @@
   <meta name="description" content="LimitIQ educational next-month credit-risk and credit-line optimization platform">
   <meta name="theme-color" content="#071923">
   <title>{{ title }} · LimitIQ</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=4.1.0">
+  <link rel="stylesheet" href="{{ url_for('static', path='/style.css') }}?v=4.2.0">
   {% block head_scripts %}{% endblock %}
-  <script src="{{ url_for('static', path='/app.js') }}?v=4.1.0" defer></script>
+  <script src="{{ url_for('static', path='/app.js') }}?v=4.2.0" defer></script>
   {% block page_scripts %}{% endblock %}
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
+  <div class="route-progress" aria-hidden="true"></div>
   <header class="topbar">
     <a class="brand" href="/" aria-label="LimitIQ home"><span class="brand-mark">LQ</span><span>LimitIQ</span><small>Decision intelligence</small></a>
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Open navigation"><span>Menu</span><i aria-hidden="true"></i></button>
     <nav id="primary-nav" aria-label="Primary">
       <a href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Overview</a>
       <a href="/portfolio" {% if request.url.path.startswith('/portfolio') %}aria-current="page"{% endif %}>Portfolio</a>
