@@ -3,7 +3,7 @@
 ## Decision
 
 **Conditional approval for educational research and synthetic policy
-demonstration only.** LimitIQ v4.0.0 is not approved for lending decisions,
+demonstration only.** LimitIQ v4.1.0 is not approved for lending decisions,
 regulatory probability of default (PD), pricing, provisioning, capital,
 customer treatment, Indian-customer decisions or automated credit-line changes.
 
@@ -20,17 +20,17 @@ approved it.
 
 ## Scope and evidence
 
-Review date: 24 August 2026.
+Review date: 25 August 2026.
 
 | Item | Reviewed evidence |
 |---|---|
 | Primary model | `limitiq-behavioral-4.0.0-21234ab33f78` |
 | Primary dataset | UCI 350 next-month default; 30,000 rows |
 | Research benchmark | `limitiq-global-2.0.0-37a14c45a811`; 1,869,548 rows |
-| Implementation | v4.0.0 verified on Render; `/health` binds the application, primary model, dataset and exact deployed commit |
+| Implementation | v4.1.0 verified on Render; `/health` binds the application, unchanged primary model, dataset and exact deployed commit |
 | Development evidence | `reports/behavioral_model.json`, `reports/temporal_validation.json`, `reports/global_model.json`, calibration, paired comparison and checksum metadata |
 | Controls | policy constraints, reason codes, manual review, early-warning freeze, `AUTO_INCREASES_ENABLED` rollback |
-| Verification | Local v4 release gates are recorded in `docs/V4_WORKBENCH.md`; CI, container and live evidence must bind the exact release commit before the tag is issued |
+| Verification | 137 local tests at 72.26% coverage; CI, CodeQL, container, exact-commit Render and production browser/workflow evidence passed |
 | Documentation | methodology, data card, model card, assumptions, provenance notice and monitoring baseline |
 
 The review follows the risk-based themes in the US interagency [Revised
@@ -180,10 +180,10 @@ Training and inference share serialized preprocessing. Dataset and model
 checksums, source provenance, fixed seeds, bootstrap evidence and artifact
 consistency checks are recorded. Strict upload validation, transient processing,
 security headers, safe production errors, liveness/readiness and aggregate-only
-operations telemetry are implemented. Final CI collected 127 tests (126 passed,
-1 skipped) at 70.85% scoped coverage with clean lint, format, Bandit, dependency
-and secret audits. CI, CodeQL, container and live deployment verification passed
-for implementation commit `621239c`. These controls
+operations telemetry are implemented. Final CI passed 137 tests at 72.26%
+scoped coverage with clean lint, format, Bandit, dependency and secret audits.
+CI, CodeQL, container and live deployment verification passed for implementation
+commit `0ac35b7`. These controls
 support the educational scope and do not certify a bank production environment.
 
 ## Validation findings

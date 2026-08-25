@@ -1,5 +1,21 @@
 # Changelog
 
+## 4.1.0 — 2026-08-25
+
+- Added a prespecified four-candidate, out-of-fold calibration challenge without
+  rereading the frozen primary test set or promoting a post-test challenger.
+- Added development-support bounds with conservative manual-review routing,
+  final-action-consistent consent reasons and correct single-account API policy
+  evaluation.
+- Expanded the separate temporal loan study with rolling vintages and stress
+  cohorts; expanded monitoring with utilization and delinquency segments.
+- Added an observed randomized-pilot analyzer with ITT/CUPED uncertainty and a
+  strict India account-month forward-validation runner. No Indian model artifact
+  is created without governed local outcomes.
+- Passed 137 tests at 72.26% coverage, security/dependency checks, CodeQL,
+  Docker/Trivy/container gates and verified the exact Render implementation
+  commit and production workflows.
+
 ## 3.0.1 — 2026-08-21
 
 - Reconciled final deployment, interview and assumptions documentation after

@@ -2,9 +2,9 @@
 
 ## Status boundary
 
-The public service runs verified **v4.0.0** with behavioral primary model
+The public service runs verified **v4.1.0** with behavioral primary model
 `limitiq-behavioral-4.0.0-21234ab33f78` and dataset
-`uci-350-behavioral-6ba3a746be13`. Live `/health` reports application `4.0.0`,
+`uci-350-behavioral-6ba3a746be13`. Live `/health` reports application `4.1.0`,
 the exact deployed Git revision and the primary model and dataset identifiers.
 The v2 global model and v4 temporal loan study remain research evidence only;
 neither drives card recommendations.
@@ -20,6 +20,38 @@ Health endpoint: https://limitiq-credit-line-optimization.onrender.com/health
 
 The `limitiq-production` Blueprint deploys the Docker service from `main` on
 Render's free plan with a `$0` workspace spend limit.
+
+## V4.1 release verification — 25 August 2026
+
+1. Implementation commit `0ac35b77d7f530c2e54f1c78c2c559ddaba9b8ce`
+   passed GitHub Actions
+   [run 32817814174](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32817814174):
+   **137 passed** tests at **72.26%** scoped statement coverage, Ruff, format,
+   primary smoke, source/analytics/SBOM checks, Bandit, pip-audit, secret scan,
+   Docker build, zero HIGH/CRITICAL Trivy findings, non-root container health
+   and concurrency smoke.
+2. Matching CodeQL
+   [run 32817814172](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32817814172)
+   passed for the same implementation SHA.
+3. Render `/health` returned 200 with application `4.1.0`, the unchanged frozen
+   behavioral primary and dataset identifiers above, and exact deployed commit
+   `0ac35b77d7f530c2e54f1c78c2c559ddaba9b8ce`.
+4. Eight major routes plus the robustness, India-readiness and model-improvement
+   evidence downloads returned 200. The executive PDF had a valid `%PDF-`
+   signature; a five-row transient batch returned the expected decision columns
+   and `Cache-Control: no-store`.
+5. Production decision checks returned a positive eligibility offer with an
+   explicit acceptance requirement and routed an out-of-development-support
+   profile to manual review with a failed support policy check.
+6. Browser QA exercised overview, v4 lab, batch and reports at 1440 and 390 px.
+   There was no page-level overflow or console warning/error. Local browser QA
+   additionally covered 768 px and found two shared decision defects that were
+   corrected before the full suite and production verification were repeated.
+
+The v4.1 application adds development-only calibration/challenger evidence,
+support-bound review routing, temporal stress cohorts, observed-pilot analysis
+and a governed India forward-validation runner. It does not promote a new
+primary model or claim Indian validation or observed treatment impact.
 
 ## V4 release verification — 21–24 August 2026
 

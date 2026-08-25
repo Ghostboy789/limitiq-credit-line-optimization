@@ -98,7 +98,7 @@ python -m pytest tests/test_behavioral.py tests/test_temporal.py tests/test_opti
 Completed and release-verified: rich-history portfolio rebuild; strict batch/API migration;
 mixed-integer policy allocation; monitoring, experiment, explanation, review and
 India workbenches; executive report; checksum manifest; model/data cards and
-validation-style review; 127 collected tests (126 passed, 1 skipped) at 70.85% coverage; Ruff/format, Bandit,
+validation-style review; 137 passing tests at 72.26% coverage; Ruff/format, Bandit,
 dependency and secret scans; SQL/SBOM/artifact checks; and two-page PDF render
 inspection. Container/Trivy, CI/CodeQL, responsive browser and production HTTPS
 gates passed for implementation commit `621239c`.

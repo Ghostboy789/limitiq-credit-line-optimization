@@ -25,6 +25,10 @@ flowchart LR
   E --> W
   T[Ordered US loan vintages] --> X[Separate temporal research]
   X --> W
+  P --> H[Development-only calibration challenge]
+  H --> K[Support bounds and manual-review routing]
+  I[Governed Indian account-month outcomes] -. unavailable .-> F[Forward-validation runner]
+  F -. promotion gate only .-> P
 ```
 
 The primary model derives 17 features from six months of behavior in one coherent
@@ -48,11 +52,11 @@ unseen markets.
 
 ## Deployment boundary
 
-The public Render service serves verified v4.0.0. Live `/health` exposes the
+The public Render service serves verified v4.1.0. Live `/health` exposes the
 application, behavioral primary model, dataset and exact deployed commit. CI,
-CodeQL, container security, production workflows and 1440/768/390 px browser QA
-passed for implementation commit `621239c` on 21–24 August 2026. The annotated
-release tag is the immutable source boundary. Research-source publication
+CodeQL, container security, production workflows and responsive browser QA
+passed for implementation commit `0ac35b7` on 25 August 2026. The release tag is
+the immutable source boundary. Research-source publication
 proceeds under the repository owner's 14 August 2026 resolution attestation in
 `NOTICE.md`; this record is not an independent legal opinion.
 

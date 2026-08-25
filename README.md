@@ -50,12 +50,12 @@ The overview captures show the current interface and synthetic demonstration
 data. The workflow capture and linked secondary-route images record the verified
 v4 release; the linked public service remains authoritative.
 
-The **v4.0.0 release is live** and its immutable tag resolves to `59842cb`.
-Render `/health` exposes application `4.0.0`, model
+The **v4.1.0 release is live**. Render `/health` exposes application `4.1.0`, model
 `limitiq-behavioral-4.0.0-21234ab33f78`, dataset
 `uci-350-behavioral-6ba3a746be13` and the exact currently deployed commit.
-The exact-commit CI gate collected 127 tests (**126 passed, 1 skipped**) at
-**70.85% coverage** and passed Ruff, format, Bandit, dependency/secret scans,
+The v4.1 implementation commit `0ac35b7` passed an exact-commit CI gate with
+**137 passed** tests at **72.26% coverage**, plus Ruff, format, Bandit,
+dependency/secret scans,
 source/demo/SBOM checks, Docker, Trivy, container health and concurrency smoke.
 Matching CodeQL and production browser/workflow verification passed.
 
@@ -301,6 +301,9 @@ and a machine-readable India readiness contract.
 
 ## Release history
 
+- **v4.1.0:** calibration/challenger evidence, support-bound review routing,
+  temporal stress cohorts, segment monitoring, observed-pilot analysis and a
+  governed India forward-validation gate; frozen primary model unchanged.
 - **v4.0.0:** rich behavioral primary, constrained portfolio allocation,
   temporal research, monitoring/experiment replays, maker-checker and India contract.
 - **v3.0.1:** documentation-consistency patch; model and simulation unchanged.

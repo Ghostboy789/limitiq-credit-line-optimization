@@ -1,5 +1,36 @@
 # QA report
 
+## V4.1.0 verified release — 25 August 2026
+
+- Exact implementation commit:
+  `0ac35b77d7f530c2e54f1c78c2c559ddaba9b8ce`.
+- The final local suite passed **137 tests** at **72.26%** scoped statement
+  coverage. Ruff lint and formatting, Bandit, SBOM and analytics checks,
+  manifest validation, dependency audit and a 164-file secret scan passed.
+- GitHub Actions
+  [run 32817814174](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32817814174)
+  independently passed the same quality gates plus Docker build, zero
+  HIGH/CRITICAL Trivy findings, non-root container health and concurrency smoke.
+  Matching CodeQL
+  [run 32817814172](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32817814172)
+  passed on the implementation SHA.
+- Local rendered QA covered overview, v4 lab, batch, governance and reports at
+  1440, 768 and 390 px with no page-level overflow or console warning/error.
+  It found and fixed two shared causes: consent reason codes could survive a
+  portfolio-level action change, and single-account API calls incorrectly used
+  portfolio concentration caps.
+- Render `/health` returned application `4.1.0`, the unchanged frozen behavioral
+  primary, its dataset and the exact implementation commit. Eight major routes,
+  the new evidence downloads, PDF signature, five-row transient batch, positive
+  eligibility/consent flow and out-of-support manual-review flow passed over
+  public HTTPS.
+- Production browser QA covered overview, v4 lab, batch and reports at 1440 and
+  390 px. No page-level overflow or browser-console warning/error was observed.
+- The calibration/challenger table is development-only; the temporal evidence
+  is separate US installment-loan research; the India runner remains awaiting
+  governed local outcomes. None is reported as a promoted model or production
+  impact.
+
 ## Editorial overview refresh — 24 August 2026
 
 - The image-first interface pass was checked against four section-specific
