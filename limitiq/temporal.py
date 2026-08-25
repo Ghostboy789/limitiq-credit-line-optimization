@@ -104,21 +104,7 @@ def _metrics(target: pd.Series, probability: np.ndarray) -> dict[str, float | in
     }
 
 
-def train_temporal_track(
-    frame: pd.DataFrame,
-    *,
-    model_dir: Path = MODEL_DIR,
-    report_dir: Path = REPORT_DIR,
-    iterations: int = 160,
-) -> dict[str, Any]:
-    """Train on <=2013, calibrate on 2014 and evaluate once on 2015."""
-    train = frame[frame["vintage"] <= 2013]
-    validation = frame[frame["vintage"] == 2014]
-    test = frame[frame["vintage"] == 2015]
-    if min(map(len, (train, validation, test))) < 100 or any(
-        cohort["target"].nunique() != 2 for cohort in (train, validation, test)
-    ):
-        raise ValueError("Temporal track requires both classes and at least 100 rows per period")
+def _fit_model(train: pd.DataFrame, calibration: pd.DataFrame, iterations: int) -> Any:
     base = Pipeline(
         [
             ("impute", SimpleImputer(strategy="median", add_indicator=True)),
@@ -136,7 +122,85 @@ def train_temporal_track(
     )
     base.fit(train[FEATURES], train["target"])
     model = CalibratedClassifierCV(FrozenEstimator(base), method="sigmoid")
-    model.fit(validation[FEATURES], validation["target"])
+    model.fit(calibration[FEATURES], calibration["target"])
+    return model
+
+
+def rolling_vintage_evidence(
+    frame: pd.DataFrame, *, iterations: int = 160, minimum_rows: int = 100
+) -> list[dict[str, Any]]:
+    """Evaluate every feasible expanding-window vintage without pooling future data."""
+    evidence = []
+    years = sorted(frame["vintage"].unique())
+    for test_year in years:
+        calibration_year = test_year - 1
+        train = frame[frame["vintage"] < calibration_year]
+        calibration = frame[frame["vintage"] == calibration_year]
+        test = frame[frame["vintage"] == test_year]
+        if min(map(len, (train, calibration, test))) < minimum_rows or any(
+            cohort["target"].nunique() != 2 for cohort in (train, calibration, test)
+        ):
+            continue
+        model = _fit_model(train, calibration, iterations)
+        probability = model.predict_proba(test[FEATURES])[:, 1]
+        evidence.append(
+            {
+                "train_through": int(calibration_year - 1),
+                "calibration": int(calibration_year),
+                "test": int(test_year),
+                **_metrics(test["target"], probability),
+            }
+        )
+    return evidence
+
+
+def _stress_segments(test: pd.DataFrame, probability: np.ndarray) -> list[dict[str, Any]]:
+    masks = {
+        "High revolving utilization": test["revol_util"] >= 80,
+        "High debt-to-income": test["dti"] >= 30,
+        "Prior delinquency": test["delinq_2yrs"] > 0,
+        "All other accounts": (test["revol_util"] < 80)
+        & (test["dti"] < 30)
+        & (test["delinq_2yrs"] <= 0),
+    }
+    rows = []
+    for name, mask in masks.items():
+        cohort = test.loc[mask]
+        if len(cohort) < 2:
+            continue
+        score = probability[mask.to_numpy()]
+        metrics: dict[str, Any] = {
+            "segment": name,
+            "rows": len(cohort),
+            "event_rate": float(cohort["target"].mean()),
+            "mean_score": float(score.mean()),
+            "brier_score": float(brier_score_loss(cohort["target"], score)),
+        }
+        metrics["roc_auc"] = (
+            float(roc_auc_score(cohort["target"], score))
+            if cohort["target"].nunique() == 2
+            else None
+        )
+        rows.append(metrics)
+    return rows
+
+
+def train_temporal_track(
+    frame: pd.DataFrame,
+    *,
+    model_dir: Path = MODEL_DIR,
+    report_dir: Path = REPORT_DIR,
+    iterations: int = 160,
+) -> dict[str, Any]:
+    """Train on <=2013, calibrate on 2014 and evaluate once on 2015."""
+    train = frame[frame["vintage"] <= 2013]
+    validation = frame[frame["vintage"] == 2014]
+    test = frame[frame["vintage"] == 2015]
+    if min(map(len, (train, validation, test))) < 100 or any(
+        cohort["target"].nunique() != 2 for cohort in (train, validation, test)
+    ):
+        raise ValueError("Temporal track requires both classes and at least 100 rows per period")
+    model = _fit_model(train, validation, iterations)
     test_probability = model.predict_proba(test[FEATURES])[:, 1]
     global_metadata_path = MODEL_DIR / "global_metadata.json"
     source = {}
@@ -176,10 +240,12 @@ def train_temporal_track(
         "features": FEATURES,
         "test_metrics": _metrics(test["target"], test_probability),
         "per_vintage_test": per_vintage,
+        "rolling_windows": rolling_vintage_evidence(frame, iterations=iterations),
+        "stress_segments": _stress_segments(test, test_probability),
         "model_checksum": _sha256(model_path),
         "prohibited_use": "Never feeds LimitIQ card recommendations or claims India portability",
     }
-    payload["model_version"] = f"limitiq-temporal-4.0.0-{payload['model_checksum'][:12]}"
+    payload["model_version"] = f"limitiq-temporal-4.1.0-{payload['model_checksum'][:12]}"
     _write_json(report_dir / "temporal_validation.json", payload)
     return payload
 

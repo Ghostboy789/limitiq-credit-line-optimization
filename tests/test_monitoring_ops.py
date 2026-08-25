@@ -17,3 +17,4 @@ def test_monitoring_replay_is_deterministic_and_detects_degradation() -> None:
     assert stable == repeated
     assert degraded["status"] == "red"
     assert "rollback" in degraded["required_response"].lower()
+    assert stable["segment_metrics"]

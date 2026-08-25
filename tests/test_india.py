@@ -19,6 +19,7 @@ def _record() -> dict[str, object]:
         "verified_monthly_income_inr": 100_000,
         "income_verified_at": "2026-08-01T10:00:00+05:30",
         "current_limit_inr": 300_000,
+        "other_credit_limits_inr": 200_000,
         "current_balance_inr": 120_000,
         "statement_months": 12,
         "data_lineage_id": "LINEAGE-0001",
@@ -29,5 +30,8 @@ def test_india_contract_validates_fresh_consent_lineage_and_affordability() -> N
     result = validate_india_contract(_record())
     assert result["foir_proxy"] == pytest.approx(0.25)
     assert result["classification"].endswith("no PD or lending decision")
+    assert result["aggregate_credit_limit_inr"] == 500_000
+    assert result["aggregate_limit_to_annual_income"] == pytest.approx(5 / 12)
+    assert "explicit customer acceptance" in result["activation_status"]
     with pytest.raises(ValueError, match="Direct identifiers"):
         validate_india_contract({**_record(), "pan": "NOT-ALLOWED"})

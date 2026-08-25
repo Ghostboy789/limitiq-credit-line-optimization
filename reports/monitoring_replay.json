@@ -2,7 +2,7 @@
   "classification": "Deterministic synthetic monitoring replay",
   "stable": {
     "classification": "Monitoring output; demonstration unless sourced from approved outcomes",
-    "generated_at": "2026-08-21T11:40:13.475200+00:00",
+    "generated_at": "2026-08-25T05:49:13.848639+00:00",
     "model_version": "limitiq-behavioral-4.0.0-21234ab33f78",
     "dataset_version": "uci-350-behavioral-6ba3a746be13",
     "rows": 2000,
@@ -22,6 +22,53 @@
       "Manual review": 671,
       "No change": 674
     },
+    "segment_metrics": [
+      {
+        "segment": "Utilization <30%",
+        "rows": 546,
+        "event_rate": 0.23076923076923078,
+        "mean_probability": 0.214717907731184,
+        "brier_score": 0.14278197388839559,
+        "calibration_gap": 0.039761523711388434,
+        "roc_auc": 0.7744142101284959
+      },
+      {
+        "segment": "Utilization 30\u201370%",
+        "rows": 1193,
+        "event_rate": 0.22632020117351215,
+        "mean_probability": 0.220341682298491,
+        "brier_score": 0.13925626306358216,
+        "calibration_gap": 0.02855256325791835,
+        "roc_auc": 0.7654468119256852
+      },
+      {
+        "segment": "Utilization \u226570%",
+        "rows": 261,
+        "event_rate": 0.210727969348659,
+        "mean_probability": 0.20482147985101434,
+        "brier_score": 0.11844608379381713,
+        "calibration_gap": 0.07075395693366734,
+        "roc_auc": 0.7849073256840249
+      },
+      {
+        "segment": "No reported delinquency",
+        "rows": 1375,
+        "event_rate": 0.22618181818181818,
+        "mean_probability": 0.217955492858191,
+        "brier_score": 0.13725845008327817,
+        "calibration_gap": 0.021364620071951373,
+        "roc_auc": 0.771701158039794
+      },
+      {
+        "segment": "Reported delinquency",
+        "rows": 625,
+        "event_rate": 0.224,
+        "mean_probability": 0.2141971330630854,
+        "brier_score": 0.1380411817337541,
+        "calibration_gap": 0.03179480282195816,
+        "roc_auc": 0.767820324005891
+      }
+    ],
     "thresholds": {
       "psi_amber": 0.1,
       "psi_red": 0.25,
@@ -31,11 +78,11 @@
       "calibration_gap_red": 0.05,
       "missing_rate_red": 0.01
     },
-    "report_sha256": "9fd14129399514b63629f5c9c24fa18e77e240b234dfc690f41f8a36ef2c7c81"
+    "report_sha256": "609a04dc0294a984d49307406804ed20b795046cd3a96fcd49e4c65dae408232"
   },
   "degraded": {
     "classification": "Monitoring output; demonstration unless sourced from approved outcomes",
-    "generated_at": "2026-08-21T11:40:13.554196+00:00",
+    "generated_at": "2026-08-25T05:49:14.015927+00:00",
     "model_version": "limitiq-behavioral-4.0.0-21234ab33f78",
     "dataset_version": "uci-350-behavioral-6ba3a746be13",
     "rows": 2000,
@@ -55,6 +102,53 @@
       "Manual review": 644,
       "No change": 705
     },
+    "segment_metrics": [
+      {
+        "segment": "Utilization <30%",
+        "rows": 555,
+        "event_rate": 0.4972972972972973,
+        "mean_probability": 0.4276271966919973,
+        "brier_score": 0.1889516710548088,
+        "calibration_gap": 0.07902257777882667,
+        "roc_auc": 0.7725053243987325
+      },
+      {
+        "segment": "Utilization 30\u201370%",
+        "rows": 1218,
+        "event_rate": 0.5336617405582923,
+        "mean_probability": 0.43568251833319993,
+        "brier_score": 0.20654695488186753,
+        "calibration_gap": 0.10395159306313856,
+        "roc_auc": 0.7442686890574216
+      },
+      {
+        "segment": "Utilization \u226570%",
+        "rows": 227,
+        "event_rate": 0.47577092511013214,
+        "mean_probability": 0.40923913665491496,
+        "brier_score": 0.19337564516025987,
+        "calibration_gap": 0.09828101312309973,
+        "roc_auc": 0.7624494242141301
+      },
+      {
+        "segment": "No reported delinquency",
+        "rows": 1406,
+        "event_rate": 0.5142247510668563,
+        "mean_probability": 0.4212037392622955,
+        "brier_score": 0.2030893978858843,
+        "calibration_gap": 0.09764740263484874,
+        "roc_auc": 0.7505898029400031
+      },
+      {
+        "segment": "Reported delinquency",
+        "rows": 594,
+        "event_rate": 0.5235690235690236,
+        "mean_probability": 0.4523219328481048,
+        "brier_score": 0.19325748569925794,
+        "calibration_gap": 0.07616623379906233,
+        "roc_auc": 0.7659323054548761
+      }
+    ],
     "thresholds": {
       "psi_amber": 0.1,
       "psi_red": 0.25,
@@ -64,6 +158,6 @@
       "calibration_gap_red": 0.05,
       "missing_rate_red": 0.01
     },
-    "report_sha256": "bb3fda4d7d02b20597b181ac38c8744d36b6866da8bd649cf4bee7be449a40a1"
+    "report_sha256": "756b3fe795e3e27c020216d3b082cfa52750cd614fba1ebbc4a20bd535f5f7f1"
   }
 }

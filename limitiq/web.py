@@ -49,8 +49,9 @@ from limitiq.features import (
     validate_behavioral_input,
 )
 from limitiq.india import validate_india_contract
-from limitiq.optimizer import Decision, recommend_portfolio, summarize_portfolio
+from limitiq.optimizer import Decision, recommend_account, recommend_portfolio, summarize_portfolio
 from limitiq.review import DECISIONS, REASONS, ReviewLedger
+from limitiq.robustness import behavioral_support_flags
 
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(5 * 1024 * 1024)))
 MAX_UPLOAD_REQUEST_BYTES = MAX_UPLOAD_BYTES + 64 * 1024
@@ -72,6 +73,8 @@ V4_SUPPORTING_REPORT_FILES = {
     "temporal-validation-evidence": "temporal_validation.json",
     "monitoring-replay-evidence": "monitoring_replay.json",
     "experiment-replay-evidence": "experiment_replay.json",
+    "model-robustness-evidence": "model_robustness.json",
+    "india-validation-readiness": "india_validation_readiness.json",
 }
 V3_ARCHIVE_REPORT_FILES = {
     "v3-primary-model-evidence": "primary_model.json",
@@ -123,9 +126,10 @@ DOCUMENT_FILES = {
     "india-readiness": "INDIA_READINESS.md",
     "v4-workbench": "V4_WORKBENCH.md",
     "recruiter-brief": "RECRUITER_BRIEF.md",
+    "model-improvement-evidence": "MODEL_IMPROVEMENT_EVIDENCE.md",
 }
 MARKDOWN = MarkdownIt("commonmark", {"html": False, "linkify": False}).enable("table")
-RELEASE_MANIFEST_PATH = ROOT / "release" / "checksums-v4.0.0.sha256"
+RELEASE_MANIFEST_PATH = ROOT / "release" / "checksums-v4.1.0.sha256"
 
 
 class RequestBodyLimitMiddleware:
@@ -218,6 +222,7 @@ def _load_artifacts() -> tuple[
     pd.DataFrame,
     dict[str, Any],
     dict[str, Any],
+    dict[str, Any],
 ]:
     model_path = MODEL_DIR / "behavioral_candidate.joblib"
     metadata_path = MODEL_DIR / "behavioral_metadata.json"
@@ -227,6 +232,7 @@ def _load_artifacts() -> tuple[
     research_path = MODEL_DIR / "global_metadata.json"
     schema_path = MODEL_DIR / "behavioral_feature_schema.json"
     research_feature_path = REPORT_DIR / "global_feature_evidence.json"
+    robustness_path = REPORT_DIR / "model_robustness.json"
     for path in (
         model_path,
         metadata_path,
@@ -236,6 +242,7 @@ def _load_artifacts() -> tuple[
         simulation_path,
         research_path,
         research_feature_path,
+        robustness_path,
     ):
         if not path.exists():
             raise RuntimeError(
@@ -251,6 +258,7 @@ def _load_artifacts() -> tuple[
             simulation_path,
             research_path,
             research_feature_path,
+            robustness_path,
         ]
     )
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
@@ -278,6 +286,17 @@ def _load_artifacts() -> tuple[
     portfolio["source_name"] = report["source"]["dataset"]
     portfolio["display_utilization"] = portfolio["utilization"].fillna(
         portfolio["current_balance_inr"] / portfolio["current_limit_inr"]
+    )
+    increased = portfolio["increase_pct"].gt(0)
+    acceptance_reason = "Explicit customer acceptance required before activation"
+    portfolio.loc[
+        increased & ~portfolio["reason_codes"].str.contains(acceptance_reason), "reason_codes"
+    ] = (
+        portfolio.loc[
+            increased & ~portfolio["reason_codes"].str.contains(acceptance_reason), "reason_codes"
+        ]
+        + " | "
+        + acceptance_reason
     )
     if not AUTO_INCREASES_ENABLED:
         increase = portfolio["increase_pct"].gt(0)
@@ -319,7 +338,8 @@ def _load_artifacts() -> tuple[
             "risk_counts": portfolio["risk_band"].value_counts().to_dict(),
         }
     research_metadata = json.loads(research_path.read_text(encoding="utf-8"))
-    return model, metadata, report, portfolio, simulation, research_metadata
+    robustness = json.loads(robustness_path.read_text(encoding="utf-8"))
+    return model, metadata, report, portfolio, simulation, research_metadata, robustness
 
 
 def _svg_points(x_values: list[float], y_values: list[float]) -> str:
@@ -451,7 +471,9 @@ def _primary_model_frame(frame: pd.DataFrame) -> pd.DataFrame:
     return frame[TAIWAN_MODEL_INPUT_COLUMNS]
 
 
-def _optimizer_frame(frame: pd.DataFrame) -> pd.DataFrame:
+def _optimizer_frame(
+    frame: pd.DataFrame, support: dict[str, dict[str, float]] | None = None
+) -> pd.DataFrame:
     """Derive the small policy contract from validated behavioral inputs."""
     result = pd.DataFrame(index=frame.index, columns=MODEL_INPUT_COLUMNS)
     result["delinquency_count"] = (frame[PAY_COLUMNS] > 0).sum(axis=1).astype(float)
@@ -460,7 +482,13 @@ def _optimizer_frame(frame: pd.DataFrame) -> pd.DataFrame:
     ).clip(upper=5)
     result["region"] = "taiwan"
     result[EXPOSURE_COLUMNS] = frame[EXPOSURE_COLUMNS]
-    return result[[*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]]
+    if support:
+        result = result.join(
+            behavioral_support_flags(frame[TAIWAN_MODEL_INPUT_COLUMNS], support)[
+                ["outside_model_support", "support_breach_count"]
+            ]
+        )
+    return result
 
 
 def _decision_frame(decisions: list[Decision]) -> pd.DataFrame:
@@ -592,7 +620,15 @@ PALETTE_PAGES = [
 
 
 def create_app() -> FastAPI:
-    model, metadata, primary_report, portfolio, simulation, research_metadata = _load_artifacts()
+    (
+        model,
+        metadata,
+        primary_report,
+        portfolio,
+        simulation,
+        research_metadata,
+        robustness,
+    ) = _load_artifacts()
     review_ledger = ReviewLedger()
     app = FastAPI(
         title="LimitIQ",
@@ -615,6 +651,7 @@ def create_app() -> FastAPI:
     app.state.research_metadata = research_metadata
     app.state.portfolio = portfolio
     app.state.simulation = simulation
+    app.state.robustness = robustness
     app.state.started_at = time.monotonic()
     app.state.operations = {
         "requests": 0,
@@ -1126,12 +1163,12 @@ def create_app() -> FastAPI:
                 422, "ACCOUNT_ID must be 3–40 letters, numbers, underscores or hyphens"
             )
         probability = model.predict_proba(_primary_model_frame(clean))[:, 1]
-        decision = recommend_portfolio(
-            _optimizer_frame(clean),
-            probability,
-            [account_id],
+        decision = recommend_account(
+            _optimizer_frame(clean, robustness["support_bounds"]).iloc[0],
+            float(probability[0]),
+            account_id,
             automatic_increases_enabled=AUTO_INCREASES_ENABLED,
-        )[0]
+        )
         return JSONResponse(
             {
                 "classification": "Educational synthetic-economics decision",
@@ -1181,7 +1218,7 @@ def create_app() -> FastAPI:
             )
         probability = model.predict_proba(_primary_model_frame(clean))[:, 1]
         decisions = recommend_portfolio(
-            _optimizer_frame(clean),
+            _optimizer_frame(clean, robustness["support_bounds"]),
             probability,
             clean["ACCOUNT_ID"].tolist(),
             automatic_increases_enabled=AUTO_INCREASES_ENABLED,
@@ -1329,11 +1366,13 @@ def create_app() -> FastAPI:
             "v4_lab.html",
             context(
                 request,
-                title="V4 decision-science lab",
+                title="V4.1 decision-science lab",
                 behavioral=primary_report,
                 temporal=evidence.get("temporal-validation-evidence"),
                 monitoring_replay=evidence.get("monitoring-replay-evidence"),
                 experiment_replay=evidence.get("experiment-replay-evidence"),
+                robustness=evidence.get("model-robustness-evidence"),
+                india_readiness=evidence.get("india-validation-readiness"),
                 explanation=explanation,
                 review_events=review_ledger.events(),
                 review_decisions=sorted(DECISIONS),

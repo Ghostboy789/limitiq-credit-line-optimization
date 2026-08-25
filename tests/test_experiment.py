@@ -12,3 +12,9 @@ def test_assignment_power_and_analysis_are_reproducible() -> None:
     second.pop("generated_at")
     assert first == second
     assert set(first["comparisons_to_control"]) == {"increase_10", "increase_20", "increase_30"}
+    assert first["analysis_protocol_version"] == "1.1"
+    assert len(first["comparisons_to_control"]["increase_10"]["cuped_95_interval"]) == 2
+    assert first["comparisons_to_control"]["increase_10"]["guardrail_status"] in {
+        "within_bound",
+        "review_stop",
+    }

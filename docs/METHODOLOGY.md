@@ -83,8 +83,10 @@ establish future-vintage or geographic portability.
 
 A US Lending Club research track uses only application-time features and
 terminal 36-month loans. Training vintages end in 2013, 2014 is calibration and
-2015 is an untouched test. The deterministic 249,999-row sample records test
-ROC-AUC 0.647084, PR-AUC 0.229972, Brier 0.122924 and log loss 0.404746.
+2015 is an untouched test. The deterministic 400,000-row sample records test
+ROC-AUC 0.649217, PR-AUC 0.232211, Brier 0.123224 and log loss 0.405290.
+Expanding-window tests cover every feasible vintage and the report separately
+measures high revolving utilization, high DTI and prior delinquency cohorts.
 This is installment-loan temporal evidence with unavailable within-term event
 timing; it never feeds card decisions or claims India portability.
 

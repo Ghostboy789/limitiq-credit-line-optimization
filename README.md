@@ -25,6 +25,7 @@ rules and a recruiter-ready banking workflow in one Dockerized FastAPI service.
 3. [Policy simulator](https://limitiq-credit-line-optimization.onrender.com/simulator) — baseline-versus-scenario trade-offs.
 4. [Model governance](https://limitiq-credit-line-optimization.onrender.com/governance) — primary evidence, independent challenge and research benchmark.
 5. [Recruiter brief](docs/RECRUITER_BRIEF.md) — interview narrative, résumé bullets and role fit.
+6. [V4.1 model-improvement evidence](docs/MODEL_IMPROVEMENT_EVIDENCE.md) — calibration challenge, temporal stress, support routing and India/pilot gates.
 
 ## Product preview
 
@@ -67,11 +68,17 @@ loan study:
 |---|---|---|---|
 | **Primary** | Source-coherent behavioral application model | UCI Taiwan, 30,000 accounts, default in the following month | Drives only the educational synthetic demo |
 | **Research** | Cross-source transportability benchmark | 1,869,548 rows, six independent cohorts with different events and horizons | Governance evidence only; never drives account recommendations |
-| **Temporal study** | Ordered-vintage robustness research | 249,999 seasoned US installment loans; terminal 36-month outcome | Never feeds card recommendations |
+| **Temporal study** | Expanding-window and stressed-segment robustness research | 400,000 seasoned US installment loans; terminal 36-month outcome | Never feeds card recommendations |
 
 This avoids pretending that heterogeneous public labels form one regulatory PD.
 The primary model still does **not** establish Indian-market, out-of-time,
 production, regulatory or fair-lending suitability.
+
+V4.1 adds a development-only four-candidate calibration challenge, conservative
+out-of-support manual-review routing, expanding-window temporal/stress evidence,
+segment monitoring, an observed randomized-pilot analyzer and a strict Indian
+account-month forward-validation runner. It deliberately leaves the checksum-
+bound v4 primary unchanged until a genuinely new validation population exists.
 
 ## Exact primary-model evidence
 
@@ -146,6 +153,8 @@ candidates, then maximizes simulated risk-adjusted contribution subject to:
 - delinquency and payment-history eligibility
 - overextension safeguards
 - manual-review and early-warning routing
+- three-or-more development-support breaches routed to manual review
+- explicit customer acceptance before any positive offer is activated
 - application-level rollback via `AUTO_INCREASES_ENABLED=false`
 
 Expected loss proxy is `score × LGD × EAD`. Incremental contribution is simulated
@@ -207,6 +216,16 @@ python -m limitiq.primary --smoke
 python -m limitiq.multisource
 python -m limitiq.evidence
 
+# Rebuild development-only calibration/challenger evidence
+python -m limitiq.robustness
+
+# Analyze a governed observed pilot, or rebuild the labelled synthetic replay
+python -m limitiq.experiment --input pilot.csv --output reports/pilot-observed.json
+python -m limitiq.experiment --rows 20000
+
+# Validate governed Indian account-month outcomes when available
+python -m limitiq.india_validation INPUT.csv --output-dir OUTPUT
+
 # Quality gates
 python -m pytest --cov=limitiq --cov-report=term-missing
 ruff check .
@@ -225,7 +244,7 @@ docker run --rm -p 8000:8000 limitiq
 - Pinned runtime and development dependencies
 - Deterministic source manifest with URLs, licence/terms, hashes and row counts
 - CycloneDX 1.6 direct-dependency [SBOM](sbom/limitiq.cdx.json)
-- Release [SHA-256 manifest](release/checksums-v4.0.0.sha256) covering the
+- Release [SHA-256 manifest](release/checksums-v4.1.0.sha256) covering the
   behavioral and temporal models, metadata, schema, evidence, demo portfolio,
   executive report, India contract and SBOM
 - GitHub Actions for tests, coverage, Ruff, Bandit, dependency/secret scanning,
@@ -245,6 +264,7 @@ docker run --rm -p 8000:8000 limitiq
 - [Model and decision-component inventory](docs/MODEL_INVENTORY.md)
 - [Randomized pilot design](docs/EXPERIMENT_DESIGN.md)
 - [India readiness assessment](docs/INDIA_READINESS.md)
+- [V4.1 model-improvement evidence](docs/MODEL_IMPROVEMENT_EVIDENCE.md)
 - [Model card](docs/MODEL_CARD.md) and [data card](docs/DATA_CARD.md)
 - [Methodology](docs/METHODOLOGY.md), [PRD](docs/PRD.md), [architecture](docs/ARCHITECTURE.md)
 - [Career targeting guide](docs/CAREER_TARGETING.md)
@@ -267,6 +287,10 @@ repository owner's dated attestation and is not an independent legal opinion.
 The correct next step is representative local data, a future-vintage holdout,
 organizationally independent validation and a governed randomized pilot—not a
 larger decorative model.
+
+V4.1 closes the software-readiness portion of those next steps; the evidence
+gates stay open because public files cannot substitute for representative Indian
+outcomes or observed line-increase treatments.
 
 ## V4 decision-science workbench
 

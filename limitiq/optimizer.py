@@ -14,6 +14,7 @@ ACTION_LABELS = {
     0.2: "Increase 20%",
     0.3: "Increase 30%",
 }
+CONSENT_REASON = "Explicit customer acceptance required before activation"
 
 
 @dataclass(frozen=True)
@@ -86,6 +87,7 @@ def _behavior(row: pd.Series) -> dict[str, Any]:
         "debt_to_income": float(debt_to_income) if pd.notna(debt_to_income) else None,
         "utilization": min(max(utilization, 0.0), 5.0),
         "history_fields": sum(pd.notna(row.get(column)) for column in history_fields),
+        "outside_model_support": bool(row.get("outside_model_support", False)),
     }
 
 
@@ -93,6 +95,8 @@ def _warning_state(behavior: dict[str, Any]) -> tuple[str | None, list[str]]:
     delinquency = behavior["delinquency_count"]
     debt_to_income = behavior["debt_to_income"]
     reasons: list[str] = []
+    if behavior["outside_model_support"]:
+        return "Manual review", ["Outside behavioral model support", "Manual review required"]
     if behavior["history_fields"] < 2 or delinquency is None:
         return "Manual review", ["Insufficient behavioral history", "Manual review required"]
     if delinquency >= 2:
@@ -148,6 +152,7 @@ def _candidate(
             utilization <= 1.10
             and (behavior["debt_to_income"] is None or behavior["debt_to_income"] <= 0.60)
         ),
+        "within_model_support": not behavior["outside_model_support"],
     }
     eligible = increase_pct == 0 or all(checks.values())
     return {
@@ -215,10 +220,13 @@ def recommend_account(
                 "meets_profitability_hurdle": "Incremental return below profitability hurdle",
                 "payment_history_eligible": "Payment-history eligibility rule not met",
                 "not_overextended": "Customer-overextension safeguard",
+                "within_model_support": "Outside behavioral model support",
             }
             reasons.extend(mapping[name] for name in failed if name in mapping)
         if not reasons:
             reasons.append("Best eligible risk-adjusted contribution")
+        if selected["increase_pct"] > 0:
+            reasons.append(CONSENT_REASON)
     limit = behavior["limit"]
     balance = behavior["balance"]
     current_ead = exposure(limit, balance, assumptions.ccf)
@@ -381,6 +389,11 @@ def _optimize_candidate_allocation(
                 "Portfolio constraints retained current limit",
             )
         )
+        final_reasons = tuple(
+            reason for reason in decision.reason_codes if reason != CONSENT_REASON
+        )
+        if increase_pct:
+            final_reasons = (*final_reasons, CONSENT_REASON)
         optimized.append(
             replace(
                 decision,
@@ -391,7 +404,7 @@ def _optimize_candidate_allocation(
                 proposed_expected_loss=float(candidate["proposed_expected_loss"]),
                 incremental_contribution=float(candidate["incremental_contribution"]),
                 risk_adjusted_return=float(candidate["risk_adjusted_return"]),
-                reason_codes=tuple(dict.fromkeys((*decision.reason_codes, *portfolio_reasons))),
+                reason_codes=tuple(dict.fromkeys((*final_reasons, *portfolio_reasons))),
                 policy_checks=candidate["checks"],
             )
         )

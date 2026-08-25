@@ -60,6 +60,18 @@ The PD model may define pre-treatment strata or eligibility, but it must not use
 post-assignment data. Reusing a model for a new population or purpose requires
 specific validation.
 
+The executable analyzer accepts a governed randomized-pilot CSV:
+
+```bash
+python -m limitiq.experiment --input pilot.csv --output reports/pilot-observed.json
+```
+
+It validates the frozen four arms, unique assignments, finite outcomes and
+binary acceptance/delinquency fields. It reports ITT and CUPED contribution
+deltas, standard errors, 95% intervals, delinquency risk-difference intervals
+and an explicit harm-bound status. The committed `experiment_replay.json` is
+still deterministic synthetic plumbing and never presented as observed impact.
+
 ## Power and minimum detectable effect
 
 Set sample size from portfolio data before launch; LimitIQ has no empirical

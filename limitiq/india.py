@@ -20,6 +20,7 @@ INDIA_REQUIRED_FIELDS = (
     "verified_monthly_income_inr",
     "income_verified_at",
     "current_limit_inr",
+    "other_credit_limits_inr",
     "current_balance_inr",
     "statement_months",
     "data_lineage_id",
@@ -63,6 +64,7 @@ def validate_india_contract(record: dict[str, Any]) -> dict[str, Any]:
             "total_monthly_obligation_inr",
             "verified_monthly_income_inr",
             "current_limit_inr",
+            "other_credit_limits_inr",
             "current_balance_inr",
             "statement_months",
         )
@@ -75,6 +77,8 @@ def validate_india_contract(record: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("Current balance exceeds the readiness contract bound")
     if numeric["statement_months"] < 6:
         raise ValueError("At least six statement months are required")
+    aggregate_limit = numeric["current_limit_inr"] + numeric["other_credit_limits_inr"]
+    annual_income = numeric["verified_monthly_income_inr"] * 12
     return {
         "classification": "India data-readiness validation only; no PD or lending decision",
         "customer_reference": str(record["customer_reference"]),
@@ -83,8 +87,11 @@ def validate_india_contract(record: dict[str, Any]) -> dict[str, Any]:
         "foir_proxy": numeric["total_monthly_obligation_inr"]
         / numeric["verified_monthly_income_inr"],
         "utilization": numeric["current_balance_inr"] / numeric["current_limit_inr"],
+        "aggregate_credit_limit_inr": aggregate_limit,
+        "aggregate_limit_to_annual_income": aggregate_limit / annual_income,
         "bureau_age_days": (as_of - bureau).days,
         "income_age_days": (as_of - income_verified).days,
         "ready_for_local_model_validation": True,
+        "activation_status": "Eligibility offer only; explicit customer acceptance is required",
         "next_gate": "Representative Indian outcomes, legal review and independent validation",
     }

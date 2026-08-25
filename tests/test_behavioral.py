@@ -58,12 +58,12 @@ def test_behavioral_primary_artifacts_are_checksum_bound_and_sane() -> None:
     assert np.all((0 <= score) & (score <= 1))
 
 
-def test_v4_release_manifest_matches_current_artifacts() -> None:
+def test_v41_release_manifest_matches_current_artifacts() -> None:
     entries = {
         relative: checksum
         for checksum, relative in (
             line.split(maxsplit=1)
-            for line in (ROOT / "release" / "checksums-v4.0.0.sha256")
+            for line in (ROOT / "release" / "checksums-v4.1.0.sha256")
             .read_text(encoding="utf-8")
             .splitlines()
             if line
@@ -80,6 +80,8 @@ def test_v4_release_manifest_matches_current_artifacts() -> None:
         "reports/temporal_validation.json",
         "reports/monitoring_replay.json",
         "reports/experiment_replay.json",
+        "reports/model_robustness.json",
+        "reports/india_validation_readiness.json",
         "docs/INDIA_DATA_CONTRACT.json",
         "reports/executive_report.html",
         "reports/executive_report.pdf",

@@ -21,7 +21,7 @@ review and early-warning-freeze actions.
 | Test PR-AUC / Brier | 0.567889 / 0.133149 |
 | Exact gain vs v3 | +0.023728 ROC; -0.008533 Brier; paired intervals exclude zero |
 | Research union | 1,869,548 rows; six independent cohorts; governance only |
-| Temporal study | 249,999 seasoned US loans; 2015 test ROC-AUC 0.647084; research only |
+| Temporal study | 400,000 seasoned US loans; 2015 test ROC-AUC 0.649217; research only |
 | Synthetic portfolio | 1,200 histories; ₹2.980M simulated contribution |
 
 The behavioral primary has one event and one horizon. The global model remains a
@@ -47,6 +47,9 @@ impact.
 - Added validation review, issue ledger, model inventory, pilot design, India
   readiness contract, executable monitoring/experiment replays, maker-checker,
   SBOM, CodeQL, Trivy, operational probes and SQL reconciliation.
+- Challenged sigmoid/isotonic calibration and monotonic HGB out of fold on the
+  development partition without rereading the frozen test; added conservative
+  support-bound routing, temporal stress cohorts and local-data validation gates.
 
 ## What to inspect in five minutes
 

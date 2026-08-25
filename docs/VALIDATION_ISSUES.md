@@ -1,15 +1,15 @@
 # Validation issue ledger
 
-Status date: 18 August 2026. Severity describes the consequence **if the system
+Status date: 25 August 2026. Severity describes the consequence **if the system
 were proposed for real credit use**; it does not imply current customer impact,
 because LimitIQ is an educational demonstration.
 
 | ID | Severity | Finding | Required remediation | Owner role | Status |
 |---|---|---|---|---|---|
 | VAL-01 | High | V2 used heterogeneous events and horizons for the application score. | V4 retains one next-month Taiwan target for the decision demo and restricts the global model to research. | Model Development | Closed for current educational scope; global benchmark remains prohibited for decisions |
-| VAL-02 | High | No representative Indian development or validation population exists. INR is only presentation/canonical demo currency. | Obtain governed Indian application, bureau, affordability and outcome data; redevelop and independently validate. | India Credit Risk | Open; India-use blocker |
-| VAL-03 | High | The primary split tests seeded within-source interpolation, not a true future vintage or unseen population. | Freeze a sufficiently seasoned card future-vintage test and perform external/transportability validation. The separate US loan-vintage study does not close this card-domain gap. | Model Validation | Open; production blocker |
-| VAL-04 | High | No source observes response to credit-line treatment; value and expected-loss changes are simulated. | Run an approved randomized pilot with holdout, customer guardrails and observed outcome reconciliation. | Credit Strategy | Open; automation blocker |
+| VAL-02 | High | No representative Indian development or validation population exists. INR is only presentation/canonical demo currency. | Obtain governed Indian application, bureau, affordability and outcome data; redevelop and independently validate. | India Credit Risk | Open blocker; strict account-month contract and four-way forward runner implemented |
+| VAL-03 | High | The primary split tests seeded within-source interpolation, not a true future vintage or unseen population. | Freeze a sufficiently seasoned card future-vintage test and perform external/transportability validation. The separate rolling US loan-vintage study does not close this card-domain gap. | Model Validation | Open blocker; development-only four-candidate calibration challenge completed without rereading the v4 test |
+| VAL-04 | High | No source observes response to credit-line treatment; value and expected-loss changes are simulated. | Run an approved randomized pilot with holdout, customer guardrails and observed outcome reconciliation. | Credit Strategy | Open blocker; observed-input ITT/CUPED analyzer with uncertainty and harm bounds implemented |
 | VAL-05 | High | Research-benchmark performance is heterogeneous: Home Credit test ROC-AUC is 0.517499 and Lending Club is 0.601517; Lending Club dominates pooled rows. | Keep the benchmark out of decisioning; establish source/product acceptance floors before any expanded research use. | Model Development | Risk avoided for decisions; open research limitation |
 | VAL-06 | Medium | Region and structural missingness can identify sources and base rates. | Test source-balanced, source-held-out and missingness-restricted alternatives; document permitted context features. | Model Development | Open |
 | VAL-07 | Medium | The behavioral primary and exact v3 comparison have 500-repeat seeded bootstrap intervals, but research-cohort intervals remain absent and South German has only 200 test rows. | Add source-stratified intervals before comparative research claims; never use underpowered cohort estimates for decisions. | Model Validation | Partially remediated; open for research benchmark |

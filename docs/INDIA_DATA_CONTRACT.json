@@ -17,6 +17,7 @@
     "verified_monthly_income_inr",
     "income_verified_at",
     "current_limit_inr",
+    "other_credit_limits_inr",
     "current_balance_inr",
     "statement_months",
     "data_lineage_id"
@@ -34,6 +35,7 @@
     "verified_monthly_income_inr": {"type": "number", "exclusiveMinimum": 0},
     "income_verified_at": {"type": "string", "format": "date-time"},
     "current_limit_inr": {"type": "number", "exclusiveMinimum": 0},
+    "other_credit_limits_inr": {"type": "number", "minimum": 0, "description": "Known sanctioned limits at other issuers, captured from an approved current source."},
     "current_balance_inr": {"type": "number", "minimum": 0},
     "statement_months": {"type": "integer", "minimum": 6},
     "data_lineage_id": {"type": "string", "minLength": 8, "maxLength": 120}

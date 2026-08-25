@@ -77,7 +77,22 @@ def synthetic_pilot(rows: int = 20_000) -> pd.DataFrame:
     )
 
 
-def analyze_pilot(frame: pd.DataFrame) -> dict[str, Any]:
+def _difference_interval(
+    treatment: pd.Series, control: pd.Series
+) -> tuple[float, float, float, float]:
+    delta = float(treatment.mean() - control.mean())
+    standard_error = math.sqrt(
+        float(treatment.var(ddof=1)) / len(treatment) + float(control.var(ddof=1)) / len(control)
+    )
+    return delta, standard_error, delta - 1.96 * standard_error, delta + 1.96 * standard_error
+
+
+def analyze_pilot(
+    frame: pd.DataFrame,
+    *,
+    classification: str = "Deterministic synthetic experiment-analysis demonstration",
+    delinquency_harm_bound: float = 0.01,
+) -> dict[str, Any]:
     """Return ITT and CUPED results; treatment assignment is never conditioned on acceptance."""
     required = {"account_id", "arm", "baseline_spend", "contribution", "delinquency", "accepted"}
     missing = sorted(required - set(frame.columns))
@@ -87,6 +102,24 @@ def analyze_pilot(frame: pd.DataFrame) -> dict[str, Any]:
         raise ValueError("Pilot arm is outside the frozen four-arm design")
     if frame["account_id"].duplicated().any():
         raise ValueError("Pilot account IDs must be unique")
+    if set(ARMS) - set(frame["arm"]):
+        raise ValueError("Pilot data must contain every frozen arm, including control")
+    if (frame["arm"].value_counts() < 2).any():
+        raise ValueError("Pilot data must contain at least two observations per arm")
+    numeric_columns = ["baseline_spend", "contribution", "delinquency", "accepted"]
+    numeric = frame[numeric_columns].apply(pd.to_numeric, errors="coerce")
+    if not np.isfinite(numeric.to_numpy()).all():
+        raise ValueError("Pilot numeric outcomes must be finite")
+    if (numeric["baseline_spend"] < 0).any():
+        raise ValueError("Pilot baseline spend cannot be negative")
+    if not set(numeric["delinquency"].unique()).issubset({0, 1}) or not set(
+        numeric["accepted"].unique()
+    ).issubset({0, 1}):
+        raise ValueError("Pilot delinquency and acceptance must contain only 0 and 1")
+    if not 0 <= delinquency_harm_bound < 1:
+        raise ValueError("Delinquency harm bound must be inside [0,1)")
+    frame = frame.copy()
+    frame[numeric_columns] = numeric
     variance = float(frame["baseline_spend"].var(ddof=0))
     theta = (
         float(frame[["contribution", "baseline_spend"]].cov(ddof=0).iloc[0, 1]) / variance
@@ -108,25 +141,44 @@ def analyze_pilot(frame: pd.DataFrame) -> dict[str, Any]:
         }
         for arm, group in grouped
     }
-    control = summaries["control"]
-    comparisons = {
-        arm: {
-            "itt_contribution_delta": values["mean_contribution"] - control["mean_contribution"],
-            "cuped_contribution_delta": values["cuped_mean_contribution"]
-            - control["cuped_mean_contribution"],
-            "delinquency_delta": values["delinquency_rate"] - control["delinquency_rate"],
+    comparisons = {}
+    control_rows = analysis[analysis["arm"] == "control"]
+    for arm in ARMS[1:]:
+        treatment_rows = analysis[analysis["arm"] == arm]
+        itt = _difference_interval(treatment_rows["contribution"], control_rows["contribution"])
+        cuped = _difference_interval(
+            treatment_rows["cuped_contribution"], control_rows["cuped_contribution"]
+        )
+        delinquency = _difference_interval(
+            treatment_rows["delinquency"], control_rows["delinquency"]
+        )
+        comparisons[arm] = {
+            "itt_contribution_delta": itt[0],
+            "itt_standard_error": itt[1],
+            "itt_95_interval": [itt[2], itt[3]],
+            "cuped_contribution_delta": cuped[0],
+            "cuped_standard_error": cuped[1],
+            "cuped_95_interval": [cuped[2], cuped[3]],
+            "delinquency_delta": delinquency[0],
+            "delinquency_standard_error": delinquency[1],
+            "delinquency_95_interval": [delinquency[2], delinquency[3]],
+            "guardrail_status": (
+                "review_stop" if delinquency[3] > delinquency_harm_bound else "within_bound"
+            ),
         }
-        for arm, values in summaries.items()
-        if arm != "control"
-    }
     return {
-        "classification": "Deterministic synthetic experiment-analysis demonstration",
+        "classification": classification,
+        "analysis_protocol_version": "1.1",
         "generated_at": datetime.now(UTC).isoformat(),
         "estimand": "Intent-to-treat effect by assigned credit-line arm",
         "arms": summaries,
         "comparisons_to_control": comparisons,
         "cuped_theta": theta,
-        "guardrail": "Stop review if delinquency harm exceeds the independently approved bound",
+        "guardrail": {
+            "metric": "Upper 95% interval for delinquency risk difference",
+            "harm_bound": delinquency_harm_bound,
+            "rule": "Route the arm to stop review when the upper interval exceeds the bound",
+        },
         "limitations": [
             "Synthetic outcomes prove analysis plumbing only and are not causal business evidence.",
             "A real pilot requires consent, eligibility, harm monitoring and independent approval.",
@@ -135,11 +187,26 @@ def analyze_pilot(frame: pd.DataFrame) -> dict[str, Any]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the LimitIQ synthetic pilot analysis")
-    parser.add_argument("--rows", type=int, default=20_000)
+    parser = argparse.ArgumentParser(description="Run the LimitIQ randomized-pilot analysis")
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument("--input", type=Path, help="Observed randomized-pilot CSV")
+    source.add_argument("--rows", type=int, help="Rows in the synthetic plumbing replay")
     parser.add_argument("--output", type=Path, default=REPORT_DIR / "experiment_replay.json")
+    parser.add_argument("--delinquency-harm-bound", type=float, default=0.01)
     args = parser.parse_args()
-    payload = analyze_pilot(synthetic_pilot(args.rows))
+    if args.input:
+        frame = pd.read_csv(args.input)
+        classification = "Observed randomized-pilot analysis supplied by operator"
+    else:
+        frame = synthetic_pilot(args.rows or 20_000)
+        classification = "Deterministic synthetic experiment-analysis demonstration"
+    payload = analyze_pilot(
+        frame,
+        classification=classification,
+        delinquency_harm_bound=args.delinquency_harm_bound,
+    )
+    if args.input:
+        payload["input_sha256"] = hashlib.sha256(args.input.read_bytes()).hexdigest()
     payload["power_example"] = {
         "baseline_rate": 0.10,
         "absolute_mde": 0.01,

@@ -23,6 +23,14 @@ as an organizing reference. Before any pilot, Indian Legal and Compliance must
 identify the final, current requirements applying to the institution, product,
 data, customer communication and outsourcing arrangement.
 
+The RBI [Credit Card and Debit Card — Issuance and Conduct Directions,
+2022](https://www.rbi.org.in/Scripts/BS_ViewMasDirections.aspx?id=12300), updated
+7 March 2024, are the authoritative product-policy reference used for two
+implemented safeguards: known limits from other entities enter aggregate
+exposure review, and a positive eligibility offer cannot activate without the
+customer's explicit acceptance. Institution-specific Legal and Compliance
+approval remains mandatory.
+
 ## Data gaps
 
 | Required evidence | Current LimitIQ evidence | Gap to close |
@@ -52,6 +60,24 @@ data, customer communication and outsourcing arrangement.
 7. Validate reason codes, manual reviews and overrides against actual cases.
 8. Estimate line response only from a governed experiment or credible causal
    design; never transfer the current synthetic elasticity.
+
+## Executable readiness and validation contracts
+
+`docs/INDIA_DATA_CONTRACT.json` now requires tokenized customer references,
+timezone-aware consent and evidence timestamps, fresh bureau and verified-income
+records, current and other-issuer sanctioned limits, obligations, balance,
+statement history and lineage. `validate_india_contract` derives FOIR,
+utilization, aggregate credit limit and aggregate-limit-to-income measures but
+returns no PD or lending decision. A positive line recommendation is only an
+eligibility offer; explicit customer acceptance is required before activation.
+
+`python -m limitiq.india_validation INPUT.csv --output-dir OUTPUT` is the
+governed local-outcome runner. It requires a complete 12-month default outcome,
+at least four snapshot months and unique account/month pairs. It creates ordered
+train, calibration, model-selection and final-test periods, excludes held-out
+accounts from development, compares logistic and histogram-gradient models,
+and checksums the selected artifact and report. No Indian model artifact is
+committed because no representative governed Indian outcomes were supplied.
 
 ## Governance and control gates
 

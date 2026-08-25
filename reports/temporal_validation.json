@@ -1,6 +1,6 @@
 {
   "classification": "Separate US installment-loan temporal validation; research only",
-  "generated_at": "2026-08-21T09:48:43.653592+00:00",
+  "generated_at": "2026-08-25T05:51:03.798126+00:00",
   "source": {
     "dataset": "Lending Club Loans 2007-2018 (US)",
     "source_url": "https://huggingface.co/datasets/codesignal/lending-club-loan-accepted",
@@ -16,9 +16,9 @@
     "untouched_test": 2015
   },
   "rows": {
-    "train": 69912,
-    "validation": 65702,
-    "test": 114385
+    "train": 111860,
+    "validation": 105124,
+    "test": 183015
   },
   "sampling": "Deterministic proportional-by-vintage sample capped by --max-rows after terminal 36-month eligibility filtering",
   "features": [
@@ -35,27 +35,147 @@
     "total_acc"
   ],
   "test_metrics": {
-    "rows": 114385,
-    "event_rate": 0.149346505223587,
-    "mean_score": 0.13549603703271904,
-    "roc_auc": 0.6470839892627627,
-    "pr_auc": 0.22997214555412535,
-    "brier_score": 0.12292414393956681,
-    "log_loss": 0.4047458858561719
+    "rows": 183015,
+    "event_rate": 0.14994945769472448,
+    "mean_score": 0.13508462938922175,
+    "roc_auc": 0.6492172442650614,
+    "pr_auc": 0.23221095760922578,
+    "brier_score": 0.12322372685336028,
+    "log_loss": 0.40528989622044925
   },
   "per_vintage_test": [
     {
       "vintage": 2015,
-      "rows": 114385,
-      "event_rate": 0.149346505223587,
-      "mean_score": 0.13549603703271904,
-      "roc_auc": 0.6470839892627627,
-      "pr_auc": 0.22997214555412535,
-      "brier_score": 0.12292414393956681,
-      "log_loss": 0.4047458858561719
+      "rows": 183015,
+      "event_rate": 0.14994945769472448,
+      "mean_score": 0.13508462938922175,
+      "roc_auc": 0.6492172442650614,
+      "pr_auc": 0.23221095760922578,
+      "brier_score": 0.12322372685336028,
+      "log_loss": 0.40528989622044925
     }
   ],
-  "model_checksum": "526f21581e02484260108f677ec56aabaaef83224fe921aee1c8eee4a2c4d82b",
+  "rolling_windows": [
+    {
+      "train_through": 2007,
+      "calibration": 2008,
+      "test": 2009,
+      "rows": 3050,
+      "event_rate": 0.12918032786885245,
+      "mean_score": 0.1617235631872134,
+      "roc_auc": 0.5549579345299982,
+      "pr_auc": 0.14672091328706574,
+      "brier_score": 0.11366907601977883,
+      "log_loss": 0.38781129453701374
+    },
+    {
+      "train_through": 2008,
+      "calibration": 2009,
+      "test": 2010,
+      "rows": 5474,
+      "event_rate": 0.09554256485202776,
+      "mean_score": 0.12880779740346002,
+      "roc_auc": 0.5821150525629177,
+      "pr_auc": 0.1350511042392213,
+      "brier_score": 0.08680066587390899,
+      "log_loss": 0.3170296512676622
+    },
+    {
+      "train_through": 2009,
+      "calibration": 2010,
+      "test": 2011,
+      "rows": 9118,
+      "event_rate": 0.10528624698398771,
+      "mean_score": 0.09443231961769238,
+      "roc_auc": 0.5996838481654,
+      "pr_auc": 0.13880762359221246,
+      "brier_score": 0.09334943818030496,
+      "log_loss": 0.33147382520155677
+    },
+    {
+      "train_through": 2010,
+      "calibration": 2011,
+      "test": 2012,
+      "rows": 28109,
+      "event_rate": 0.13557935180902914,
+      "mean_score": 0.11892746138661073,
+      "roc_auc": 0.6232192513671592,
+      "pr_auc": 0.1901788679597176,
+      "brier_score": 0.11530309170989145,
+      "log_loss": 0.38780644116675084
+    },
+    {
+      "train_through": 2011,
+      "calibration": 2012,
+      "test": 2013,
+      "rows": 64937,
+      "event_rate": 0.1239355067218997,
+      "mean_score": 0.14088366212097914,
+      "roc_auc": 0.6193980156135381,
+      "pr_auc": 0.17007045261994413,
+      "brier_score": 0.10703568715975675,
+      "log_loss": 0.3663362970104808
+    },
+    {
+      "train_through": 2012,
+      "calibration": 2013,
+      "test": 2014,
+      "rows": 105124,
+      "event_rate": 0.13757086868840607,
+      "mean_score": 0.12783918558706128,
+      "roc_auc": 0.6303200046141955,
+      "pr_auc": 0.19935200825794136,
+      "brier_score": 0.11586526982308351,
+      "log_loss": 0.3882355171081251
+    },
+    {
+      "train_through": 2013,
+      "calibration": 2014,
+      "test": 2015,
+      "rows": 183015,
+      "event_rate": 0.14994945769472448,
+      "mean_score": 0.13508462938922175,
+      "roc_auc": 0.6492172442650614,
+      "pr_auc": 0.23221095760922578,
+      "brier_score": 0.12322372685336028,
+      "log_loss": 0.40528989622044925
+    }
+  ],
+  "stress_segments": [
+    {
+      "segment": "High revolving utilization",
+      "rows": 26549,
+      "event_rate": 0.16294399035745225,
+      "mean_score": 0.15872116447873896,
+      "brier_score": 0.13285490291620367,
+      "roc_auc": 0.6214746890932326
+    },
+    {
+      "segment": "High debt-to-income",
+      "rows": 19671,
+      "event_rate": 0.21213969803263688,
+      "mean_score": 0.17416564109147561,
+      "brier_score": 0.16489537580111405,
+      "roc_auc": 0.6044387212041646
+    },
+    {
+      "segment": "Prior delinquency",
+      "rows": 38220,
+      "event_rate": 0.16114599686028258,
+      "mean_score": 0.14116505787955413,
+      "brier_score": 0.1320113002940361,
+      "roc_auc": 0.6245497254662489
+    },
+    {
+      "segment": "All other accounts",
+      "rows": 110424,
+      "event_rate": 0.1361841628631457,
+      "mean_score": 0.12425529943362014,
+      "brier_score": 0.11344541085216593,
+      "roc_auc": 0.6596459751902092
+    }
+  ],
+  "model_checksum": "765af54f737156b801b95f23b684baa551e7ccb2087080f35a055fc90774b9d7",
   "prohibited_use": "Never feeds LimitIQ card recommendations or claims India portability",
-  "model_version": "limitiq-temporal-4.0.0-526f21581e02"
+  "model_version": "limitiq-temporal-4.1.0-765af54f7371"
 }

@@ -59,6 +59,39 @@ def _calibration_gap(outcome: np.ndarray, probability: np.ndarray) -> float:
     return float((grouped["outcome"].mean() - grouped["probability"].mean()).abs().mean())
 
 
+def _segment_metrics(clean: pd.DataFrame) -> list[dict[str, Any]]:
+    segments = {
+        "Utilization <30%": clean["utilization"] < 0.30,
+        "Utilization 30–70%": clean["utilization"].between(0.30, 0.70, inclusive="left"),
+        "Utilization ≥70%": clean["utilization"] >= 0.70,
+        "No reported delinquency": clean["delinquency_count"] == 0,
+        "Reported delinquency": clean["delinquency_count"] > 0,
+    }
+    rows = []
+    for name, mask in segments.items():
+        cohort = clean.loc[mask].dropna(subset=["probability", "outcome"])
+        if len(cohort) < 2:
+            continue
+        metrics: dict[str, Any] = {
+            "segment": name,
+            "rows": len(cohort),
+            "event_rate": float(cohort["outcome"].mean()),
+            "mean_probability": float(cohort["probability"].mean()),
+            "brier_score": float(brier_score_loss(cohort["outcome"], cohort["probability"])),
+            "calibration_gap": _calibration_gap(
+                cohort["outcome"].to_numpy(dtype=int),
+                cohort["probability"].to_numpy(dtype=float),
+            ),
+        }
+        metrics["roc_auc"] = (
+            float(roc_auc_score(cohort["outcome"], cohort["probability"]))
+            if cohort["outcome"].nunique() == 2
+            else None
+        )
+        rows.append(metrics)
+    return rows
+
+
 def evaluate_snapshot(
     reference: dict[str, Any],
     frame: pd.DataFrame,
@@ -121,6 +154,7 @@ def evaluate_snapshot(
         "required_response": response,
         "signals": signals,
         "action_mix": clean["action"].value_counts().sort_index().to_dict(),
+        "segment_metrics": _segment_metrics(clean),
         "thresholds": asdict(thresholds),
     }
     payload["report_sha256"] = hashlib.sha256(

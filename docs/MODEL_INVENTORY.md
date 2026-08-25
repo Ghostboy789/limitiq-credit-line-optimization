@@ -1,6 +1,6 @@
 # Model and decision-component inventory
 
-Inventory date: 21 August 2026. This deliberately small register reflects the
+Inventory date: 25 August 2026. This deliberately small register reflects the
 actual v4 architecture. An institution must apply its own approved model
 definition, materiality and ownership framework before any real use.
 
@@ -8,10 +8,10 @@ definition, materiality and ownership framework before any real use.
 |---|---|---|---|---|
 | MOD-001 | UCI Taiwan behavioral next-month default model | `limitiq-behavioral-4.0.0-21234ab33f78` | Primary for the educational synthetic decision demo | Conditional demonstration approval only |
 | MOD-002 | Multi-source adverse-credit-outcome model | `limitiq-global-2.0.0-37a14c45a811` | Transportability research and governance comparison only | Explicitly prohibited from account decisioning |
-| MOD-003 | US terminal 36-month loan temporal model | `limitiq-temporal-4.0.0-526f21581e02` | Ordered-vintage research only | Prohibited from card decisioning |
+| MOD-003 | US terminal 36-month loan temporal model | `limitiq-temporal-4.1.0-765af54f7371` | Expanding-window and stressed-segment research only | Prohibited from card decisioning |
 | MOD-004 | V3 two-feature Taiwan model | `limitiq-primary-3.0.0-89f9a2530bde` | Exact paired benchmark | Superseded |
-| CALC-001 | Candidate-limit optimizer and policy rules | v4.0.0 | Mixed-integer +10%, +20%, +30%, hold, review and freeze allocation | Model-adjacent; high materiality if real |
-| SIM-001 | Line-response and financial simulation | v4.0.0 assumptions | Synthetic EAD, loss, revenue, cost and contribution | Not causal or observed |
+| CALC-001 | Candidate-limit optimizer and policy rules | v4.1.0 | Mixed-integer +10%, +20%, +30%, hold, review, support-bound and freeze allocation | Model-adjacent; high materiality if real |
+| SIM-001 | Line-response and financial simulation | v4.1.0 assumptions | Synthetic EAD, loss, revenue, cost and contribution | Not causal or observed |
 
 ## MOD-001 — primary application candidate
 

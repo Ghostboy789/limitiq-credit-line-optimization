@@ -248,6 +248,7 @@ def test_single_prediction_api_validates_and_returns_no_store_decision() -> None
     assert result["classification"] == "Educational synthetic-economics decision"
     assert 0 <= result["decision"]["pd"] <= 1
     assert result["decision"]["account_id"] == payload["ACCOUNT_ID"]
+    assert "Portfolio constraints retained current limit" not in result["decision"]["reason_codes"]
 
     assert client.post("/api/predict", json={**payload, "UNEXPECTED": 1}).status_code == 422
     missing = dict(payload)
@@ -386,12 +387,15 @@ def test_sample_and_filtered_csv_downloads_are_valid() -> None:
         "/downloads/reports/global-financial-impact",
         "/downloads/reports/global-feature-evidence",
         "/downloads/reports/global-monitoring-baseline",
+        "/downloads/reports/model-robustness-evidence",
+        "/downloads/reports/india-validation-readiness",
         "/documents/methodology",
         "/documents/model-card",
         "/documents/data-card",
         "/documents/prd",
         "/documents/case-study",
         "/documents/career-targeting",
+        "/documents/model-improvement-evidence",
     ],
 )
 def test_report_and_document_downloads(path: str) -> None:
@@ -577,6 +581,7 @@ def test_v4_lab_review_and_india_readiness_workflows() -> None:
         "verified_monthly_income_inr": 100_000,
         "income_verified_at": "2026-08-01T10:00:00+05:30",
         "current_limit_inr": 300_000,
+        "other_credit_limits_inr": 200_000,
         "current_balance_inr": 120_000,
         "statement_months": 12,
         "data_lineage_id": "LINEAGE-0001",
@@ -584,4 +589,5 @@ def test_v4_lab_review_and_india_readiness_workflows() -> None:
     readiness = client.post("/api/india-readiness", json=payload)
     assert readiness.status_code == 200
     assert readiness.json()["foir_proxy"] == pytest.approx(0.25)
+    assert readiness.json()["aggregate_credit_limit_inr"] == 500_000
     assert "no PD" in readiness.json()["classification"]

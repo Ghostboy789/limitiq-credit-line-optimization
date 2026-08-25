@@ -152,6 +152,9 @@ def test_global_optimizer_respects_loss_cap_and_is_not_greedy(healthy_row: pd.Se
     summary = summarize_portfolio(decisions)
     assert summary["proposed_expected_loss"] <= summary["current_expected_loss"] * 1.02 + 1e-6
     assert any("Portfolio" in reason for item in decisions for reason in item.reason_codes)
+    for decision in decisions:
+        consent = "Explicit customer acceptance required before activation"
+        assert (consent in decision.reason_codes) is (decision.increase_pct > 0)
 
 
 def test_governance_switch_disables_automatic_increases(healthy_row: pd.Series) -> None:
@@ -164,3 +167,12 @@ def test_governance_switch_disables_automatic_increases(healthy_row: pd.Series) 
     assert decision.action == "Manual review"
     assert decision.increase_pct == 0
     assert "Automatic increases disabled by governance control" in decision.reason_codes
+
+
+def test_outside_model_support_routes_to_manual_review(healthy_row: pd.Series) -> None:
+    row = healthy_row.copy()
+    row["outside_model_support"] = True
+    decision = recommend_account(row, 0.03, "OOD-1")
+    assert decision.action == "Manual review"
+    assert decision.policy_checks["within_model_support"] is False
+    assert "Outside behavioral model support" in decision.reason_codes

@@ -31,6 +31,25 @@ log loss `-0.021093` (`-0.025538–-0.016470`). This supports application-level
 promotion for the educational demo; it does not establish India, temporal,
 regulatory or production suitability.
 
+## V4.1 development-only robustness challenge
+
+The frozen 6,000-row v4 test was not reread. Four prespecified candidates were
+compared with three-fold out-of-fold predictions on the original 24,000-row
+development partition:
+
+| Candidate | ROC-AUC | PR-AUC | Brier | Log loss | Calibration gap | Slope |
+|---|---:|---:|---:|---:|---:|---:|
+| Logistic + sigmoid | 0.747223 | 0.508847 | 0.140594 | 0.447859 | 0.018915 | 1.0066 |
+| HGB + sigmoid | **0.772346** | 0.546790 | 0.135778 | 0.433135 | 0.008446 | 1.0303 |
+| HGB + isotonic | 0.772185 | **0.547072** | **0.135737** | **0.432868** | **0.005497** | 1.0055 |
+| Monotonic HGB + sigmoid | 0.771038 | 0.542365 | 0.136188 | 0.434412 | 0.009182 | 1.0159 |
+
+The frozen selection rule prefers isotonic HGB on development calibration.
+That result does **not** replace the deployed sigmoid model: choosing a new
+calibrator after this comparison requires a new, current-vintage or independent
+holdout. The study also derives 0.5th–99.5th percentile feature-support ranges;
+three or more breaches conservatively route inference to manual review.
+
 ## Current limitations and controls
 
 - random within-source interpolation on Taiwan 2005 behavior, not out-of-time validation;
@@ -39,6 +58,8 @@ regulatory or production suitability.
 - management expected-loss and economics are simulated, not Ind AS 109/IFRS 9 allowances;
 - fairness diagnostics cannot establish jurisdiction-specific compliance;
 - automatic increases can be disabled with `AUTO_INCREASES_ENABLED=false`;
+- requests outside multiple development-support ranges route to manual review;
+- positive recommendations are eligibility offers requiring explicit customer acceptance;
 - monitoring and experiment outputs are executable deterministic replays, not live results.
 
 The separate 2015 US installment-loan vintage study and heterogeneous 1.87M-row

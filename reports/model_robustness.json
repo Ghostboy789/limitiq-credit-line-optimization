@@ -1,0 +1,205 @@
+{
+  "classification": "Development-only robustness study; frozen v4 test was not reread",
+  "generated_at": "2026-08-25T05:46:07.720861+00:00",
+  "development_rows": 24000,
+  "source": {
+    "dataset": "Default of Credit Card Clients",
+    "source_file": "default_of_credit_card_clients.xls",
+    "source_sha256": "30c6be3abd8dcfd3e6096c828bad8c2f011238620f5369220bd60cfc82700933",
+    "rows": 30000,
+    "event_rate": 0.2212,
+    "geography": "Taiwan",
+    "target_definition": "Default payment in the following month",
+    "prediction_horizon": "One month",
+    "protected_attributes_excluded": [
+      "SEX",
+      "EDUCATION",
+      "MARRIAGE",
+      "AGE"
+    ]
+  },
+  "candidates": {
+    "Logistic + sigmoid": {
+      "roc_auc": 0.7472233416414964,
+      "pr_auc": 0.5088466516633088,
+      "brier_score": 0.1405939611434662,
+      "log_loss": 0.4478592218796547,
+      "calibration_intercept": 0.007903237680345081,
+      "calibration_slope": 1.0065524354267688,
+      "expected_calibration_error": 0.01891487298189528,
+      "folds": [
+        {
+          "fold": 1,
+          "roc_auc": 0.7425265855118726,
+          "brier_score": 0.1407301206106084
+        },
+        {
+          "fold": 2,
+          "roc_auc": 0.7514601753860943,
+          "brier_score": 0.1400388122011672
+        },
+        {
+          "fold": 3,
+          "roc_auc": 0.7482321734635579,
+          "brier_score": 0.14101295061862293
+        }
+      ]
+    },
+    "HGB + sigmoid": {
+      "roc_auc": 0.772345985613559,
+      "pr_auc": 0.5467897730618035,
+      "brier_score": 0.1357780001137678,
+      "log_loss": 0.433135325029564,
+      "calibration_intercept": 0.033725858958633045,
+      "calibration_slope": 1.0303034599040344,
+      "expected_calibration_error": 0.008445537092238218,
+      "folds": [
+        {
+          "fold": 1,
+          "roc_auc": 0.7687773318168182,
+          "brier_score": 0.1357151565270712
+        },
+        {
+          "fold": 2,
+          "roc_auc": 0.7774882335337487,
+          "brier_score": 0.13613537479792395
+        },
+        {
+          "fold": 3,
+          "roc_auc": 0.7723617723608202,
+          "brier_score": 0.13548346901630828
+        }
+      ]
+    },
+    "HGB + isotonic": {
+      "roc_auc": 0.7721848456723278,
+      "pr_auc": 0.547072216625629,
+      "brier_score": 0.13573665056386403,
+      "log_loss": 0.43286758805678455,
+      "calibration_intercept": 0.006449634697084501,
+      "calibration_slope": 1.0055099433880201,
+      "expected_calibration_error": 0.005496568156374723,
+      "folds": [
+        {
+          "fold": 1,
+          "roc_auc": 0.7682409357686486,
+          "brier_score": 0.1357592194700528
+        },
+        {
+          "fold": 2,
+          "roc_auc": 0.7774118761959175,
+          "brier_score": 0.13613831357765127
+        },
+        {
+          "fold": 3,
+          "roc_auc": 0.7722995166453555,
+          "brier_score": 0.13531241864388807
+        }
+      ]
+    },
+    "Monotonic HGB + sigmoid": {
+      "roc_auc": 0.7710376078956113,
+      "pr_auc": 0.5423649711343084,
+      "brier_score": 0.13618843400000175,
+      "log_loss": 0.43441240549665366,
+      "calibration_intercept": 0.01849866847277728,
+      "calibration_slope": 1.0159171369560152,
+      "expected_calibration_error": 0.009181854157092996,
+      "folds": [
+        {
+          "fold": 1,
+          "roc_auc": 0.76778959194799,
+          "brier_score": 0.13613696728801145
+        },
+        {
+          "fold": 2,
+          "roc_auc": 0.7765416111216912,
+          "brier_score": 0.1361972235062446
+        },
+        {
+          "fold": 3,
+          "roc_auc": 0.7703053840084881,
+          "brier_score": 0.1362311112057492
+        }
+      ]
+    }
+  },
+  "development_preference": "HGB + isotonic",
+  "selection_rule": "Lowest out-of-fold Brier score within 0.02 ROC-AUC of the best",
+  "support_bounds": {
+    "limit_bal": {
+      "lower": 20.0,
+      "upper": 20.0
+    },
+    "current_utilization": {
+      "lower": 0.0,
+      "upper": 1.5233149166666697
+    },
+    "average_utilization": {
+      "lower": 0.0,
+      "upper": 1.1330037166666687
+    },
+    "maximum_utilization": {
+      "lower": 0.0,
+      "upper": 1.8773185142857152
+    },
+    "utilization_trend": {
+      "lower": -0.7619271647058824,
+      "upper": 1.0761111378205168
+    },
+    "recent_payment_ratio": {
+      "lower": 0.0,
+      "upper": 20.0
+    },
+    "average_payment_ratio": {
+      "lower": 0.0,
+      "upper": 20.0
+    },
+    "payment_consistency": {
+      "lower": 0.0,
+      "upper": 1.0
+    },
+    "delinquent_month_count": {
+      "lower": 0.0,
+      "upper": 6.0
+    },
+    "maximum_delinquency_severity": {
+      "lower": 0.0,
+      "upper": 5.0
+    },
+    "recent_payment_deterioration": {
+      "lower": -2.2,
+      "upper": 3.0
+    },
+    "revolving_balance_proxy": {
+      "lower": 0.0,
+      "upper": 1.4603886000000017
+    },
+    "limit_headroom": {
+      "lower": 0.0,
+      "upper": 1.0
+    },
+    "balance_volatility": {
+      "lower": 0.0,
+      "upper": 0.570801315013093
+    },
+    "payment_volatility": {
+      "lower": 0.0,
+      "upper": 0.41856341162613786
+    },
+    "recent_balance_growth": {
+      "lower": -0.784740746969697,
+      "upper": 0.9946788324175826
+    },
+    "inactive_month_count": {
+      "lower": 0.0,
+      "upper": 6.0
+    }
+  },
+  "promotion_status": "No promotion; a new untouched or current-vintage external gate is required",
+  "limitations": [
+    "All candidates use the same 2005 Taiwan development population.",
+    "Out-of-fold evidence supports engineering choices but is not new external validation.",
+    "Support-bound flags are conservative routing controls, not evidence of default."
+  ]
+}

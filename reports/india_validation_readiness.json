@@ -1,0 +1,34 @@
+{
+  "classification": "Blocked deployment gate; no representative Indian outcomes supplied",
+  "generated_at": "2026-08-25T05:47:18.769700+00:00",
+  "required_contract": [
+    "customer_reference",
+    "as_of_date",
+    "consent_reference",
+    "consent_timestamp",
+    "bureau_report_date",
+    "bureau_dpd_30_12m",
+    "bureau_dpd_90_24m",
+    "open_trades",
+    "total_monthly_obligation_inr",
+    "verified_monthly_income_inr",
+    "income_verified_at",
+    "current_limit_inr",
+    "other_credit_limits_inr",
+    "current_balance_inr",
+    "statement_months",
+    "data_lineage_id",
+    "outcome_end_date",
+    "default_within_12m"
+  ],
+  "implemented_checks": [
+    "Complete 12-month outcomes",
+    "Chronological four-way split",
+    "Account-disjoint selection and test holdout",
+    "Dedicated calibration window",
+    "Logistic baseline and histogram-gradient challenger",
+    "Checksum-bound model and report outputs"
+  ],
+  "status": "awaiting_governed_operator_data",
+  "prohibited_claim": "The public Taiwan or multi-source benchmarks are not Indian validation."
+}
