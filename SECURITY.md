@@ -24,3 +24,5 @@ container health smoke check. GitHub secret scanning, push protection,
 Dependabot security updates and private vulnerability reporting are enabled.
 These controls reduce risk; they do not certify the application for production
 lending use.
+
+Application resource and input controls are documented in [docs/SECURITY.md](docs/SECURITY.md).

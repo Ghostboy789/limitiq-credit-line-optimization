@@ -33,9 +33,15 @@ regulatory or production suitability.
 
 ## V4.1 development-only robustness challenge
 
-The frozen 6,000-row v4 test was not reread. Four prespecified candidates were
-compared with three-fold out-of-fold predictions on the original 24,000-row
-development partition:
+The frozen 6,000-row v4 test was not reread. The split is reconstructed through
+the same frozen split function used for primary training, leaving exactly
+24,000 development rows. Four prespecified candidates were compared with
+three-fold out-of-fold predictions. Every HGB candidate used 180 maximum
+boosting iterations, matching the deployed model configuration.
+
+The decision rule was fixed before reading this result: adopt a new calibrator
+only if paired 95% candidate-minus-reference intervals for both Brier score and
+log loss exclude zero in the candidate's favor.
 
 | Candidate | ROC-AUC | PR-AUC | Brier | Log loss | Calibration gap | Slope |
 |---|---:|---:|---:|---:|---:|---:|
@@ -44,11 +50,18 @@ development partition:
 | HGB + isotonic | 0.772185 | **0.547072** | **0.135737** | **0.432868** | **0.005497** | 1.0055 |
 | Monotonic HGB + sigmoid | 0.771038 | 0.542365 | 0.136188 | 0.434412 | 0.009182 | 1.0159 |
 
-The frozen selection rule prefers isotonic HGB on development calibration.
-That result does **not** replace the deployed sigmoid model: choosing a new
-calibrator after this comparison requires a new, current-vintage or independent
-holdout. The study also derives 0.5th–99.5th percentile feature-support ranges;
-three or more breaches conservatively route inference to manual review.
+For isotonic minus sigmoid, the seeded 500-repeat paired bootstrap gives Brier
+`-0.00004135` (95% interval `-0.00019490–0.00010568`) and log loss
+`-0.00026774` (95% interval `-0.00076437–0.00020020`). Both intervals cross
+zero, so the calibrator-adoption rule is not met.
+
+The development selection metric still prefers isotonic HGB, but the conclusion
+remains **no promotion**. Even if its paired intervals had excluded zero,
+selection after this comparison would require a new current-vintage or
+independent holdout before promotion. Support ranges use unclipped engineered
+values so extremes remain detectable; the frozen estimator pipeline continues
+to receive clipped values. Three or more support breaches route inference to
+manual review.
 
 ## Current limitations and controls
 

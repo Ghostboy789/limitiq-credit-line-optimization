@@ -1,11 +1,31 @@
 # QA report
 
+## Split, policy and analysis controls — 4 September 2026
+
+- The complete local suite passes **154 tests**.
+- The default **76.00%** figure uses a scoped 3,112-statement denominator that
+  excludes `limitiq/external.py` and `limitiq/multisource.py`. CI separately
+  prints the honest all-`limitiq` result: **67.30%** across 3,658 statements,
+  including both offline research CLIs.
+- `limitiq/behavioral.py` coverage is **74.63%** across 201 statements, up from
+  **36.32%** before the synthetic end-to-end training test. The test writes only
+  below `tmp_path` and verifies the 180/60/60 split, champion rule and artifact
+  checksums without reading the frozen 6,000-row test.
+- The regenerated development-only robustness report uses 180 HGB iterations
+  and paired calibration intervals; the experiment replay uses protocol 1.2
+  multiplicity families. Only those two report hashes changed in the release
+  manifest.
+- Local Docker remains unavailable. The unchanged CI container path still
+  builds the image, runs it as non-root, and requires `/health` before its
+  concurrency smoke test.
+
 ## V4.1.0 verified release — 25 August 2026
 
 - Exact implementation commit:
   `0ac35b77d7f530c2e54f1c78c2c559ddaba9b8ce`.
 - The final local suite passed **137 tests** at **72.26%** scoped statement
-  coverage. Ruff lint and formatting, Bandit, SBOM and analytics checks,
+  coverage over 2,963 statements, excluding `limitiq/external.py` and
+  `limitiq/multisource.py`. Ruff lint and formatting, Bandit, SBOM and analytics checks,
   manifest validation, dependency audit and a 164-file secret scan passed.
 - GitHub Actions
   [run 32817814174](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32817814174)
@@ -122,8 +142,9 @@ scan gates.
   overflow or browser warning/error was observed; the favicon defect found in
   server logs was fixed. Current screenshots are committed under `docs/assets/`.
 - The coverage headline applies to the primary/runtime package. Large offline
-  research CLIs remain explicitly omitted and are checked through artifact,
-  schema and provenance tests; the headline is not full rebuild-path coverage.
+  research CLIs (`limitiq/external.py` and `limitiq/multisource.py`) remain
+  explicitly omitted and are checked through artifact, schema and provenance
+  tests; the headline is not full rebuild-path coverage.
 - Local Docker is unavailable; GitHub Actions supplied the container evidence.
 - The v3.0.0 implementation CI [run 32455018502](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/32455018502)
   passed Docker build, zero HIGH/CRITICAL Trivy scanning, non-root container

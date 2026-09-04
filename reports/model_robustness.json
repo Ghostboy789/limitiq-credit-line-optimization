@@ -1,6 +1,6 @@
 {
   "classification": "Development-only robustness study; frozen v4 test was not reread",
-  "generated_at": "2026-08-25T05:46:07.720861+00:00",
+  "generated_at": "2026-09-04T08:53:14.647405+00:00",
   "development_rows": 24000,
   "source": {
     "dataset": "Default of Credit Card Clients",
@@ -18,20 +18,27 @@
       "AGE"
     ]
   },
+  "boosting_configuration": {
+    "iterations": 180,
+    "deployed_iterations": 180,
+    "matches_deployed_configuration": true
+  },
+  "selection_rule": "Lowest out-of-fold Brier score within 0.02 ROC-AUC of the best",
+  "calibrator_decision_rule": "Adopt a new calibrator only if its paired 95% candidate-minus-reference Brier and log-loss intervals both exclude zero in its favor",
   "candidates": {
     "Logistic + sigmoid": {
       "roc_auc": 0.7472233416414964,
       "pr_auc": 0.5088466516633088,
       "brier_score": 0.1405939611434662,
       "log_loss": 0.4478592218796547,
-      "calibration_intercept": 0.007903237680345081,
+      "calibration_intercept": 0.007903237680345074,
       "calibration_slope": 1.0065524354267688,
-      "expected_calibration_error": 0.01891487298189528,
+      "expected_calibration_error": 0.018914872981895273,
       "folds": [
         {
           "fold": 1,
           "roc_auc": 0.7425265855118726,
-          "brier_score": 0.1407301206106084
+          "brier_score": 0.14073012061060838
         },
         {
           "fold": 2,
@@ -50,7 +57,7 @@
       "pr_auc": 0.5467897730618035,
       "brier_score": 0.1357780001137678,
       "log_loss": 0.433135325029564,
-      "calibration_intercept": 0.033725858958633045,
+      "calibration_intercept": 0.03372585895863302,
       "calibration_slope": 1.0303034599040344,
       "expected_calibration_error": 0.008445537092238218,
       "folds": [
@@ -102,7 +109,7 @@
       "pr_auc": 0.5423649711343084,
       "brier_score": 0.13618843400000175,
       "log_loss": 0.43441240549665366,
-      "calibration_intercept": 0.01849866847277728,
+      "calibration_intercept": 0.018498668472777327,
       "calibration_slope": 1.0159171369560152,
       "expected_calibration_error": 0.009181854157092996,
       "folds": [
@@ -125,11 +132,33 @@
     }
   },
   "development_preference": "HGB + isotonic",
-  "selection_rule": "Lowest out-of-fold Brier score within 0.02 ROC-AUC of the best",
+  "paired_calibrator_comparison": {
+    "candidate": "HGB + isotonic",
+    "reference": "HGB + sigmoid",
+    "metrics": {
+      "brier_score": {
+        "candidate_minus_reference": -4.1349549903785254e-05,
+        "lower_95": -0.00019489870760826532,
+        "upper_95": 0.00010568486821890812,
+        "repeats": 500,
+        "method": "seeded paired nonparametric percentile bootstrap",
+        "higher_is_better": false
+      },
+      "log_loss": {
+        "candidate_minus_reference": -0.000267736972779431,
+        "lower_95": -0.0007643660483347553,
+        "upper_95": 0.00020019687213754922,
+        "repeats": 500,
+        "method": "seeded paired nonparametric percentile bootstrap",
+        "higher_is_better": false
+      }
+    },
+    "development_interval_rule_met": false
+  },
   "support_bounds": {
     "limit_bal": {
-      "lower": 20.0,
-      "upper": 20.0
+      "lower": 29700.000000000004,
+      "upper": 1603800.0
     },
     "current_utilization": {
       "lower": 0.0,
@@ -149,11 +178,11 @@
     },
     "recent_payment_ratio": {
       "lower": 0.0,
-      "upper": 20.0
+      "upper": 30059.830350000095
     },
     "average_payment_ratio": {
       "lower": 0.0,
-      "upper": 20.0
+      "upper": 49640.18032015131
     },
     "payment_consistency": {
       "lower": 0.0,
@@ -200,6 +229,7 @@
   "limitations": [
     "All candidates use the same 2005 Taiwan development population.",
     "Out-of-fold evidence supports engineering choices but is not new external validation.",
-    "Support-bound flags are conservative routing controls, not evidence of default."
+    "Support-bound flags are conservative routing controls, not evidence of default.",
+    "Support bounds use unclipped engineered values; estimator inputs remain clipped."
   ]
 }

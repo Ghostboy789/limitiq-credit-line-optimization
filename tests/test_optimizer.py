@@ -114,7 +114,13 @@ def test_maximum_increase_and_portfolio_growth_cap_are_deterministic(
     second = recommend_portfolio(frame, np.array([0.04, 0.04]), ["A-001", "A-002"], assumptions)
     assert [item.to_dict() for item in first] == [item.to_dict() for item in second]
     assert sum(item.proposed_limit for item in first) <= 210_000
-    assert any("Exposure limit reached" in item.reason_codes for item in first)
+    held = next(item for item in first if item.increase_pct == 0)
+    assert "Portfolio limit growth cap retained current limit" in held.reason_codes
+    assert not {
+        "Exposure limit reached",
+        "Best eligible risk-adjusted contribution",
+        "Explicit customer acceptance required before activation",
+    } & set(held.reason_codes)
 
 
 def test_portfolio_contract_summary_and_sensitivity(healthy_row: pd.Series) -> None:
@@ -144,14 +150,25 @@ def test_assumption_validation() -> None:
 def test_global_optimizer_respects_loss_cap_and_is_not_greedy(healthy_row: pd.Series) -> None:
     frame = pd.DataFrame([healthy_row, healthy_row], columns=DECISION_COLUMNS)
     assumptions = PolicyAssumptions(
-        portfolio_growth_cap=0.30,
+        portfolio_growth_cap=0.20,
         portfolio_loss_growth_cap=0.02,
         portfolio_capital_budget=1_000_000,
+        max_higher_risk_increase_share=0.50,
     )
-    decisions = recommend_portfolio(frame, np.array([0.04, 0.08]), ["LOW", "HIGH"], assumptions)
+    decisions = recommend_portfolio(frame, np.array([0.01, 0.08]), ["LOW", "HIGH"], assumptions)
     summary = summarize_portfolio(decisions)
     assert summary["proposed_expected_loss"] <= summary["current_expected_loss"] * 1.02 + 1e-6
-    assert any("Portfolio" in reason for item in decisions for reason in item.reason_codes)
+    held = [decision for decision in decisions if decision.increase_pct == 0]
+    assert held
+    assert any(decision.increase_pct > 0 for decision in decisions)
+    assert all(
+        {reason for reason in decision.reason_codes if reason.startswith("Portfolio ")}
+        == {"Portfolio loss growth cap retained current limit"}
+        for decision in held
+    )
+    assert all(
+        "Best eligible risk-adjusted contribution" not in decision.reason_codes for decision in held
+    )
     for decision in decisions:
         consent = "Explicit customer acceptance required before activation"
         assert (consent in decision.reason_codes) is (decision.increase_pct > 0)

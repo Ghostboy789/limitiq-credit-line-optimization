@@ -15,10 +15,15 @@ from limitiq.behavioral import (
     CANDIDATE_MODEL_PATH,
     CANDIDATE_REPORT_PATH,
     CANDIDATE_SCHEMA_PATH,
+    _canonical_sha256,
     _paired_bootstrap,
+    _text_sha256,
+    synthetic_behavioral_profiles,
+    train_behavioral_candidate,
 )
 from limitiq.config import ROOT
 from limitiq.features import TAIWAN_MODEL_INPUT_COLUMNS
+from limitiq.multisource import TARGET
 
 
 def test_paired_bootstrap_is_deterministic_and_directional() -> None:
@@ -32,6 +37,77 @@ def test_paired_bootstrap_is_deterministic_and_directional() -> None:
     assert first == second
     assert first["roc_auc"]["candidate_minus_v3"] > 0
     assert first["brier_score"]["candidate_minus_v3"] < 0
+
+
+def test_tiny_end_to_end_training_enforces_selection_and_checksum_contracts(
+    tmp_path: Path,
+) -> None:
+    profiles = synthetic_behavioral_profiles(300)
+    features = profiles[TAIWAN_MODEL_INPUT_COLUMNS]
+    target = (
+        (features["PAY_0"] > 0) | (features["BILL_AMT1"] / features["LIMIT_BAL"] > 0.55)
+    ).astype(int)
+    provenance = {
+        "dataset": "Deterministic synthetic unit-test fixture",
+        "source_file": "generated-in-memory",
+        "source_sha256": "synthetic",
+        "rows": len(features),
+        "event_rate": float(target.mean()),
+        "geography": "Synthetic",
+        "target_definition": "Synthetic repayment-or-utilization outcome",
+        "prediction_horizon": "Synthetic next period",
+        "protected_attributes_excluded": ["SEX", "EDUCATION", "MARRIAGE", "AGE"],
+    }
+    model_dir = tmp_path / "models"
+    report_dir = tmp_path / "reports"
+
+    payload = train_behavioral_candidate(
+        features,
+        target,
+        provenance,
+        model_dir=model_dir,
+        report_dir=report_dir,
+        iterations=5,
+        bootstrap_repeats=5,
+    )
+
+    assert payload["split"] == {"train": 180, "validation": 60, "test": 60}
+    candidates = payload["validation_models"]
+    best_auc = max(metrics["roc_auc"] for metrics in candidates.values())
+    eligible = {
+        name: metrics
+        for name, metrics in candidates.items()
+        if metrics["roc_auc"] >= best_auc - 0.02
+    }
+    expected_champion = min(eligible, key=lambda name: (eligible[name]["brier_score"], name))
+    assert payload["champion"] == expected_champion
+
+    model_path = model_dir / CANDIDATE_MODEL_PATH.name
+    metadata_path = model_dir / CANDIDATE_METADATA_PATH.name
+    schema_path = model_dir / CANDIDATE_SCHEMA_PATH.name
+    report_path = report_dir / CANDIDATE_REPORT_PATH.name
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    model_checksum = hashlib.sha256(model_path.read_bytes()).hexdigest()
+    dataset_checksum = hashlib.sha256(
+        pd.concat([features, target.rename(TARGET)], axis=1)
+        .to_csv(index=False, lineterminator="\n")
+        .encode()
+    ).hexdigest()
+
+    assert report == payload
+    assert schema == payload["schema"]
+    assert payload["model_checksum"] == metadata["model_checksum"] == model_checksum
+    assert payload["dataset_checksum"] == metadata["dataset_checksum"] == dataset_checksum
+    assert payload["schema_checksum"] == metadata["schema_checksum"] == _canonical_sha256(schema)
+    assert payload["model_version"].endswith(model_checksum[:12])
+    assert payload["dataset_version"].endswith(dataset_checksum[:12])
+    assert metadata["artifact_checksums"] == {
+        model_path.name: model_checksum,
+        schema_path.name: _text_sha256(schema_path),
+        report_path.name: _text_sha256(report_path),
+    }
 
 
 def test_behavioral_primary_artifacts_are_checksum_bound_and_sane() -> None:

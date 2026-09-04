@@ -16,7 +16,9 @@ RUN apt-get update && apt-get upgrade --yes && \
     addgroup --system app && adduser --system --ingroup app app
 
 COPY limitiq ./limitiq
-COPY models ./models
+COPY models/behavioral_candidate.joblib models/behavioral_metadata.json \
+     models/behavioral_feature_schema.json models/global_metadata.json \
+     ./models/
 COPY release ./release
 COPY data/processed/behavioral_demo_portfolio.csv ./data/processed/behavioral_demo_portfolio.csv
 COPY reports ./reports

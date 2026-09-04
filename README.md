@@ -54,10 +54,17 @@ The **v4.1.0 release is live**. Render `/health` exposes application `4.1.0`, mo
 `limitiq-behavioral-4.0.0-21234ab33f78`, dataset
 `uci-350-behavioral-6ba3a746be13` and the exact currently deployed commit.
 The v4.1 implementation commit `0ac35b7` passed an exact-commit CI gate with
-**137 passed** tests at **72.26% coverage**, plus Ruff, format, Bandit,
-dependency/secret scans,
-source/demo/SBOM checks, Docker, Trivy, container health and concurrency smoke.
+**137 passed** tests at **72.26% scoped statement coverage**. That historical
+2,963-statement denominator excluded `limitiq/external.py` and
+`limitiq/multisource.py`. Ruff, format, Bandit, dependency/secret scans,
+source/demo/SBOM checks, Docker, Trivy, container health and concurrency smoke all passed.
 Matching CodeQL and production browser/workflow verification passed.
+
+The current local hardening suite passes **154 tests**. Its default scoped
+3,112-statement report is **76.00%**; the separately printed all-`limitiq`
+3,658-statement denominator, including both offline research CLIs, is
+**67.30%**. The deployed-model producer `behavioral.py` is **74.63%** covered,
+up from **36.32%**.
 
 ## The senior-level design decision
 

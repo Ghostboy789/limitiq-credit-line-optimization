@@ -22,7 +22,6 @@ from sklearn.metrics import (
     roc_auc_score,
     roc_curve,
 )
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -39,6 +38,7 @@ from limitiq.features import (
 from limitiq.multisource import MODEL_FEATURES, TARGET
 from limitiq.pipeline import _metrics, _sha256, _threshold, _write_json, load_source
 from limitiq.primary import PRIMARY_METADATA_PATH, PRIMARY_MODEL_PATH, _bootstrap_intervals
+from limitiq.splits import frozen_split
 
 CANDIDATE_MODEL_PATH = MODEL_DIR / "behavioral_candidate.joblib"
 CANDIDATE_METADATA_PATH = MODEL_DIR / "behavioral_metadata.json"
@@ -47,6 +47,7 @@ CANDIDATE_REPORT_PATH = REPORT_DIR / "behavioral_model.json"
 BEHAVIORAL_DEMO_PATH = PROCESSED_DIR / "behavioral_demo_portfolio.csv"
 BEHAVIORAL_SIMULATION_PATH = REPORT_DIR / "behavioral_policy_simulation.json"
 BOOTSTRAP_SEED = SEED + 4_100
+BEHAVIORAL_HGB_ITERATIONS = 180
 
 
 def _canonical_sha256(value: Any) -> str:
@@ -296,18 +297,15 @@ def train_behavioral_candidate(
     model_dir: Path = MODEL_DIR,
     report_dir: Path = REPORT_DIR,
     bootstrap_repeats: int = 500,
-    iterations: int = 180,
+    iterations: int = BEHAVIORAL_HGB_ITERATIONS,
 ) -> dict[str, Any]:
     """Train and compare the rich behavioral model without promoting it."""
     if list(features.columns) != TAIWAN_MODEL_INPUT_COLUMNS:
         raise ValueError("Behavioral source columns do not match the frozen Taiwan contract")
     if len(features) < 100 or target.nunique() != 2:
         raise ValueError("Behavioral training requires at least 100 rows and both target classes")
-    train_x, holdout_x, train_y, holdout_y = train_test_split(
-        features, target, test_size=0.4, stratify=target, random_state=SEED
-    )
-    validation_x, test_x, validation_y, test_y = train_test_split(
-        holdout_x, holdout_y, test_size=0.5, stratify=holdout_y, random_state=SEED
+    (train_x, train_y), (validation_x, validation_y), (test_x, test_y) = frozen_split(
+        features, target
     )
 
     validation_models: dict[str, dict[str, Any]] = {}

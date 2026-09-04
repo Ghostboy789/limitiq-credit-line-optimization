@@ -77,6 +77,13 @@ def synthetic_pilot(rows: int = 20_000) -> pd.DataFrame:
     )
 
 
+def _normal_interval(
+    delta: float, standard_error: float, *, alpha: float = 0.05
+) -> tuple[float, float]:
+    critical = NormalDist().inv_cdf(1 - alpha / 2)
+    return delta - critical * standard_error, delta + critical * standard_error
+
+
 def _difference_interval(
     treatment: pd.Series, control: pd.Series
 ) -> tuple[float, float, float, float]:
@@ -84,7 +91,36 @@ def _difference_interval(
     standard_error = math.sqrt(
         float(treatment.var(ddof=1)) / len(treatment) + float(control.var(ddof=1)) / len(control)
     )
-    return delta, standard_error, delta - 1.96 * standard_error, delta + 1.96 * standard_error
+    lower, upper = _normal_interval(delta, standard_error)
+    return delta, standard_error, lower, upper
+
+
+def _two_sided_p_value(delta: float, standard_error: float) -> float:
+    if standard_error == 0:
+        return 1.0 if delta == 0 else 0.0
+    return math.erfc(abs(delta / standard_error) / math.sqrt(2))
+
+
+def _holm_adjust_p_values(p_values: dict[str, float]) -> dict[str, float]:
+    """Return monotone Holm-Bonferroni adjusted p-values."""
+    if not p_values or any(not 0 <= value <= 1 for value in p_values.values()):
+        raise ValueError("Holm p-values must be a non-empty mapping inside [0,1]")
+    adjusted: dict[str, float] = {}
+    running_max = 0.0
+    total = len(p_values)
+    for rank, (name, value) in enumerate(
+        sorted(p_values.items(), key=lambda item: (item[1], item[0])), start=1
+    ):
+        running_max = max(running_max, (total - rank + 1) * value)
+        adjusted[name] = min(running_max, 1.0)
+    return adjusted
+
+
+def _harm_p_value(delta: float, standard_error: float, bound: float) -> float:
+    """One-sided p-value for H0: delinquency difference is at least the harm bound."""
+    if standard_error == 0:
+        return 0.0 if delta < bound else 1.0
+    return NormalDist().cdf((delta - bound) / standard_error)
 
 
 def analyze_pilot(
@@ -141,7 +177,12 @@ def analyze_pilot(
         }
         for arm, group in grouped
     }
-    comparisons = {}
+    family_alpha = 0.05
+    family_size = len(ARMS) - 1
+    bonferroni_alpha = family_alpha / family_size
+    comparisons: dict[str, dict[str, Any]] = {}
+    itt_raw_p_values: dict[str, float] = {}
+    delinquency_raw_p_values: dict[str, float] = {}
     control_rows = analysis[analysis["arm"] == "control"]
     for arm in ARMS[1:]:
         treatment_rows = analysis[analysis["arm"] == arm]
@@ -152,32 +193,86 @@ def analyze_pilot(
         delinquency = _difference_interval(
             treatment_rows["delinquency"], control_rows["delinquency"]
         )
+        itt_raw_p_values[arm] = _two_sided_p_value(itt[0], itt[1])
+        delinquency_raw_p_values[arm] = _harm_p_value(
+            delinquency[0], delinquency[1], delinquency_harm_bound
+        )
+        itt_simultaneous = _normal_interval(itt[0], itt[1], alpha=bonferroni_alpha)
+        delinquency_simultaneous = _normal_interval(
+            delinquency[0], delinquency[1], alpha=bonferroni_alpha
+        )
+        raw_guardrail_upper = (
+            delinquency[0] + NormalDist().inv_cdf(1 - family_alpha) * delinquency[1]
+        )
+        familywise_guardrail_upper = (
+            delinquency[0] + NormalDist().inv_cdf(1 - bonferroni_alpha) * delinquency[1]
+        )
         comparisons[arm] = {
+            "itt_family": "primary_contribution",
             "itt_contribution_delta": itt[0],
             "itt_standard_error": itt[1],
-            "itt_95_interval": [itt[2], itt[3]],
+            "itt_raw_p_value": itt_raw_p_values[arm],
+            "itt_raw_95_interval": [itt[2], itt[3]],
+            "itt_bonferroni_simultaneous_95_interval": list(itt_simultaneous),
             "cuped_contribution_delta": cuped[0],
             "cuped_standard_error": cuped[1],
-            "cuped_95_interval": [cuped[2], cuped[3]],
+            "cuped_raw_p_value": _two_sided_p_value(cuped[0], cuped[1]),
+            "cuped_raw_95_interval": [cuped[2], cuped[3]],
+            "cuped_inference_role": "Descriptive precision-adjusted sensitivity",
+            "delinquency_family": "delinquency_guardrail",
             "delinquency_delta": delinquency[0],
             "delinquency_standard_error": delinquency[1],
-            "delinquency_95_interval": [delinquency[2], delinquency[3]],
+            "delinquency_raw_harm_p_value": delinquency_raw_p_values[arm],
+            "delinquency_raw_95_interval": [delinquency[2], delinquency[3]],
+            "delinquency_bonferroni_simultaneous_95_interval": list(delinquency_simultaneous),
+            "delinquency_raw_upper_95": raw_guardrail_upper,
+            "delinquency_familywise_upper_95": familywise_guardrail_upper,
             "guardrail_status": (
-                "review_stop" if delinquency[3] > delinquency_harm_bound else "within_bound"
+                "within_bound"
+                if familywise_guardrail_upper <= delinquency_harm_bound
+                else "review_stop"
             ),
         }
+    holm_adjusted = _holm_adjust_p_values(itt_raw_p_values)
+    for arm in ARMS[1:]:
+        comparisons[arm]["itt_holm_adjusted_p_value"] = holm_adjusted[arm]
+        comparisons[arm]["delinquency_bonferroni_adjusted_p_value"] = min(
+            1.0, family_size * delinquency_raw_p_values[arm]
+        )
     return {
         "classification": classification,
-        "analysis_protocol_version": "1.1",
+        "analysis_protocol_version": "1.2",
         "generated_at": datetime.now(UTC).isoformat(),
         "estimand": "Intent-to-treat effect by assigned credit-line arm",
+        "multiplicity_families": {
+            "primary_contribution": {
+                "members": list(ARMS[1:]),
+                "estimand": "Unadjusted ITT mean contribution difference versus control",
+                "family_alpha": family_alpha,
+                "p_value_adjustment": "Holm-Bonferroni step-down",
+                "interval_adjustment": "Bonferroni simultaneous familywise 95%",
+            },
+            "delinquency_guardrail": {
+                "members": list(ARMS[1:]),
+                "null": (
+                    "Treatment-minus-control delinquency risk difference is at least "
+                    f"{delinquency_harm_bound:.4f}"
+                ),
+                "family_alpha": family_alpha,
+                "p_value_adjustment": "One-sided Bonferroni",
+                "interval_adjustment": "Bonferroni simultaneous familywise 95%",
+            },
+        },
         "arms": summaries,
         "comparisons_to_control": comparisons,
         "cuped_theta": theta,
         "guardrail": {
-            "metric": "Upper 95% interval for delinquency risk difference",
+            "metric": "Familywise one-sided upper bound for delinquency risk difference",
             "harm_bound": delinquency_harm_bound,
-            "rule": "Route the arm to stop review when the upper interval exceeds the bound",
+            "rule": (
+                "Within bound only when the Bonferroni familywise upper bound does not "
+                "exceed the harm bound"
+            ),
         },
         "limitations": [
             "Synthetic outcomes prove analysis plumbing only and are not causal business evidence.",

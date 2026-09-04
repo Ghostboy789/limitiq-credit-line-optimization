@@ -1,8 +1,32 @@
 {
   "classification": "Deterministic synthetic experiment-analysis demonstration",
-  "analysis_protocol_version": "1.1",
-  "generated_at": "2026-08-25T05:49:08.789423+00:00",
+  "analysis_protocol_version": "1.2",
+  "generated_at": "2026-09-04T08:51:31.008923+00:00",
   "estimand": "Intent-to-treat effect by assigned credit-line arm",
+  "multiplicity_families": {
+    "primary_contribution": {
+      "members": [
+        "increase_10",
+        "increase_20",
+        "increase_30"
+      ],
+      "estimand": "Unadjusted ITT mean contribution difference versus control",
+      "family_alpha": 0.05,
+      "p_value_adjustment": "Holm-Bonferroni step-down",
+      "interval_adjustment": "Bonferroni simultaneous familywise 95%"
+    },
+    "delinquency_guardrail": {
+      "members": [
+        "increase_10",
+        "increase_20",
+        "increase_30"
+      ],
+      "null": "Treatment-minus-control delinquency risk difference is at least 0.0100",
+      "family_alpha": 0.05,
+      "p_value_adjustment": "One-sided Bonferroni",
+      "interval_adjustment": "Bonferroni simultaneous familywise 95%"
+    }
+  },
   "arms": {
     "control": {
       "rows": 4943,
@@ -35,74 +59,128 @@
   },
   "comparisons_to_control": {
     "increase_10": {
+      "itt_family": "primary_contribution",
       "itt_contribution_delta": 648.9992165629046,
       "itt_standard_error": 46.988128204020164,
-      "itt_95_interval": [
-        556.902485283025,
-        741.0959478427842
+      "itt_raw_p_value": 2.158087381436876e-43,
+      "itt_raw_95_interval": [
+        556.9041775820743,
+        741.0942555437349
+      ],
+      "itt_bonferroni_simultaneous_95_interval": [
+        536.510586811198,
+        761.4878463146113
       ],
       "cuped_contribution_delta": 531.1856600231349,
       "cuped_standard_error": 29.13504292812862,
-      "cuped_95_interval": [
-        474.08097588400284,
-        588.290344162267
+      "cuped_raw_p_value": 2.884113468822906e-74,
+      "cuped_raw_95_interval": [
+        474.08202519597444,
+        588.2892948502954
       ],
+      "cuped_inference_role": "Descriptive precision-adjusted sensitivity",
+      "delinquency_family": "delinquency_guardrail",
       "delinquency_delta": -0.00906065839828643,
       "delinquency_standard_error": 0.0080528962923525,
-      "delinquency_95_interval": [
-        -0.02484433513129733,
-        0.006723018334724468
+      "delinquency_raw_harm_p_value": 0.008968112564078812,
+      "delinquency_raw_95_interval": [
+        -0.024844045102533463,
+        0.006722728305960601
       ],
-      "guardrail_status": "within_bound"
+      "delinquency_bonferroni_simultaneous_95_interval": [
+        -0.028339129452211693,
+        0.010217812655638831
+      ],
+      "delinquency_raw_upper_95": 0.004185177275653637,
+      "delinquency_familywise_upper_95": 0.008076269178040236,
+      "guardrail_status": "within_bound",
+      "itt_holm_adjusted_p_value": 2.158087381436876e-43,
+      "delinquency_bonferroni_adjusted_p_value": 0.026904337692236435
     },
     "increase_20": {
+      "itt_family": "primary_contribution",
       "itt_contribution_delta": 1110.1276897804864,
       "itt_standard_error": 49.87652348950113,
-      "itt_95_interval": [
-        1012.3697037410642,
-        1207.8856758199086
+      "itt_raw_p_value": 9.538109366446509e-110,
+      "itt_raw_95_interval": [
+        1012.3715000669982,
+        1207.8838794939747
+      ],
+      "itt_bonferroni_simultaneous_95_interval": [
+        990.7243000614473,
+        1229.5310794995255
       ],
       "cuped_contribution_delta": 1077.7436991432855,
       "cuped_standard_error": 29.653475880182306,
-      "cuped_95_interval": [
-        1019.6228864181282,
-        1135.8645118684428
+      "cuped_raw_p_value": 3.198076798186822e-289,
+      "cuped_raw_95_interval": [
+        1019.6239544017011,
+        1135.86344388487
       ],
+      "cuped_inference_role": "Descriptive precision-adjusted sensitivity",
+      "delinquency_family": "delinquency_guardrail",
       "delinquency_delta": 0.0004615857867941997,
       "delinquency_standard_error": 0.008219031617017968,
-      "delinquency_95_interval": [
-        -0.015647716182561017,
-        0.016570887756149417
+      "delinquency_raw_harm_p_value": 0.12291700253253557,
+      "delinquency_raw_95_interval": [
+        -0.015647420170357015,
+        0.016570591743945415
       ],
-      "guardrail_status": "review_stop"
+      "delinquency_bonferroni_simultaneous_95_interval": [
+        -0.019214609878416482,
+        0.020137781452004882
+      ],
+      "delinquency_raw_upper_95": 0.013980689752075021,
+      "delinquency_familywise_upper_95": 0.01795205684900499,
+      "guardrail_status": "review_stop",
+      "itt_holm_adjusted_p_value": 1.9076218732893018e-109,
+      "delinquency_bonferroni_adjusted_p_value": 0.3687510075976067
     },
     "increase_30": {
+      "itt_family": "primary_contribution",
       "itt_contribution_delta": 1663.978919771036,
       "itt_standard_error": 53.19026659630996,
-      "itt_95_interval": [
-        1559.7259972422685,
-        1768.2318422998037
+      "itt_raw_p_value": 7.818497132500627e-215,
+      "itt_raw_95_interval": [
+        1559.7279129141848,
+        1768.2299266278874
+      ],
+      "itt_bonferroni_simultaneous_95_interval": [
+        1536.6424959925089,
+        1791.3153435495633
       ],
       "cuped_contribution_delta": 1605.3128473288257,
       "cuped_standard_error": 30.080484160520655,
-      "cuped_95_interval": [
-        1546.3550983742052,
-        1664.2705962834461
+      "cuped_raw_p_value": 0.0,
+      "cuped_raw_95_interval": [
+        1546.3561817366776,
+        1664.2695129209737
       ],
+      "cuped_inference_role": "Descriptive precision-adjusted sensitivity",
+      "delinquency_family": "delinquency_guardrail",
       "delinquency_delta": 0.0035112790841731745,
       "delinquency_standard_error": 0.008217245735553299,
-      "delinquency_95_interval": [
-        -0.012594522557511291,
-        0.01961708072585764
+      "delinquency_raw_harm_p_value": 0.21486706571113345,
+      "delinquency_raw_95_interval": [
+        -0.012594226609626634,
+        0.019616784777972983
       ],
-      "guardrail_status": "review_stop"
+      "delinquency_bonferroni_simultaneous_95_interval": [
+        -0.01616064121688622,
+        0.02318319938523257
+      ],
+      "delinquency_raw_upper_95": 0.01702744553584953,
+      "delinquency_familywise_upper_95": 0.020997949709844255,
+      "guardrail_status": "review_stop",
+      "itt_holm_adjusted_p_value": 2.3455491397501882e-214,
+      "delinquency_bonferroni_adjusted_p_value": 0.6446011971334004
     }
   },
   "cuped_theta": 0.12749600021869026,
   "guardrail": {
-    "metric": "Upper 95% interval for delinquency risk difference",
+    "metric": "Familywise one-sided upper bound for delinquency risk difference",
     "harm_bound": 0.01,
-    "rule": "Route the arm to stop review when the upper interval exceeds the bound"
+    "rule": "Within bound only when the Bonferroni familywise upper bound does not exceed the harm bound"
   },
   "limitations": [
     "Synthetic outcomes prove analysis plumbing only and are not causal business evidence.",

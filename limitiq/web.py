@@ -7,6 +7,7 @@ import json
 import os
 import re
 import secrets
+import threading
 import time
 from pathlib import Path
 from typing import Any
@@ -57,6 +58,13 @@ from limitiq.robustness import behavioral_support_flags
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(5 * 1024 * 1024)))
 MAX_UPLOAD_REQUEST_BYTES = MAX_UPLOAD_BYTES + 64 * 1024
 MAX_UPLOAD_ROWS = 5_000
+RATE_LIMIT_BURST = 60
+RATE_LIMIT_REFILL_PER_SECOND = 1.0
+RATE_LIMIT_MAX_CLIENTS = 10_000
+RATE_LIMIT_PATHS = frozenset({"/batch", "/simulator", "/api/predict", "/v4-lab/reviews"})
+REVIEW_LEDGER_MAX_EVENTS = 500
+REVIEW_RENDER_LIMIT = 100
+REVIEW_CSRF_COOKIE = "limitiq_review_csrf"
 ACCOUNT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{2,39}$")
 MONETARY_KEYS = (
     "servicing_cost",
@@ -134,19 +142,14 @@ RELEASE_MANIFEST_PATH = ROOT / "release" / "checksums-v4.1.0.sha256"
 
 
 class RequestBodyLimitMiddleware:
-    """Bound a batch request before Starlette's multipart parser can spool it."""
+    """Bound every POST before Starlette parses or buffers its body."""
 
-    def __init__(self, app: ASGIApp, max_bytes: int, path: str) -> None:
+    def __init__(self, app: ASGIApp, max_bytes: int) -> None:
         self.app = app
         self.max_bytes = max_bytes
-        self.path = path
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if (
-            scope["type"] != "http"
-            or scope.get("method") != "POST"
-            or scope.get("path") != self.path
-        ):
+        if scope["type"] != "http" or scope.get("method") != "POST":
             await self.app(scope, receive, send)
             return
 
@@ -182,6 +185,57 @@ class RequestBodyLimitMiddleware:
             return {"type": "http.disconnect"}
 
         await self.app(scope, replay, send)
+
+
+class TokenBucketRateLimitMiddleware:
+    """Apply a bounded in-process token bucket to resource-intensive POST routes."""
+
+    def __init__(
+        self,
+        app: ASGIApp,
+        *,
+        paths: frozenset[str],
+        burst: int,
+        refill_per_second: float,
+        max_clients: int,
+    ) -> None:
+        self.app = app
+        self.paths = paths
+        self.burst = float(burst)
+        self.refill_per_second = refill_per_second
+        self.max_clients = max_clients
+        self._buckets: dict[str, tuple[float, float]] = {}
+        self._lock = threading.Lock()
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if (
+            scope["type"] != "http"
+            or scope.get("method") != "POST"
+            or scope.get("path") not in self.paths
+        ):
+            await self.app(scope, receive, send)
+            return
+
+        client = scope.get("client")
+        client_ip = str(client[0]) if client else "unknown"
+        now = time.monotonic()
+        with self._lock:
+            if client_ip not in self._buckets and len(self._buckets) >= self.max_clients:
+                self._buckets.pop(next(iter(self._buckets)))
+            tokens, updated_at = self._buckets.get(client_ip, (self.burst, now))
+            tokens = min(self.burst, tokens + (now - updated_at) * self.refill_per_second)
+            allowed = tokens >= 1
+            self._buckets[client_ip] = (tokens - 1 if allowed else tokens, now)
+        if not allowed:
+            response = Response(
+                "Rate limit exceeded; retry later.",
+                status_code=429,
+                media_type="text/plain",
+                headers={"Cache-Control": "no-store", "Retry-After": "1"},
+            )
+            await response(scope, receive, send)
+            return
+        await self.app(scope, receive, send)
 
 
 def _sha256(path: Path) -> str:
@@ -462,7 +516,9 @@ def _safe_csv(frame: pd.DataFrame) -> str:
     safe = frame.copy()
     for column in safe.select_dtypes(include="object").columns:
         safe[column] = safe[column].map(
-            lambda value: f"'{value}" if str(value).startswith(("=", "+", "-", "@")) else value
+            lambda value: f"'{value}"
+            if str(value).startswith(("\t", "\r", "=", "+", "-", "@"))
+            else value
         )
     return safe.to_csv(index=False, quoting=csv.QUOTE_MINIMAL)
 
@@ -518,7 +574,7 @@ def _run_simulator(
     source: pd.DataFrame, assumptions: PolicyAssumptions
 ) -> tuple[dict[str, Any], np.ndarray, np.ndarray, np.ndarray]:
     decisions = recommend_portfolio(
-        source[[*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]],
+        source[[*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS, "outside_model_support"]],
         source["pd"].to_numpy(),
         source["ACCOUNT_ID"].tolist(),
         assumptions,
@@ -685,8 +741,13 @@ def create_app() -> FastAPI:
         research_metadata,
         robustness,
     ) = _load_artifacts()
+    portfolio = portfolio.copy()
+    support_flags = behavioral_support_flags(
+        portfolio[TAIWAN_MODEL_INPUT_COLUMNS], robustness["support_bounds"]
+    )
+    portfolio[support_flags.columns] = support_flags
     v4_evidence, v4_explanation = _load_v4_lab_state()
-    review_ledger = ReviewLedger()
+    review_ledger = ReviewLedger(max_events=REVIEW_LEDGER_MAX_EVENTS)
     app = FastAPI(
         title="LimitIQ",
         version=__version__,
@@ -697,7 +758,13 @@ def create_app() -> FastAPI:
     app.add_middleware(
         RequestBodyLimitMiddleware,
         max_bytes=MAX_UPLOAD_REQUEST_BYTES,
-        path="/batch",
+    )
+    app.add_middleware(
+        TokenBucketRateLimitMiddleware,
+        paths=RATE_LIMIT_PATHS,
+        burst=RATE_LIMIT_BURST,
+        refill_per_second=RATE_LIMIT_REFILL_PER_SECOND,
+        max_clients=RATE_LIMIT_MAX_CLIENTS,
     )
     templates = Jinja2Templates(directory=ROOT / "limitiq" / "templates")
     templates.env.filters.update(money=_money, percent=_percent, number=_number)
@@ -711,6 +778,7 @@ def create_app() -> FastAPI:
     app.state.robustness = robustness
     app.state.v4_evidence = v4_evidence
     app.state.v4_explanation = v4_explanation
+    app.state.review_ledger = review_ledger
     app.state.started_at = time.monotonic()
     app.state.operations = {
         "requests": 0,
@@ -1391,7 +1459,8 @@ def create_app() -> FastAPI:
     def v4_lab(request: Request, message: str = Query("", max_length=120)) -> HTMLResponse:
         """Expose the executable decision-science and governance workbench."""
         evidence = app.state.v4_evidence
-        return templates.TemplateResponse(
+        review_csrf_token = request.cookies.get(REVIEW_CSRF_COOKIE) or secrets.token_urlsafe(32)
+        response = templates.TemplateResponse(
             request,
             "v4_lab.html",
             context(
@@ -1404,16 +1473,32 @@ def create_app() -> FastAPI:
                 robustness=evidence.get("model-robustness-evidence"),
                 india_readiness=evidence.get("india-validation-readiness"),
                 explanation=app.state.v4_explanation,
-                review_events=review_ledger.events(),
+                review_events=review_ledger.events(limit=REVIEW_RENDER_LIMIT),
                 review_decisions=sorted(DECISIONS),
                 review_reasons=sorted(REASONS),
+                review_csrf_token=review_csrf_token,
                 message=message,
             ),
         )
+        response.set_cookie(
+            REVIEW_CSRF_COOKIE,
+            review_csrf_token,
+            max_age=3_600,
+            path="/v4-lab",
+            samesite="strict",
+            secure=request.url.scheme == "https",
+            httponly=True,
+        )
+        response.headers["Cache-Control"] = "no-store"
+        return response
 
     @app.post("/v4-lab/reviews")
     async def v4_review(request: Request) -> RedirectResponse:
         form = await request.form()
+        cookie_token = request.cookies.get(REVIEW_CSRF_COOKIE, "")
+        form_token = str(form.get("csrf_token", ""))
+        if not (cookie_token and form_token and secrets.compare_digest(cookie_token, form_token)):
+            raise HTTPException(403, "Invalid review CSRF token")
         try:
             if form.get("operation") == "approve":
                 review_ledger.approve(str(form.get("review_id", "")), str(form.get("actor", "")))

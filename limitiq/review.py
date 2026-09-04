@@ -6,6 +6,7 @@ import hashlib
 import json
 import re
 import threading
+from collections import deque
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 
@@ -36,8 +37,11 @@ class ReviewEvent:
 class ReviewLedger:
     """Process-local educational ledger; no uploaded or real customer data is retained."""
 
-    def __init__(self) -> None:
-        self._events: list[ReviewEvent] = []
+    def __init__(self, max_events: int = 500) -> None:
+        if max_events < 1:
+            raise ValueError("Review ledger capacity must be positive")
+        self._events: deque[ReviewEvent] = deque(maxlen=max_events)
+        self._next_review_id = 1
         self._lock = threading.Lock()
 
     def _append(
@@ -70,7 +74,8 @@ class ReviewLedger:
         if decision not in DECISIONS or reason not in REASONS:
             raise ValueError("Decision and reason must use governed values")
         with self._lock:
-            review_id = f"REV-{len({event.review_id for event in self._events}) + 1:06d}"
+            review_id = f"REV-{self._next_review_id:06d}"
+            self._next_review_id += 1
             return self._append(review_id, account_id, "submitted", actor.strip(), decision, reason)
 
     def approve(self, review_id: str, checker: str) -> ReviewEvent:
@@ -79,21 +84,29 @@ class ReviewLedger:
             if not history or history[-1].event != "submitted":
                 raise ValueError("Review is not awaiting checker approval")
             maker = history[0]
-            if not checker.strip() or checker.strip().casefold() == maker.actor.casefold():
+            checker = checker.strip()
+            if not checker or len(checker) > 80:
+                raise ValueError("Checker identity is required and limited to 80 characters")
+            if checker.casefold() == maker.actor.casefold():
                 raise ValueError("Checker must be a different identified reviewer")
             return self._append(
                 review_id,
                 maker.account_id,
                 "approved",
-                checker.strip(),
+                checker,
                 maker.decision,
                 maker.reason,
             )
 
-    def events(self, review_id: str | None = None) -> list[dict[str, str]]:
+    def events(
+        self, review_id: str | None = None, *, limit: int | None = None
+    ) -> list[dict[str, str]]:
+        if limit is not None and limit < 1:
+            raise ValueError("Review event limit must be positive")
         with self._lock:
-            return [
+            values = [
                 asdict(event)
                 for event in self._events
                 if review_id is None or event.review_id == review_id
             ]
+        return values[-limit:] if limit is not None else values

@@ -9,9 +9,10 @@ license = { file = "LICENSE" }
 testpaths = ["tests"]
 addopts = "-q --strict-markers --cov-fail-under=65"
 
-[tool.coverage.run]
-# Full-data offline CLIs are verified by artifact/provenance tests and explicit rebuild runs.
+[tool.coverage.report]
+# Default scoped gate; CI also prints all limitiq files with a nonmatching omit.
 omit = ["limitiq/external.py", "limitiq/multisource.py"]
+precision = 2
 
 [tool.ruff]
 line-length = 100

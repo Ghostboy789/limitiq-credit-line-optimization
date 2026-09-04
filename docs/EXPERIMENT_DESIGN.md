@@ -66,11 +66,25 @@ The executable analyzer accepts a governed randomized-pilot CSV:
 python -m limitiq.experiment --input pilot.csv --output reports/pilot-observed.json
 ```
 
-It validates the frozen four arms, unique assignments, finite outcomes and
-binary acceptance/delinquency fields. It reports ITT and CUPED contribution
-deltas, standard errors, 95% intervals, delinquency risk-difference intervals
-and an explicit harm-bound status. The committed `experiment_replay.json` is
-still deterministic synthetic plumbing and never presented as observed impact.
+Analysis protocol 1.2 validates the frozen four arms, unique assignments, finite
+outcomes and binary acceptance/delinquency fields. It defines two multiplicity
+families:
+
+1. The confirmatory primary-contribution family contains the three unadjusted
+   ITT treatment-versus-control mean differences. It reports raw two-sided
+   p-values and pointwise 95% intervals, Holm-Bonferroni adjusted p-values, and
+   clearly labelled Bonferroni simultaneous familywise-95% intervals. CUPED is
+   reported only as a descriptive precision-adjusted sensitivity, not as
+   another confirmatory family or a result-selection alternative.
+2. The delinquency guardrail is a separate conservative safety family. For each
+   arm it tests the one-sided null that the treatment-minus-control risk
+   difference is at least the +1 percentage-point harm bound, reports raw and
+   Bonferroni-adjusted p-values, and reports raw and Bonferroni familywise upper
+   bounds. An arm is `within_bound` only when its familywise upper bound is no
+   greater than the harm bound.
+
+The committed `experiment_replay.json` is deterministic synthetic plumbing
+and is never presented as observed impact.
 
 ## Power and minimum detectable effect
 
@@ -90,9 +104,10 @@ For equal treatment and control sizes `n`:
 For a binary guardrail near rate `p`, use the corresponding two-proportion power
 calculation rather than treating the outcome as continuous. Inflate sample size
 for non-take-up, attrition, delayed outcome maturity, stratification and planned
-cluster effects. Control the three treatment-versus-control comparisons with a
-pre-specified family-wise procedure such as Holm; do not choose the best arm
-after unadjusted repeated testing.
+cluster effects. Protocol 1.2 controls the three primary
+treatment-versus-control comparisons with Holm-Bonferroni adjusted p-values and
+Bonferroni simultaneous intervals. Do not choose the best arm after unadjusted
+repeated testing.
 
 Before launch, publish the baseline rate/variance window, alpha, power, target
 MDE, multiplicity method and resulting sample by arm. If a guardrail requires a

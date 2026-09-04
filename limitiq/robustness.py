@@ -14,13 +14,18 @@ from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score, brier_score_loss, log_loss, roc_auc_score
-from sklearn.model_selection import StratifiedKFold, train_test_split
+from sklearn.model_selection import StratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from limitiq.behavioral import load_behavioral_source
+from limitiq.behavioral import (
+    BEHAVIORAL_HGB_ITERATIONS,
+    _paired_bootstrap,
+    load_behavioral_source,
+)
 from limitiq.config import REPORT_DIR, SEED
 from limitiq.features import FEATURE_NAMES, FeatureBuilder, engineer_features
+from limitiq.splits import frozen_split
 
 REPORT_PATH = REPORT_DIR / "model_robustness.json"
 MONOTONIC_CONSTRAINTS = [
@@ -47,11 +52,8 @@ MONOTONIC_CONSTRAINTS = [
 def development_partition() -> tuple[pd.DataFrame, pd.Series, dict[str, Any]]:
     """Reconstruct the original 80% development partition without evaluating test labels."""
     features, target, provenance = load_behavioral_source()
-    train_x, holdout_x, train_y, holdout_y = train_test_split(
-        features, target, test_size=0.4, stratify=target, random_state=SEED
-    )
-    validation_x, _test_x, validation_y, _test_y = train_test_split(
-        holdout_x, holdout_y, test_size=0.5, stratify=holdout_y, random_state=SEED
+    (train_x, train_y), (validation_x, validation_y), (_test_x, _test_y) = frozen_split(
+        features, target
     )
     return pd.concat([train_x, validation_x]), pd.concat([train_y, validation_y]), provenance
 
@@ -117,20 +119,22 @@ def development_benchmark(
     target: pd.Series,
     *,
     folds: int = 3,
-    iterations: int = 120,
+    iterations: int = BEHAVIORAL_HGB_ITERATIONS,
+    bootstrap_repeats: int = 500,
 ) -> dict[str, Any]:
     """Compare a frozen, small candidate set with out-of-fold development predictions."""
     if len(features) < 200 or target.nunique() != 2:
         raise ValueError("Robustness benchmark requires at least 200 rows and both outcomes")
     splitter = StratifiedKFold(n_splits=folds, shuffle=True, random_state=SEED + 4_300)
+    split_indexes = list(splitter.split(features, target))
+    truth = target.to_numpy(dtype=int)
+    probabilities: dict[str, np.ndarray] = {}
     candidates = _candidates(iterations)
     evidence: dict[str, Any] = {}
     for name, estimator in candidates.items():
         probability = np.zeros(len(target), dtype=float)
         fold_rows = []
-        for fold, (train_index, validation_index) in enumerate(
-            splitter.split(features, target), start=1
-        ):
+        for fold, (train_index, validation_index) in enumerate(split_indexes, start=1):
             model = clone(estimator)
             model.fit(features.iloc[train_index], target.iloc[train_index])
             score = model.predict_proba(features.iloc[validation_index])[:, 1]
@@ -142,7 +146,7 @@ def development_benchmark(
                     "brier_score": float(brier_score_loss(target.iloc[validation_index], score)),
                 }
             )
-        truth = target.to_numpy(dtype=int)
+        probabilities[name] = probability
         evidence[name] = {
             "roc_auc": float(roc_auc_score(truth, probability)),
             "pr_auc": float(average_precision_score(truth, probability)),
@@ -154,15 +158,45 @@ def development_benchmark(
     best_auc = max(item["roc_auc"] for item in evidence.values())
     eligible = {name: item for name, item in evidence.items() if item["roc_auc"] >= best_auc - 0.02}
     preferred = min(eligible, key=lambda name: (eligible[name]["brier_score"], name))
+    reference = "HGB + sigmoid"
+    candidate = "HGB + isotonic"
+    paired = _paired_bootstrap(
+        target,
+        probabilities[candidate],
+        probabilities[reference],
+        bootstrap_repeats,
+    )
+    loss_differences = {}
+    for metric in ("brier_score", "log_loss"):
+        values = paired[metric]
+        loss_differences[metric] = {
+            "candidate_minus_reference": values["candidate_minus_v3"],
+            "lower_95": values["lower_95"],
+            "upper_95": values["upper_95"],
+            "repeats": values["repeats"],
+            "method": values["method"],
+            "higher_is_better": values["higher_is_better"],
+        }
+    interval_rule_met = all(values["upper_95"] < 0 for values in loss_differences.values())
     return {
+        "selection_rule": "Lowest out-of-fold Brier score within 0.02 ROC-AUC of the best",
+        "calibrator_decision_rule": (
+            "Adopt a new calibrator only if its paired 95% candidate-minus-reference "
+            "Brier and log-loss intervals both exclude zero in its favor"
+        ),
         "candidates": evidence,
         "development_preference": preferred,
-        "selection_rule": "Lowest out-of-fold Brier score within 0.02 ROC-AUC of the best",
+        "paired_calibrator_comparison": {
+            "candidate": candidate,
+            "reference": reference,
+            "metrics": loss_differences,
+            "development_interval_rule_met": interval_rule_met,
+        },
     }
 
 
 def support_bounds(features: pd.DataFrame) -> dict[str, dict[str, float]]:
-    engineered = engineer_features(features)
+    engineered = engineer_features(features, clip=False)
     return {
         name: {
             "lower": float(engineered[name].quantile(0.005)),
@@ -179,7 +213,7 @@ def behavioral_support_flags(
     minimum_breaches: int = 3,
 ) -> pd.DataFrame:
     """Flag histories outside multiple development-support bounds for manual review."""
-    engineered = engineer_features(frame)
+    engineered = engineer_features(frame, clip=False)
     breached = pd.DataFrame(
         {
             name: (engineered[name] < limit["lower"]) | (engineered[name] > limit["upper"])
@@ -199,18 +233,23 @@ def behavioral_support_flags(
     )
 
 
-def build_report(*, folds: int = 3, iterations: int = 120) -> dict[str, Any]:
+def build_report(*, folds: int = 3) -> dict[str, Any]:
     features, target, provenance = development_partition()
     payload = {
         "classification": "Development-only robustness study; frozen v4 test was not reread",
         "generated_at": datetime.now(UTC).isoformat(),
         "development_rows": len(features),
         "source": provenance,
+        "boosting_configuration": {
+            "iterations": BEHAVIORAL_HGB_ITERATIONS,
+            "deployed_iterations": BEHAVIORAL_HGB_ITERATIONS,
+            "matches_deployed_configuration": True,
+        },
         **development_benchmark(
             features.reset_index(drop=True),
             target.reset_index(drop=True),
             folds=folds,
-            iterations=iterations,
+            iterations=BEHAVIORAL_HGB_ITERATIONS,
         ),
         "support_bounds": support_bounds(features),
         "promotion_status": "No promotion; a new untouched or current-vintage external gate is required",
@@ -218,6 +257,7 @@ def build_report(*, folds: int = 3, iterations: int = 120) -> dict[str, Any]:
             "All candidates use the same 2005 Taiwan development population.",
             "Out-of-fold evidence supports engineering choices but is not new external validation.",
             "Support-bound flags are conservative routing controls, not evidence of default.",
+            "Support bounds use unclipped engineered values; estimator inputs remain clipped.",
         ],
     }
     REPORT_PATH.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n", encoding="utf-8")
@@ -227,9 +267,8 @@ def build_report(*, folds: int = 3, iterations: int = 120) -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build development-only robustness evidence")
     parser.add_argument("--folds", type=int, default=3)
-    parser.add_argument("--iterations", type=int, default=120)
     args = parser.parse_args()
-    print(json.dumps(build_report(folds=args.folds, iterations=args.iterations), indent=2))
+    print(json.dumps(build_report(folds=args.folds), indent=2))
 
 
 if __name__ == "__main__":

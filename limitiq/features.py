@@ -222,7 +222,7 @@ def clean_source(frame: pd.DataFrame) -> tuple[pd.DataFrame, dict[str, object]]:
     return clean, report
 
 
-def engineer_features(frame: pd.DataFrame) -> pd.DataFrame:
+def engineer_features(frame: pd.DataFrame, *, clip: bool = True) -> pd.DataFrame:
     clean = validate_taiwan_input(frame)
     limit = clean["LIMIT_BAL"].clip(lower=1)
     bills = clean[BILL_COLUMNS].clip(lower=0)
@@ -252,7 +252,8 @@ def engineer_features(frame: pd.DataFrame) -> pd.DataFrame:
     result["payment_volatility"] = payments.std(axis=1).fillna(0) / limit
     result["recent_balance_growth"] = (bills["BILL_AMT1"] - bills["BILL_AMT3"]) / limit
     result["inactive_month_count"] = (bills == 0).sum(axis=1)
-    return result.replace([np.inf, -np.inf], 0).fillna(0).clip(-20, 20)
+    result = result.replace([np.inf, -np.inf], 0).fillna(0)
+    return result.clip(-20, 20) if clip else result
 
 
 class FeatureBuilder(BaseEstimator, TransformerMixin):

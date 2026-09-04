@@ -47,3 +47,24 @@ def test_review_ledger_enforces_maker_checker_and_hash_chain() -> None:
         "submitted",
         "approved",
     ]
+
+
+def test_review_ledger_fifo_cap_and_ids_survive_eviction() -> None:
+    ledger = ReviewLedger(max_events=2)
+    first = ledger.submit("LIQ-000001", "Maker One", "Hold current limit", "Affordability concern")
+    second = ledger.submit("LIQ-000002", "Maker Two", "Hold current limit", "Affordability concern")
+    third = ledger.submit(
+        "LIQ-000003", "Maker Three", "Hold current limit", "Affordability concern"
+    )
+
+    assert first.review_id == "REV-000001"
+    assert [event["review_id"] for event in ledger.events()] == [
+        "REV-000002",
+        "REV-000003",
+    ]
+    assert third.previous_hash == second.event_hash
+    assert ledger.events(limit=1)[0]["review_id"] == "REV-000003"
+    with pytest.raises(ValueError, match="capacity"):
+        ReviewLedger(max_events=0)
+    with pytest.raises(ValueError, match="80"):
+        ledger.approve(third.review_id, "x" * 81)

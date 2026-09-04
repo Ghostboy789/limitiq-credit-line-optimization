@@ -11,17 +11,21 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 import limitiq.web as web
 from limitiq.behavioral import synthetic_behavioral_profiles
-from limitiq.config import PROCESSED_DIR
-from limitiq.features import BATCH_COLUMNS
+from limitiq.config import PROCESSED_DIR, PolicyAssumptions
+from limitiq.features import BATCH_COLUMNS, BILL_COLUMNS, PAY_COLUMNS, PAYMENT_COLUMNS
 from limitiq.web import (
     MAX_UPLOAD_BYTES,
     MAX_UPLOAD_REQUEST_BYTES,
     MAX_UPLOAD_ROWS,
     REPORT_FILES,
+    REVIEW_CSRF_COOKIE,
+    TokenBucketRateLimitMiddleware,
+    _safe_csv,
     _text_sha256,
     app,
 )
@@ -33,6 +37,91 @@ def test_text_artifact_checksum_is_platform_newline_stable(tmp_path: Path) -> No
     artifact = tmp_path / "artifact.csv"
     artifact.write_bytes(b"a,b\r\n1,2\r\n")
     assert _text_sha256(artifact) == hashlib.sha256(b"a,b\n1,2\n").hexdigest()
+
+
+def test_safe_csv_guards_all_spreadsheet_formula_prefixes() -> None:
+    values = ["=1", "+1", "-1", "@name", "\t=1", "\r=1", "safe"]
+    content = _safe_csv(pd.DataFrame({"value": values}))
+    round_trip = pd.read_csv(io.StringIO(content), keep_default_na=False)["value"].tolist()
+    assert round_trip == [f"'{value}" for value in values[:-1]] + ["safe"]
+
+
+def test_token_bucket_rate_limit_returns_clear_429() -> None:
+    limited = FastAPI()
+    limited.add_middleware(
+        TokenBucketRateLimitMiddleware,
+        paths=frozenset({"/work"}),
+        burst=2,
+        refill_per_second=0.0,
+        max_clients=10,
+    )
+
+    @limited.post("/work")
+    def work() -> dict[str, bool]:
+        return {"ok": True}
+
+    with TestClient(limited) as isolated:
+        assert isolated.post("/work").status_code == 200
+        assert isolated.post("/work").status_code == 200
+        rejected = isolated.post("/work")
+    assert rejected.status_code == 429
+    assert rejected.text == "Rate limit exceeded; retry later."
+    assert rejected.headers["retry-after"] == "1"
+    assert web.RATE_LIMIT_PATHS == {
+        "/batch",
+        "/simulator",
+        "/api/predict",
+        "/v4-lab/reviews",
+    }
+
+
+@pytest.mark.parametrize(
+    "path",
+    ["/simulator", "/api/predict", "/batch", "/v4-lab/reviews", "/api/india-readiness"],
+)
+def test_every_post_route_has_an_ingress_body_bound(path: str) -> None:
+    response = client.post(
+        path,
+        content=b"x" * (MAX_UPLOAD_REQUEST_BYTES + 1),
+        headers={"content-type": "application/octet-stream"},
+    )
+    assert response.status_code == 413
+    assert "Request exceeds" in response.text
+
+
+def test_out_of_support_routing_matches_api_batch_and_simulator() -> None:
+    profile = synthetic_behavioral_profiles(1)
+    limit = float(profile.loc[0, "LIMIT_BAL"])
+    profile.loc[:, PAY_COLUMNS] = 0
+    profile.loc[:, BILL_COLUMNS] = limit * 1_000
+    profile.loc[:, PAYMENT_COLUMNS] = 0
+    profile["ACCOUNT_ID"] = "LIQ-999999"
+    payload = json.loads(profile[BATCH_COLUMNS].to_json(orient="records"))[0]
+
+    api_response = client.post("/api/predict", json=payload)
+    batch_response = client.post(
+        "/batch",
+        files={
+            "file": (
+                "outside-support.csv",
+                profile[BATCH_COLUMNS].to_csv(index=False).encode(),
+                "text/csv",
+            )
+        },
+    )
+    assert api_response.status_code == batch_response.status_code == 200
+    api_decision = api_response.json()["decision"]
+    batch_decision = pd.read_csv(io.BytesIO(batch_response.content)).iloc[0]
+    assert api_decision["action"] == batch_decision["RECOMMENDATION"] == "Manual review"
+    assert "Outside behavioral model support" in api_decision["reason_codes"]
+
+    clean = web.validate_behavioral_input(profile[BATCH_COLUMNS], require_account_id=True)
+    simulator_source = web._optimizer_frame(clean, app.state.robustness["support_bounds"])
+    simulator_source["pd"] = api_decision["pd"]
+    simulator_source["ACCOUNT_ID"] = clean["ACCOUNT_ID"]
+    summary, *_ = web._run_simulator(simulator_source, PolicyAssumptions())
+    assert summary["action_counts"] == {"Manual review": 1}
+    assert {"outside_model_support", "support_breach_count"} <= set(app.state.portfolio)
 
 
 @pytest.mark.parametrize(
@@ -593,9 +682,27 @@ def test_v4_lab_review_and_india_readiness_workflows() -> None:
     assert page.status_code == 200
     assert "Six-month behavioral history" in page.text
     assert "Local sensitivities" in page.text
+    csrf_token = client.cookies.get(REVIEW_CSRF_COOKIE)
+    assert csrf_token
+    missing_csrf = TestClient(app, client=("csrf-missing", 50_000)).post(
+        "/v4-lab/reviews",
+        data={"operation": "approve", "review_id": "REV-000001", "actor": "Checker"},
+    )
+    assert missing_csrf.status_code == 403
+    mismatch_csrf = client.post(
+        "/v4-lab/reviews",
+        data={
+            "operation": "approve",
+            "review_id": "REV-000001",
+            "actor": "Checker",
+            "csrf_token": "wrong",
+        },
+    )
+    assert mismatch_csrf.status_code == 403
     submitted = client.post(
         "/v4-lab/reviews",
         data={
+            "csrf_token": csrf_token,
             "operation": "submit",
             "account_id": "LIQ-000001",
             "actor": "Maker One",
@@ -608,7 +715,12 @@ def test_v4_lab_review_and_india_readiness_workflows() -> None:
     assert "Maker submission recorded" in submitted.text
     approved = client.post(
         "/v4-lab/reviews",
-        data={"operation": "approve", "review_id": "REV-000001", "actor": "Checker Two"},
+        data={
+            "csrf_token": csrf_token,
+            "operation": "approve",
+            "review_id": "REV-000001",
+            "actor": "Checker Two",
+        },
         follow_redirects=True,
     )
     assert "Checker approval recorded" in approved.text

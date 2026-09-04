@@ -312,14 +312,17 @@ def _optimize_candidate_allocation(
     current_loss = sum(decision.current_expected_loss for decision in decisions)
     global_constraints = (
         (
+            "Portfolio limit growth cap",
             [candidate["proposed_limit"] for _, candidate in options],
             current_limit * (1 + assumptions.portfolio_growth_cap),
         ),
         (
+            "Portfolio loss growth cap",
             [candidate["proposed_expected_loss"] for _, candidate in options],
             current_loss * (1 + assumptions.portfolio_loss_growth_cap),
         ),
         (
+            "Portfolio capital budget",
             [
                 max(candidate["proposed_ead"] - decisions[owner].current_ead, 0.0)
                 * assumptions.capital_allocation_rate
@@ -328,6 +331,7 @@ def _optimize_candidate_allocation(
             assumptions.portfolio_capital_budget,
         ),
         (
+            "Portfolio higher-risk concentration cap",
             [
                 float(
                     candidate["increase_pct"] > 0
@@ -338,7 +342,7 @@ def _optimize_candidate_allocation(
             len(decisions) * assumptions.max_higher_risk_increase_share,
         ),
     )
-    for coefficients, cap in global_constraints:
+    for _name, coefficients, cap in global_constraints:
         row = len(lower)
         for option_index, coefficient in enumerate(coefficients):
             if coefficient:
@@ -367,11 +371,38 @@ def _optimize_candidate_allocation(
     if not result.success or result.x is None:
         raise RuntimeError(f"Portfolio optimization failed: {result.message}")
 
+    chosen_options = result.x > 0.5
     selected = {
         owner: candidate
-        for chosen, (owner, candidate) in zip(result.x > 0.5, options, strict=True)
+        for chosen, (owner, candidate) in zip(chosen_options, options, strict=True)
         if chosen
     }
+    binding_reasons_by_account: dict[int, list[str]] = {
+        account_index: [] for account_index in range(len(decisions))
+    }
+    for name, coefficients, cap in global_constraints:
+        activity = float(np.dot(np.asarray(coefficients, dtype=float), result.x))
+        selected_coefficients: dict[int, float] = {}
+        positive_coefficients: dict[int, list[float]] = {}
+        for chosen, (owner, option), coefficient in zip(
+            chosen_options, options, coefficients, strict=True
+        ):
+            if chosen:
+                selected_coefficients[owner] = coefficient
+            if float(option["increase_pct"]) > 0:
+                positive_coefficients.setdefault(owner, []).append(float(coefficient))
+        tolerance = max(1e-6, abs(float(cap)) * 1e-9)
+        for owner, alternatives in positive_coefficients.items():
+            if (
+                decisions[owner].increase_pct > 0
+                and float(selected[owner]["increase_pct"]) == 0
+                and all(
+                    activity - selected_coefficients[owner] + alternative > float(cap) + tolerance
+                    for alternative in alternatives
+                )
+            ):
+                binding_reasons_by_account[owner].append(f"{name} retained current limit")
+
     optimized: list[Decision] = []
     for account_index, decision in enumerate(decisions):
         candidate = selected[account_index]
@@ -379,18 +410,18 @@ def _optimize_candidate_allocation(
             optimized.append(decision)
             continue
         increase_pct = float(candidate["increase_pct"])
-        portfolio_reasons = (
-            (
-                "Portfolio allocation optimized under exposure, loss, capital and concentration constraints",
-            )
-            if increase_pct
-            else (
-                "Exposure limit reached",
-                "Portfolio constraints retained current limit",
-            )
-        )
+        portfolio_override = decision.increase_pct > 0 and increase_pct == 0
+        invalidated_reasons = {CONSENT_REASON}
+        if portfolio_override:
+            invalidated_reasons.add("Best eligible risk-adjusted contribution")
+        portfolio_reasons = tuple(binding_reasons_by_account[account_index])
+        if any(
+            reason.startswith("Portfolio higher-risk concentration cap")
+            for reason in portfolio_reasons
+        ):
+            invalidated_reasons.add("High utilization with low estimated risk")
         final_reasons = tuple(
-            reason for reason in decision.reason_codes if reason != CONSENT_REASON
+            reason for reason in decision.reason_codes if reason not in invalidated_reasons
         )
         if increase_pct:
             final_reasons = (*final_reasons, CONSENT_REASON)
