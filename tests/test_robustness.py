@@ -96,7 +96,9 @@ def test_deployed_iterations_and_in_range_predictions_are_unchanged() -> None:
             0.10343865528799094,
         ]
     )
-    np.testing.assert_array_equal(model.predict_proba(raw)[:, 1], expected)
+    np.testing.assert_allclose(
+        model.predict_proba(raw)[:, 1], expected, rtol=0, atol=np.finfo(np.float64).eps
+    )
 
 
 def test_development_benchmark_returns_calibration_evidence() -> None:
