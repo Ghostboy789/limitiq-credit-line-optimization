@@ -3,6 +3,9 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import threading
+import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
@@ -10,6 +13,7 @@ import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
+import limitiq.web as web
 from limitiq.behavioral import synthetic_behavioral_profiles
 from limitiq.config import PROCESSED_DIR
 from limitiq.features import BATCH_COLUMNS
@@ -175,6 +179,17 @@ def test_account_decision_and_missing_account() -> None:
     assert "Account not found" in missing.text
 
 
+def test_account_coverage_banner_lists_actual_unavailable_fields() -> None:
+    response = client.get("/accounts/LIQ-000001")
+    coverage = response.text.split('<p class="eyebrow">Feature coverage</p>', 1)[1].split(
+        "</article>", 1
+    )[0]
+    for field in ("Debt to income", "Credit lines", "Annual income", "Credit age (months)"):
+        assert f"<li>{field}</li>" in coverage
+    assert "<li>Utilization</li>" not in coverage
+    assert "<li>Reported delinquency count</li>" not in coverage
+
+
 def test_policy_simulator_recalculates_and_validates_extremes() -> None:
     baseline = client.get("/simulator")
     assert baseline.text.count('step="0.001"') >= 10
@@ -212,8 +227,11 @@ def test_policy_simulator_recalculates_and_validates_extremes() -> None:
     assert baseline.text != stressed.text
     assert "Scenario compared with governed baseline" in stressed.text
     invalid = client.post("/simulator", data={"lgd": "1.5"})
-    assert invalid.status_code == 200
+    assert invalid.status_code == 422
     assert "Assumptions not applied" in invalid.text
+    non_numeric = client.post("/simulator", data={"servicing_cost": "abc"})
+    assert non_numeric.status_code == 422
+    assert "Assumptions not applied" in non_numeric.text
 
 
 def _sample_frame(rows: int = 2) -> pd.DataFrame:
@@ -227,6 +245,34 @@ def _upload(frame: pd.DataFrame):
         "/batch",
         files={"file": ("accounts.csv", frame.to_csv(index=False).encode(), "text/csv")},
     )
+
+
+def test_batch_cpu_work_keeps_health_responsive(monkeypatch: pytest.MonkeyPatch) -> None:
+    entered = threading.Event()
+    release = threading.Event()
+
+    def blocked_batch(*_args: object) -> str:
+        entered.set()
+        release.wait(timeout=2)
+        return "ACCOUNT_ID\nLIQ-000001\n"
+
+    monkeypatch.setattr(web, "_process_batch", blocked_batch)
+    files = {"file": ("accounts.csv", _sample_frame(1).to_csv(index=False).encode(), "text/csv")}
+    with TestClient(app) as isolated, ThreadPoolExecutor(max_workers=1) as executor:
+        pending = executor.submit(isolated.post, "/batch", files=files)
+        assert entered.wait(timeout=1)
+        timer = threading.Timer(0.8, release.set)
+        timer.start()
+        try:
+            started = time.perf_counter()
+            health = isolated.get("/health")
+            elapsed = time.perf_counter() - started
+        finally:
+            release.set()
+            timer.cancel()
+        batch = pending.result(timeout=2)
+    assert health.status_code == batch.status_code == 200
+    assert elapsed < 0.4
 
 
 def test_batch_valid_upload_returns_decisions_without_retention() -> None:

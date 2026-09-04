@@ -8,7 +8,7 @@
 
   const words = gsap.utils.toArray("[data-scrub-word]", root);
   if (words.length) {
-    gsap.set(words, { opacity: 0.18, y: 10 });
+    gsap.set(words, { opacity: 0.85, y: 10 });
     gsap.to(words, {
       opacity: 1,
       y: 0,

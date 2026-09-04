@@ -21,6 +21,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Resp
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from markdown_it import MarkdownIt
+from starlette.concurrency import run_in_threadpool
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from limitiq import __version__
@@ -513,6 +514,61 @@ def _decision_frame(decisions: list[Decision]) -> pd.DataFrame:
     )
 
 
+def _run_simulator(
+    source: pd.DataFrame, assumptions: PolicyAssumptions
+) -> tuple[dict[str, Any], np.ndarray, np.ndarray, np.ndarray]:
+    decisions = recommend_portfolio(
+        source[[*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]],
+        source["pd"].to_numpy(),
+        source["ACCOUNT_ID"].tolist(),
+        assumptions,
+        AUTO_INCREASES_ENABLED,
+    )
+    return (
+        summarize_portfolio(decisions),
+        np.asarray([item.current_ead for item in decisions]),
+        np.asarray([item.proposed_ead for item in decisions]),
+        np.asarray([item.proposed_limit for item in decisions]),
+    )
+
+
+def _process_batch(
+    model: Any, clean: pd.DataFrame, support_bounds: dict[str, dict[str, float]]
+) -> str:
+    probability = model.predict_proba(_primary_model_frame(clean))[:, 1]
+    decisions = recommend_portfolio(
+        _optimizer_frame(clean, support_bounds),
+        probability,
+        clean["ACCOUNT_ID"].tolist(),
+        automatic_increases_enabled=AUTO_INCREASES_ENABLED,
+    )
+    return _safe_csv(_decision_frame(decisions))
+
+
+def _load_v4_lab_state() -> tuple[dict[str, Any], dict[str, Any] | None]:
+    from limitiq.behavioral import (
+        CANDIDATE_METADATA_PATH,
+        CANDIDATE_MODEL_PATH,
+        synthetic_behavioral_account,
+    )
+    from limitiq.explain import explain_account
+
+    evidence = {}
+    for name, filename in V4_SUPPORTING_REPORT_FILES.items():
+        path = REPORT_DIR / filename
+        if path.exists():
+            evidence[name] = json.loads(path.read_text(encoding="utf-8"))
+    explanation = None
+    if CANDIDATE_MODEL_PATH.exists() and CANDIDATE_METADATA_PATH.exists():
+        candidate_metadata = json.loads(CANDIDATE_METADATA_PATH.read_text(encoding="utf-8"))
+        if _sha256(CANDIDATE_MODEL_PATH) == candidate_metadata["model_checksum"]:
+            candidate_model = joblib.load(CANDIDATE_MODEL_PATH)  # noqa: S301
+            explanation = explain_account(
+                candidate_model, synthetic_behavioral_account("LIQ-000001")
+            )
+    return evidence, explanation
+
+
 def _directional_sensitivity(
     summary: dict[str, Any],
     assumptions: PolicyAssumptions,
@@ -629,6 +685,7 @@ def create_app() -> FastAPI:
         research_metadata,
         robustness,
     ) = _load_artifacts()
+    v4_evidence, v4_explanation = _load_v4_lab_state()
     review_ledger = ReviewLedger()
     app = FastAPI(
         title="LimitIQ",
@@ -652,6 +709,8 @@ def create_app() -> FastAPI:
     app.state.portfolio = portfolio
     app.state.simulation = simulation
     app.state.robustness = robustness
+    app.state.v4_evidence = v4_evidence
+    app.state.v4_explanation = v4_explanation
     app.state.started_at = time.monotonic()
     app.state.operations = {
         "requests": 0,
@@ -1017,6 +1076,7 @@ def create_app() -> FastAPI:
             ("Annual income", row.get("income_inr"), "money"),
             ("Credit age (months)", row.get("credit_age_months"), "number"),
         ]
+        missing_profile_fields = [label for label, value, _ in profile_rows if pd.isna(value)]
         return templates.TemplateResponse(
             request,
             "account.html",
@@ -1025,6 +1085,7 @@ def create_app() -> FastAPI:
                 title=f"Account {account_id}",
                 account=row,
                 profile_rows=profile_rows,
+                missing_profile_fields=missing_profile_fields,
                 synthetic_history=_synthetic_history(row),
             ),
         )
@@ -1040,10 +1101,10 @@ def create_app() -> FastAPI:
             form = await request.form()
             ccy = _resolve_ccy(form.get("ccy"))
             values = dict(form)
-            for key in MONETARY_KEYS:
-                if values.get(key) not in (None, ""):
-                    values[key] = float(values[key]) / DISPLAY_RATES[ccy]
             try:
+                for key in MONETARY_KEYS:
+                    if values.get(key) not in (None, ""):
+                        values[key] = float(values[key]) / DISPLAY_RATES[ccy]
                 assumptions = PolicyAssumptions.from_mapping(values)
             except (TypeError, ValueError) as exc:
                 error = str(exc)
@@ -1053,17 +1114,9 @@ def create_app() -> FastAPI:
             proposed_ead = source["proposed_ead"].to_numpy()
             proposed_limit = source["proposed_limit"].to_numpy()
         else:
-            decisions = recommend_portfolio(
-                source[[*MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]],
-                source["pd"].to_numpy(),
-                source["ACCOUNT_ID"].tolist(),
-                assumptions,
-                AUTO_INCREASES_ENABLED,
+            summary, current_ead, proposed_ead, proposed_limit = await run_in_threadpool(
+                _run_simulator, source, assumptions
             )
-            summary = summarize_portfolio(decisions)
-            current_ead = np.asarray([item.current_ead for item in decisions])
-            proposed_ead = np.asarray([item.proposed_ead for item in decisions])
-            proposed_limit = np.asarray([item.proposed_limit for item in decisions])
         utilization = (
             source["utilization"]
             .fillna(source["current_balance_inr"] / source["current_limit_inr"])
@@ -1110,6 +1163,7 @@ def create_app() -> FastAPI:
                 error=error,
                 scenario_applied=scenario_applied,
             ),
+            status_code=422 if error else 200,
         )
 
     @app.get("/api/search")
@@ -1216,16 +1270,11 @@ def create_app() -> FastAPI:
             raise HTTPException(
                 422, "ACCOUNT_ID must be 3–40 letters, numbers, underscores or hyphens"
             )
-        probability = model.predict_proba(_primary_model_frame(clean))[:, 1]
-        decisions = recommend_portfolio(
-            _optimizer_frame(clean, robustness["support_bounds"]),
-            probability,
-            clean["ACCOUNT_ID"].tolist(),
-            automatic_increases_enabled=AUTO_INCREASES_ENABLED,
+        content = await run_in_threadpool(
+            _process_batch, model, clean, robustness["support_bounds"]
         )
-        result = _decision_frame(decisions)
         return Response(
-            _safe_csv(result),
+            content,
             media_type="text/csv",
             headers={
                 "Content-Disposition": 'attachment; filename="limitiq-batch-decisions.csv"',
@@ -1341,26 +1390,7 @@ def create_app() -> FastAPI:
     @app.get("/v4-lab", response_class=HTMLResponse)
     def v4_lab(request: Request, message: str = Query("", max_length=120)) -> HTMLResponse:
         """Expose the executable decision-science and governance workbench."""
-        from limitiq.behavioral import (
-            CANDIDATE_METADATA_PATH,
-            CANDIDATE_MODEL_PATH,
-            synthetic_behavioral_account,
-        )
-        from limitiq.explain import explain_account
-
-        evidence = {}
-        for name, filename in V4_SUPPORTING_REPORT_FILES.items():
-            path = REPORT_DIR / filename
-            if path.exists():
-                evidence[name] = json.loads(path.read_text(encoding="utf-8"))
-        explanation = None
-        if CANDIDATE_MODEL_PATH.exists() and CANDIDATE_METADATA_PATH.exists():
-            candidate_metadata = json.loads(CANDIDATE_METADATA_PATH.read_text(encoding="utf-8"))
-            if _sha256(CANDIDATE_MODEL_PATH) == candidate_metadata["model_checksum"]:
-                candidate_model = joblib.load(CANDIDATE_MODEL_PATH)  # noqa: S301
-                explanation = explain_account(
-                    candidate_model, synthetic_behavioral_account("LIQ-000001")
-                )
+        evidence = app.state.v4_evidence
         return templates.TemplateResponse(
             request,
             "v4_lab.html",
@@ -1373,7 +1403,7 @@ def create_app() -> FastAPI:
                 experiment_replay=evidence.get("experiment-replay-evidence"),
                 robustness=evidence.get("model-robustness-evidence"),
                 india_readiness=evidence.get("india-validation-readiness"),
-                explanation=explanation,
+                explanation=app.state.v4_explanation,
                 review_events=review_ledger.events(),
                 review_decisions=sorted(DECISIONS),
                 review_reasons=sorted(REASONS),

@@ -66,6 +66,10 @@ proceeds under the repository owner's 14 August 2026 resolution attestation in
 routes otherwise eligible increases to manual review, updates the demonstration
 summary, applies to API/batch/simulator decisions and is visible in `/health`.
 
+Simulator and batch optimization, decision-frame assembly and CSV serialization
+run in the Starlette worker threadpool so health probes and other requests remain
+responsive while SciPy MILP work is in progress.
+
 Missing or checksum-invalid model artifacts fail startup. Invalid uploads return
 bounded safe errors. Unknown/insufficient profiles route to manual review or
 freeze rather than automatic increase. Rollback disables automatic increases or

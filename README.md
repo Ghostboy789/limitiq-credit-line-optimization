@@ -246,7 +246,9 @@ docker run --rm -p 8000:8000 limitiq
 - CycloneDX 1.6 direct-dependency [SBOM](sbom/limitiq.cdx.json)
 - Release [SHA-256 manifest](release/checksums-v4.1.0.sha256) covering the
   behavioral and temporal models, metadata, schema, evidence, demo portfolio,
-  executive report, India contract and SBOM
+  executive report, India contract and SBOM. Verify it with
+  `sha256sum -c release/checksums-v4.1.0.sha256`; text entries are SHA-256 of
+  LF-normalised UTF-8 content.
 - GitHub Actions for tests, coverage, Ruff, Bandit, dependency/secret scanning,
   Docker build, Trivy image scan, health and concurrency smoke
 - Separate CodeQL workflow and Dependabot configuration

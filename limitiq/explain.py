@@ -45,15 +45,20 @@ def explain_account(model: Any, raw_account: pd.DataFrame) -> dict[str, Any]:
     sensitivities = []
     for group, scenario in scenarios.items():
         counterfactual = float(model.predict_proba(scenario)[:, 1][0])
+        score_change = counterfactual - baseline
         sensitivities.append(
             {
                 "feature_group": group,
                 "observed_score": baseline,
                 "neutralized_score": counterfactual,
-                "score_change_when_neutralized": counterfactual - baseline,
-                "direction": "risk-increasing evidence"
-                if counterfactual < baseline
-                else "risk-reducing evidence",
+                "score_change_when_neutralized": score_change,
+                "direction": (
+                    "no material effect"
+                    if abs(score_change) < 0.005
+                    else "risk-increasing evidence"
+                    if score_change < 0
+                    else "risk-reducing evidence"
+                ),
             }
         )
     sensitivities.sort(key=lambda row: abs(row["score_change_when_neutralized"]), reverse=True)

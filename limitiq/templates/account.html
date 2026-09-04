@@ -16,7 +16,7 @@
 
 <section class="two-column account-grid">
   <article class="panel"><p class="eyebrow">Decision rationale</p><h2>Reason codes</h2>{% if account.reason_list %}<ul class="reason-list">{% for reason in account.reason_list %}<li>{{ reason }}</li>{% endfor %}</ul>{% else %}<p class="chart-empty">No specific reason code was emitted.</p>{% endif %}</article>
-  {% set missing_fields = account.missing_model_fields.split('|') if account.missing_model_fields else [] %}<article class="panel"><p class="eyebrow">Feature coverage</p><h2>Decision-profile fields</h2>{% if missing_fields %}<p>These optional economics fields are unavailable and remain explicitly marked as missing.</p><ul class="reason-list muted-list">{% for field in missing_fields %}<li>{{ field|trim|replace('_', ' ')|title }}</li>{% endfor %}</ul>{% else %}<p class="coverage-complete"><span aria-hidden="true">✓</span> All derived decision-profile fields are available for this row.</p>{% endif %}</article>
+  <article class="panel"><p class="eyebrow">Feature coverage</p><h2>Decision-profile fields</h2>{% if missing_profile_fields %}<p>These decision-profile fields are unavailable and remain explicitly marked as missing.</p><ul class="reason-list muted-list">{% for field in missing_profile_fields %}<li>{{ field }}</li>{% endfor %}</ul>{% else %}<p class="coverage-complete"><span aria-hidden="true">✓</span> All derived decision-profile fields are available for this row.</p>{% endif %}</article>
 </section>
 
 <section class="panel"><div class="panel-title"><div><p class="eyebrow">Derived decision profile</p><h2>Simulated economics inputs</h2></div></div>

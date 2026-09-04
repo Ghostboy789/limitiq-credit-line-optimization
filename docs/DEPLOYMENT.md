@@ -9,6 +9,11 @@ the exact deployed Git revision and the primary model and dataset identifiers.
 The v2 global model and v4 temporal loan study remain research evidence only;
 neither drives card recommendations.
 
+Verify the release files with
+`sha256sum -c release/checksums-v4.1.0.sha256`. Text entries in the manifest
+are SHA-256 of LF-normalised UTF-8 content, so the command is portable across
+supported checkout platforms.
+
 Publication proceeded under the repository owner's 14 August 2026 clearance
 attestation documented in [`NOTICE.md`](../NOTICE.md). This is an owner-cleared
 attestation, not an independent legal opinion. Historical source-review evidence
