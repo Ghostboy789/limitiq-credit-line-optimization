@@ -1,0 +1,70 @@
+{
+  "classification": "Deterministic synthetic optimizer stress; finite-difference shadow price, not an LP dual or observed impact",
+  "model_version": "limitiq-behavioral-4.0.0-21234ab33f78",
+  "dataset_version": "uci-350-behavioral-6ba3a746be13",
+  "model_checksum": "21234ab33f782a5a4d12e6e9050ccbcd812c2b1f324ae91d1a2f4bbd07648115",
+  "dataset_checksum": "6ba3a746be1359edeedc86fd33c32e61124bab6507a8ab023370b3e963ecf562",
+  "random_seed": 42,
+  "assumptions": {
+    "lgd": 0.65,
+    "ccf": 0.75,
+    "interchange_rate": 0.018,
+    "apr": 0.18,
+    "revolving_rate": 0.45,
+    "funding_cost": 0.045,
+    "capital_cost": 0.025,
+    "servicing_cost": 180.0,
+    "response_elasticity": 0.35,
+    "response_decay_kappa": 2.5,
+    "risk_ccf_sensitivity": 0.5,
+    "max_increase": 0.3,
+    "max_account_exposure": 3000000.0,
+    "portfolio_growth_cap": 0.1,
+    "portfolio_loss_growth_cap": 0.08,
+    "capital_allocation_rate": 0.08,
+    "portfolio_capital_budget": 25000000.0,
+    "max_higher_risk_increase_share": 0.05,
+    "expected_loss_ceiling": 0.12,
+    "profitability_hurdle": 300.0
+  },
+  "summary": {
+    "accounts": 1200,
+    "current_limit": 478946605.37933016,
+    "proposed_limit": 483507158.86792505,
+    "current_ead": 428861224.2982887,
+    "proposed_ead": 432520442.83856034,
+    "current_expected_loss": 53247037.37019235,
+    "proposed_expected_loss": 53496825.65786565,
+    "incremental_contribution": 277517.4666844267,
+    "incremental_exposure": 3659218.5402716626,
+    "risk_adjusted_return": 0.07584063745583876,
+    "eligible_increases": 60,
+    "early_warning": 802,
+    "action_counts": {
+      "Freeze automatic increases": 342,
+      "No change": 338,
+      "Manual review": 460,
+      "Increase 20%": 30,
+      "Increase 10%": 30
+    },
+    "risk_counts": {
+      "High": 413,
+      "Very high": 159,
+      "Moderate": 628
+    }
+  },
+  "binding_constraint": {
+    "name": "Portfolio higher-risk concentration cap",
+    "activity_accounts": 60,
+    "cap_accounts": 60,
+    "slack_accounts": 0,
+    "binding": true,
+    "shadow_price_inr_per_additional_account": 2815.0823264639475,
+    "method": "Re-optimize after relaxing the integer cap by exactly one account; contribution difference is the finite-difference shadow price."
+  },
+  "limitations": [
+    "All accounts, affordability fields, actions and economics are synthetic.",
+    "The shadow price is a discrete finite difference, not a continuous solver dual.",
+    "No causal customer response or realized financial outcome is claimed."
+  ]
+}

@@ -84,7 +84,7 @@ def test_low_need_loss_and_exposure_policies_return_no_change(healthy_row: pd.Se
         PolicyAssumptions(expected_loss_ceiling=0.01),
     )
     assert loss.action == "No change"
-    assert "Expected loss exceeds policy ceiling" in loss.reason_codes
+    assert "Expected-loss rate exceeds policy ceiling" in loss.reason_codes
 
     capped = recommend_account(
         healthy_row,
@@ -136,7 +136,7 @@ def test_portfolio_contract_summary_and_sensitivity(healthy_row: pd.Series) -> N
     first = portfolio_sensitivity(frame, np.array([0.04]), ["A"])
     second = portfolio_sensitivity(frame, np.array([0.04]), ["A"])
     assert first == second
-    assert len(first) == 30
+    assert len(first) == 36
     assert {row["scenario"] for row in first} == {"Low", "Base", "High"}
 
 
@@ -145,6 +145,9 @@ def test_assumption_validation() -> None:
         PolicyAssumptions(lgd=1.2).validate()
     with pytest.raises(ValueError, match="positive"):
         PolicyAssumptions(max_account_exposure=0).validate()
+
+    with pytest.raises(ValueError, match="response_decay_kappa"):
+        PolicyAssumptions(response_decay_kappa=-0.1).validate()
 
 
 def test_global_optimizer_respects_loss_cap_and_is_not_greedy(healthy_row: pd.Series) -> None:
@@ -172,6 +175,39 @@ def test_global_optimizer_respects_loss_cap_and_is_not_greedy(healthy_row: pd.Se
     for decision in decisions:
         consent = "Explicit customer acceptance required before activation"
         assert (consent in decision.reason_codes) is (decision.increase_pct > 0)
+
+
+def test_diminishing_response_and_pd_linked_ccf_are_live(healthy_row: pd.Series) -> None:
+    decision = recommend_account(healthy_row, 0.04, "DIMINISHING")
+    assert decision.action in {"Increase 10%", "Increase 20%"}
+    assert decision.action != "Increase 30%"
+
+    low_risk = recommend_account(healthy_row, 0.02, "LOW-CCF")
+    high_risk = recommend_account(
+        healthy_row,
+        0.20,
+        "HIGH-CCF",
+        PolicyAssumptions(expected_loss_ceiling=1),
+    )
+    assert high_risk.current_ead > low_risk.current_ead
+
+
+def test_tightening_growth_cap_cannot_raise_aggregate_limit(healthy_row: pd.Series) -> None:
+    frame = pd.DataFrame([healthy_row] * 12, columns=DECISION_COLUMNS)
+    probabilities = np.full(len(frame), 0.04)
+    account_ids = [f"CAP-{index}" for index in range(len(frame))]
+    common = {
+        "portfolio_loss_growth_cap": 1,
+        "portfolio_capital_budget": 1_000_000_000,
+        "max_higher_risk_increase_share": 1,
+    }
+    loose = recommend_portfolio(
+        frame, probabilities, account_ids, PolicyAssumptions(portfolio_growth_cap=0.20, **common)
+    )
+    tight = recommend_portfolio(
+        frame, probabilities, account_ids, PolicyAssumptions(portfolio_growth_cap=0.03, **common)
+    )
+    assert sum(item.proposed_limit for item in tight) <= sum(item.proposed_limit for item in loose)
 
 
 def test_governance_switch_disables_automatic_increases(healthy_row: pd.Series) -> None:

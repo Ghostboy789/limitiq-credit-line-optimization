@@ -24,8 +24,19 @@ MODEL_INPUT_COLUMNS = [
     "region",
 ]
 EXPOSURE_COLUMNS = ["current_limit_inr", "current_balance_inr"]
+AFFORDABILITY_COLUMNS = [
+    "income_inr",
+    "total_monthly_obligation_inr",
+    "credit_lines",
+    "credit_age_months",
+]
 HARMONIZED_BATCH_COLUMNS = ["ACCOUNT_ID", *MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]
-BEHAVIORAL_BATCH_COLUMNS = ["ACCOUNT_ID", *TAIWAN_MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]
+BEHAVIORAL_BATCH_COLUMNS = [
+    "ACCOUNT_ID",
+    *TAIWAN_MODEL_INPUT_COLUMNS,
+    *EXPOSURE_COLUMNS,
+    *AFFORDABILITY_COLUMNS,
+]
 BATCH_COLUMNS = BEHAVIORAL_BATCH_COLUMNS
 REGION_CATEGORIES = {"asia", "europe", "north_america", "taiwan", "undisclosed"}
 FEATURE_NAMES = [
@@ -143,11 +154,11 @@ def validate_taiwan_input(frame: pd.DataFrame, *, require_account_id: bool = Fal
 def validate_behavioral_input(
     frame: pd.DataFrame, *, require_account_id: bool = False
 ) -> pd.DataFrame:
-    """Validate the v4 raw-history inference contract plus simulated INR exposure fields."""
+    """Validate behavioral history plus simulated exposure and affordability fields."""
     required = (
         BEHAVIORAL_BATCH_COLUMNS
         if require_account_id
-        else [*TAIWAN_MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS]
+        else [*TAIWAN_MODEL_INPUT_COLUMNS, *EXPOSURE_COLUMNS, *AFFORDABILITY_COLUMNS]
     )
     missing = _missing(required, frame)
     if missing:
@@ -155,21 +166,30 @@ def validate_behavioral_input(
     clean = frame.loc[:, required].copy()
     history = validate_taiwan_input(clean, require_account_id=require_account_id)
     clean[history.columns] = history
-    exposure_values = clean[EXPOSURE_COLUMNS].apply(pd.to_numeric, errors="coerce")
-    invalid = exposure_values.isna() & clean[EXPOSURE_COLUMNS].notna()
+    numeric_columns = [*EXPOSURE_COLUMNS, *AFFORDABILITY_COLUMNS]
+    numeric_values = clean[numeric_columns].apply(pd.to_numeric, errors="coerce")
+    invalid = numeric_values.isna() & clean[numeric_columns].notna()
     if invalid.any().any():
-        raise SchemaError("Current limit and balance must be numeric values")
-    if exposure_values.isna().any().any():
-        raise SchemaError("current_limit_inr and current_balance_inr cannot be blank")
-    if not np.isfinite(exposure_values.to_numpy()).all():
-        raise SchemaError("Current limit and balance must be finite numeric values")
-    clean[EXPOSURE_COLUMNS] = exposure_values
+        raise SchemaError("Exposure and affordability fields must be numeric values")
+    if numeric_values.isna().any().any():
+        raise SchemaError("Exposure and affordability fields cannot be blank")
+    if not np.isfinite(numeric_values.to_numpy()).all():
+        raise SchemaError("Exposure and affordability fields must be finite numeric values")
+    clean[numeric_columns] = numeric_values
     if (clean["current_limit_inr"] <= 0).any() or (clean["current_limit_inr"] > 10_000_000).any():
         raise SchemaError("current_limit_inr must be greater than zero and at most 10,000,000")
     if (clean["current_balance_inr"] < 0).any() or (
         clean["current_balance_inr"] > clean["current_limit_inr"] * 2
     ).any():
         raise SchemaError("current_balance_inr must be between zero and twice the current limit")
+    if (clean["income_inr"] <= 0).any() or (clean["income_inr"] > 1_000_000_000).any():
+        raise SchemaError("income_inr must be greater than zero and at most 1,000,000,000")
+    if (clean["total_monthly_obligation_inr"] < 0).any():
+        raise SchemaError("total_monthly_obligation_inr cannot be negative")
+    if ((clean["credit_lines"] < 0) | (clean["credit_lines"] > 500)).any():
+        raise SchemaError("credit_lines must be between zero and 500")
+    if ((clean["credit_age_months"] < 6) | (clean["credit_age_months"] > 2_000)).any():
+        raise SchemaError("credit_age_months must be between 6 and 2,000")
     return clean
 
 

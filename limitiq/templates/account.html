@@ -5,6 +5,7 @@
   <div><p class="eyebrow">Synthetic account identifier</p><h1>{{ account.account_id }}</h1><div class="badge-row"><span class="badge action large">{{ account.action }}</span><span class="badge risk-{{ account.risk_band|lower|replace(' ', '-') }} large">{{ account.risk_band }} score band</span></div></div>
   <div class="decision-limit"><span>Simulated proposed limit</span><strong>{{ account.proposed_limit|money(ccy) }}</strong><small>from {{ account.current_limit_inr|money(ccy) }}</small></div>
 </section>
+<div class="notice{% if not account.affordability_passed %} warning{% endif %}" role="status"><strong>Synthetic affordability check: {% if account.affordability_passed %}PASS{% else %}MANUAL REVIEW{% endif %}.</strong> FOIR {{ account.debt_to_income|percent }} equals synthetic monthly obligations divided by synthetic monthly income. This is a deterministic demonstration assumption, not verified ability-to-pay.</div>
 <div class="notice" role="note"><strong>Evidence boundary:</strong> This educational score uses a coherent next-month default target from the UCI Taiwan source. This profile, its limit economics and expected-loss values are simulated. The result is not a production lending decision or a jurisdiction-specific affordability assessment.</div>
 
 <section class="metric-grid four">

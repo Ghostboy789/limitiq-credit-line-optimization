@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -46,6 +47,7 @@ CANDIDATE_SCHEMA_PATH = MODEL_DIR / "behavioral_feature_schema.json"
 CANDIDATE_REPORT_PATH = REPORT_DIR / "behavioral_model.json"
 BEHAVIORAL_DEMO_PATH = PROCESSED_DIR / "behavioral_demo_portfolio.csv"
 BEHAVIORAL_SIMULATION_PATH = REPORT_DIR / "behavioral_policy_simulation.json"
+OPTIMIZER_STRESS_PATH = REPORT_DIR / "behavioral_optimizer_stress.json"
 BOOTSTRAP_SEED = SEED + 4_100
 BEHAVIORAL_HGB_ITERATIONS = 180
 
@@ -93,10 +95,23 @@ def synthetic_behavioral_profiles(rows: int = 1_200) -> pd.DataFrame:
     raw["account_id"] = [f"LIQ-{index + 1:06d}" for index in range(rows)]
     raw["current_limit_inr"] = raw["LIMIT_BAL"]
     raw["current_balance_inr"] = raw["BILL_AMT1"].clip(lower=0, upper=raw["LIMIT_BAL"] * 2)
+    sequence = np.arange(rows)
+    verified_monthly_income = np.clip(
+        raw["LIMIT_BAL"] / 5 + raw[PAYMENT_COLUMNS].mean(axis=1) * 2,
+        25_000,
+        500_000,
+    )
+    synthetic_foir = 0.18 + (sequence % 37) * 0.01
+    synthetic_foir[sequence % 97 == 0] = 0.68
+    raw["income_inr"] = verified_monthly_income * 12
+    raw["total_monthly_obligation_inr"] = verified_monthly_income * synthetic_foir
+    raw["debt_to_income"] = raw["total_monthly_obligation_inr"] / verified_monthly_income
     raw["delinquency_count"] = (raw[PAY_COLUMNS] > 0).sum(axis=1).astype(float)
     raw["utilization"] = (raw["BILL_AMT1"].clip(lower=0) / raw["LIMIT_BAL"].clip(lower=1)).clip(
         upper=5
     )
+    raw["credit_lines"] = 1 + sequence % 8
+    raw["credit_age_months"] = 12 + sequence * 17 % 240
     for name in MODEL_FEATURES:
         if name not in raw:
             raw[name] = "taiwan" if name == "region" else np.nan
@@ -416,6 +431,72 @@ def train_behavioral_candidate(
     return payload
 
 
+def _optimizer_stress_evidence(
+    profiles: pd.DataFrame,
+    probabilities: np.ndarray,
+    metadata: dict[str, Any],
+    assumptions: PolicyAssumptions,
+) -> dict[str, Any]:
+    """Build deterministic finite-difference evidence for one binding portfolio constraint."""
+    from limitiq.optimizer import recommend_portfolio, summarize_portfolio
+
+    frame = profiles[MODEL_FEATURES + ["current_limit_inr", "current_balance_inr"]]
+    account_ids = profiles["account_id"].tolist()
+    stressed = replace(assumptions, max_higher_risk_increase_share=0.05)
+    stressed_decisions = recommend_portfolio(frame, probabilities, account_ids, stressed)
+    stressed_summary = summarize_portfolio(stressed_decisions)
+    cap_accounts = int(len(stressed_decisions) * stressed.max_higher_risk_increase_share)
+    activity_accounts = sum(
+        decision.increase_pct > 0 and decision.risk_band in {"Moderate", "High", "Very high"}
+        for decision in stressed_decisions
+    )
+    relaxed = replace(
+        stressed,
+        max_higher_risk_increase_share=(cap_accounts + 1) / len(stressed_decisions),
+    )
+    relaxed_summary = summarize_portfolio(
+        recommend_portfolio(frame, probabilities, account_ids, relaxed)
+    )
+    shadow_price = (
+        relaxed_summary["incremental_contribution"] - stressed_summary["incremental_contribution"]
+    )
+    evidence = {
+        "classification": (
+            "Deterministic synthetic optimizer stress; finite-difference shadow price, "
+            "not an LP dual or observed impact"
+        ),
+        "model_version": metadata["model_version"],
+        "dataset_version": metadata["dataset_version"],
+        "model_checksum": metadata["model_checksum"],
+        "dataset_checksum": metadata["dataset_checksum"],
+        "random_seed": SEED,
+        "assumptions": stressed.to_dict(),
+        "summary": stressed_summary,
+        "binding_constraint": {
+            "name": "Portfolio higher-risk concentration cap",
+            "activity_accounts": activity_accounts,
+            "cap_accounts": cap_accounts,
+            "slack_accounts": cap_accounts - activity_accounts,
+            "binding": activity_accounts == cap_accounts,
+            "shadow_price_inr_per_additional_account": shadow_price,
+            "method": (
+                "Re-optimize after relaxing the integer cap by exactly one account; "
+                "contribution difference is the finite-difference shadow price."
+            ),
+        },
+        "limitations": [
+            "All accounts, affordability fields, actions and economics are synthetic.",
+            "The shadow price is a discrete finite difference, not a continuous solver dual.",
+            "No causal customer response or realized financial outcome is claimed.",
+        ],
+    }
+    if not evidence["binding_constraint"]["binding"] or shadow_price <= 0:
+        raise RuntimeError(
+            "Configured optimizer stress must produce a binding, valuable constraint"
+        )
+    return evidence
+
+
 def write_behavioral_demo(model: Any, metadata: dict[str, Any]) -> dict[str, Any]:
     """Score and optimize the deterministic rich-history demonstration portfolio."""
     from limitiq.optimizer import portfolio_sensitivity, recommend_portfolio, summarize_portfolio
@@ -454,6 +535,8 @@ def write_behavioral_demo(model: Any, metadata: dict[str, Any]) -> dict[str, Any
     temporary = BEHAVIORAL_DEMO_PATH.with_suffix(".csv.tmp")
     output.to_csv(temporary, index=False, lineterminator="\n")
     temporary.replace(BEHAVIORAL_DEMO_PATH)
+    optimizer_stress = _optimizer_stress_evidence(profiles, probabilities, metadata, assumptions)
+    _write_json(OPTIMIZER_STRESS_PATH, optimizer_stress)
     payload = {
         "classification": "Deterministic synthetic rich-history scenario; not observed impact",
         "model_version": metadata["model_version"],
@@ -464,6 +547,7 @@ def write_behavioral_demo(model: Any, metadata: dict[str, Any]) -> dict[str, Any
         "generated_at": datetime.now(UTC).isoformat(),
         "demo_rows": len(output),
         "demo_portfolio_sha256": _text_sha256(BEHAVIORAL_DEMO_PATH),
+        "optimizer_stress_sha256": _text_sha256(OPTIMIZER_STRESS_PATH),
         "assumptions": assumptions.to_dict(),
         "summary": summarize_portfolio(decisions),
         "sensitivity": portfolio_sensitivity(
@@ -474,7 +558,8 @@ def write_behavioral_demo(model: Any, metadata: dict[str, Any]) -> dict[str, Any
         ),
         "limitations": [
             "All histories and account identifiers are deterministic synthetic data.",
-            "Limit response, LGD, CCF, revenue and costs are simulated assumptions.",
+            "Income, obligations, FOIR, line response, LGD, CCF, revenue and costs are synthetic assumptions.",
+            "The expected-loss ceiling is a PD × LGD rate ceiling, not a currency loss cap.",
             "The Taiwan model is not validated for India or production lending.",
         ],
     }

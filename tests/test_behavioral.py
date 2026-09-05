@@ -15,6 +15,7 @@ from limitiq.behavioral import (
     CANDIDATE_MODEL_PATH,
     CANDIDATE_REPORT_PATH,
     CANDIDATE_SCHEMA_PATH,
+    OPTIMIZER_STRESS_PATH,
     _canonical_sha256,
     _paired_bootstrap,
     _text_sha256,
@@ -114,6 +115,7 @@ def test_behavioral_primary_artifacts_are_checksum_bound_and_sane() -> None:
     metadata = json.loads(CANDIDATE_METADATA_PATH.read_text(encoding="utf-8"))
     report = json.loads(CANDIDATE_REPORT_PATH.read_text(encoding="utf-8"))
     simulation = json.loads(BEHAVIORAL_SIMULATION_PATH.read_text(encoding="utf-8"))
+    optimizer_stress = json.loads(OPTIMIZER_STRESS_PATH.read_text(encoding="utf-8"))
     assert metadata["promotion_gate"]["status"] == "application_primary"
     assert report["model_version"] == metadata["model_version"]
     assert (
@@ -128,10 +130,26 @@ def test_behavioral_primary_artifacts_are_checksum_bound_and_sane() -> None:
     assert len(demo) == simulation["demo_rows"] == 1_200
     assert demo["account_id"].is_unique
     assert not {"ID", "SEX", "EDUCATION", "MARRIAGE", "AGE"} & set(demo)
+    assert {
+        "income_inr",
+        "total_monthly_obligation_inr",
+        "debt_to_income",
+        "credit_lines",
+        "credit_age_months",
+    } <= set(demo)
+    assert (
+        (demo["action"] == "Manual review")
+        & demo["reason_codes"].str.contains("Customer-overextension safeguard")
+    ).any()
     score = joblib.load(CANDIDATE_MODEL_PATH).predict_proba(
         demo[TAIWAN_MODEL_INPUT_COLUMNS].head(5)
     )[:, 1]
     assert np.all((0 <= score) & (score <= 1))
+
+    assert simulation["summary"]["action_counts"]["Increase 10%"] > 0
+    assert simulation["summary"]["action_counts"]["Increase 20%"] > 0
+    assert optimizer_stress["binding_constraint"]["binding"] is True
+    assert optimizer_stress["binding_constraint"]["shadow_price_inr_per_additional_account"] > 0
 
 
 def test_v41_release_manifest_matches_current_artifacts() -> None:
@@ -153,6 +171,7 @@ def test_v41_release_manifest_matches_current_artifacts() -> None:
         "reports/behavioral_policy_simulation.json",
         "data/processed/behavioral_demo_portfolio.csv",
         "models/temporal_champion.joblib",
+        "reports/behavioral_optimizer_stress.json",
         "reports/temporal_validation.json",
         "reports/monitoring_replay.json",
         "reports/experiment_replay.json",

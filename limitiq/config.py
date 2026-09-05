@@ -79,6 +79,8 @@ class PolicyAssumptions:
     capital_cost: float = 0.025
     servicing_cost: float = 180.0
     response_elasticity: float = 0.35
+    response_decay_kappa: float = 2.5
+    risk_ccf_sensitivity: float = 0.50
     max_increase: float = 0.30
     max_account_exposure: float = 3_000_000.0
     portfolio_growth_cap: float = 0.10
@@ -99,6 +101,7 @@ class PolicyAssumptions:
             "funding_cost",
             "capital_cost",
             "response_elasticity",
+            "risk_ccf_sensitivity",
             "max_increase",
             "portfolio_growth_cap",
             "portfolio_loss_growth_cap",
@@ -114,6 +117,8 @@ class PolicyAssumptions:
             raise ValueError("exposure and capital budgets must be positive")
         if self.servicing_cost < 0 or self.profitability_hurdle < 0:
             raise ValueError("cost and hurdle values cannot be negative")
+        if self.response_decay_kappa < 0:
+            raise ValueError("response_decay_kappa cannot be negative")
 
     def to_dict(self) -> dict[str, float]:
         return asdict(self)

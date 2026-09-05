@@ -9,6 +9,17 @@
 <div class="notice" role="note"><strong>Interpretation boundary:</strong> Pooled metrics are row-weighted and dominated by the largest dataset. Macro and source-cohort evidence are shown alongside them. Random within-source holdouts do not demonstrate performance in an unseen country, institution or time period.</div>
 <div class="notice{% if metadata.publication_gate.status != 'cleared' %} warning{% endif %}" role="note"><strong>V2 publication gate: {{ metadata.publication_gate.status|upper }}.</strong> {{ metadata.publication_gate.reason }}{% if metadata.publication_gate.resolution_basis %} {{ metadata.publication_gate.resolution_basis }}{% endif %}</div>
 
+{% set binding = optimizer_stress.binding_constraint %}
+<section class="panel"><div class="section-heading"><div><p class="eyebrow">Committed optimizer stress</p><h2>Binding concentration constraint</h2></div><span class="badge action">Synthetic evidence</span></div>
+  <p>{{ optimizer_stress.classification }}.</p>
+  <div class="metric-grid four">
+    <article class="metric"><span>Constraint</span><strong class="metric-text">{{ binding.name }}</strong><small>Stressed global policy control</small></article>
+    <article class="metric"><span>Activity / cap</span><strong>{{ binding.activity_accounts|number }} / {{ binding.cap_accounts|number }}</strong><small>{{ binding.slack_accounts|number }} account slack · {% if binding.binding %}binding{% else %}not binding{% endif %}</small></article>
+    <article class="metric accent"><span>Discrete shadow price</span><strong>{{ binding.shadow_price_inr_per_additional_account|money(ccy) }}</strong><small>per one-account cap relaxation</small></article>
+    <article class="metric"><span>Method</span><strong class="metric-text">Finite difference</strong><small>Re-optimized; not an LP dual</small></article>
+  </div><p class="footnote">{{ binding.method }} No causal or realized financial effect is claimed.</p>
+</section>
+
 <section class="panel"><div class="section-heading"><div><p class="eyebrow">Primary decision track</p><h2>UCI Taiwan next-month default</h2></div><span class="badge action">Behavioral primary</span></div>
   <p>One disclosed event and one-month horizon; 18,000 training, 6,000 validation and 6,000 untouched-test rows. Only utilization and delinquency count are active. Random within-source validation does not establish out-of-time or geographic portability.</p>
   <div class="metric-grid four">

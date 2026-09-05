@@ -58,6 +58,11 @@ def exposure(limit: float, balance: float, ccf: float) -> float:
     return drawn + ccf * max(limit - drawn, 0.0)
 
 
+def risk_adjusted_ccf(pd_value: float, assumptions: PolicyAssumptions) -> float:
+    """Apply an explicitly assumed PD-linked uplift to undrawn conversion."""
+    return min(assumptions.ccf + assumptions.risk_ccf_sensitivity * pd_value, 1.0)
+
+
 def expected_loss(pd_value: float, lgd: float, ead: float) -> float:
     if not 0 <= pd_value <= 1 or not 0 <= lgd <= 1 or ead < 0:
         raise ValueError("PD and LGD must be in [0, 1], and EAD cannot be negative")
@@ -121,17 +126,17 @@ def _candidate(
     limit = behavior["limit"]
     balance = behavior["balance"]
     proposed_limit = limit * (1 + increase_pct)
-    current_ead = exposure(limit, balance, assumptions.ccf)
-    proposed_ead = exposure(proposed_limit, balance, assumptions.ccf)
+    adjusted_ccf = risk_adjusted_ccf(pd_value, assumptions)
+    current_ead = exposure(limit, balance, adjusted_ccf)
+    proposed_ead = exposure(proposed_limit, balance, adjusted_ccf)
     current_ecl = expected_loss(pd_value, assumptions.lgd, current_ead)
     proposed_ecl = expected_loss(pd_value, assumptions.lgd, proposed_ead)
     delta_ead = proposed_ead - current_ead
     utilization = behavior["utilization"]
     # Elasticity is the simulated monthly spend response to incremental line; annual economics
     # therefore use 12 periods. This is an assumption, never an observed causal estimate.
-    incremental_spend = (
-        (proposed_limit - limit) * assumptions.response_elasticity * utilization * 12
-    )
+    incremental_spend = (proposed_limit - limit) * assumptions.response_elasticity * utilization
+    incremental_spend *= 12 * np.exp(-assumptions.response_decay_kappa * increase_pct)
     interchange = incremental_spend * assumptions.interchange_rate
     interest = incremental_spend * assumptions.revolving_rate * assumptions.apr
     incremental_ecl = proposed_ecl - current_ecl
@@ -143,7 +148,7 @@ def _candidate(
         "automatic_increases_enabled": automatic_increases_enabled,
         "within_maximum_increase": bool(increase_pct <= assumptions.max_increase + 1e-12),
         "within_account_exposure": bool(proposed_limit <= assumptions.max_account_exposure),
-        "within_expected_loss_ceiling": bool(
+        "within_expected_loss_rate_ceiling": bool(
             pd_value * assumptions.lgd <= assumptions.expected_loss_ceiling
         ),
         "meets_profitability_hurdle": bool(contribution >= assumptions.profitability_hurdle),
@@ -216,7 +221,7 @@ def recommend_account(
             mapping = {
                 "automatic_increases_enabled": "Automatic increases disabled by governance control",
                 "within_account_exposure": "Exposure limit reached",
-                "within_expected_loss_ceiling": "Expected loss exceeds policy ceiling",
+                "within_expected_loss_rate_ceiling": "Expected-loss rate exceeds policy ceiling",
                 "meets_profitability_hurdle": "Incremental return below profitability hurdle",
                 "payment_history_eligible": "Payment-history eligibility rule not met",
                 "not_overextended": "Customer-overextension safeguard",
@@ -229,7 +234,8 @@ def recommend_account(
             reasons.append(CONSENT_REASON)
     limit = behavior["limit"]
     balance = behavior["balance"]
-    current_ead = exposure(limit, balance, assumptions.ccf)
+    adjusted_ccf = risk_adjusted_ccf(pd_value, assumptions)
+    current_ead = exposure(limit, balance, adjusted_ccf)
     current_ecl = expected_loss(pd_value, assumptions.lgd, current_ead)
     return Decision(
         account_id=account_id,
@@ -263,14 +269,14 @@ def recommend_portfolio(
         raise ValueError("Frame, probabilities, and account IDs must have equal lengths")
     decisions = [
         recommend_account(
-            row,
+            pd.Series(row._asdict()),
             float(probability),
             account_id,
             assumptions,
             automatic_increases_enabled,
         )
-        for (_, row), probability, account_id in zip(
-            frame.iterrows(), probabilities, account_ids, strict=True
+        for row, probability, account_id in zip(
+            frame.itertuples(index=False), probabilities, account_ids, strict=True
         )
     ]
     return _optimize_candidate_allocation(decisions, assumptions)
@@ -281,7 +287,7 @@ def _optimize_candidate_allocation(
 ) -> list[Decision]:
     """Select one candidate per account under portfolio-wide linear constraints."""
     from scipy.optimize import Bounds, LinearConstraint, milp
-    from scipy.sparse import coo_matrix
+    from scipy.sparse import csr_matrix, vstack
 
     options: list[tuple[int, dict[str, Any]]] = []
     restricted_actions = {"Manual review", "Freeze automatic increases"}
@@ -293,20 +299,12 @@ def _optimize_candidate_allocation(
         )
         options.extend((account_index, candidate) for candidate in candidates)
 
-    row_indexes: list[int] = []
-    column_indexes: list[int] = []
-    values: list[float] = []
-    lower: list[float] = []
-    upper: list[float] = []
-    for account_index in range(len(decisions)):
-        row = len(lower)
-        for option_index, (owner, _) in enumerate(options):
-            if owner == account_index:
-                row_indexes.append(row)
-                column_indexes.append(option_index)
-                values.append(1.0)
-        lower.append(1.0)
-        upper.append(1.0)
+    owners = np.fromiter((owner for owner, _ in options), dtype=int)
+    option_indexes = np.arange(len(options))
+    one_hot = csr_matrix(
+        (np.ones(len(options)), (owners, option_indexes)),
+        shape=(len(decisions), len(options)),
+    )
 
     current_limit = sum(decision.current_limit for decision in decisions)
     current_loss = sum(decision.current_expected_loss for decision in decisions)
@@ -342,30 +340,30 @@ def _optimize_candidate_allocation(
             len(decisions) * assumptions.max_higher_risk_increase_share,
         ),
     )
-    for _name, coefficients, cap in global_constraints:
-        row = len(lower)
-        for option_index, coefficient in enumerate(coefficients):
-            if coefficient:
-                row_indexes.append(row)
-                column_indexes.append(option_index)
-                values.append(float(coefficient))
-        lower.append(-np.inf)
-        upper.append(float(cap))
 
-    matrix = coo_matrix(
-        (values, (row_indexes, column_indexes)), shape=(len(lower), len(options))
-    ).tocsr()
-    objective = np.asarray(
-        [
-            -candidate["incremental_contribution"] + option_index * 1e-8
-            for option_index, (_, candidate) in enumerate(options)
-        ]
+    global_matrix = csr_matrix(
+        np.asarray([coefficients for _, coefficients, _ in global_constraints], dtype=float)
     )
+    matrix = vstack((one_hot, global_matrix), format="csr")
+    lower = np.concatenate((np.ones(len(decisions)), np.full(len(global_constraints), -np.inf)))
+    upper = np.concatenate(
+        (
+            np.ones(len(decisions)),
+            np.asarray([cap for _, _, cap in global_constraints], dtype=float),
+        )
+    )
+    contributions = np.fromiter(
+        (candidate["incremental_contribution"] for _, candidate in options),
+        dtype=float,
+    )
+    objective_scale = max(float(np.max(np.abs(contributions))), 1.0)
+    tie_break = option_indexes / max(len(options) - 1, 1) * 1e-9
+    objective = -contributions / objective_scale + tie_break
     result = milp(
         objective,
         integrality=np.ones(len(options)),
         bounds=Bounds(0, 1),
-        constraints=LinearConstraint(matrix, np.asarray(lower), np.asarray(upper)),
+        constraints=LinearConstraint(matrix, lower, upper),
         options={"time_limit": 15},
     )
     if not result.success or result.x is None:
@@ -450,6 +448,8 @@ SENSITIVITY_ASSUMPTIONS = (
     "funding_cost",
     "capital_cost",
     "response_elasticity",
+    "response_decay_kappa",
+    "risk_ccf_sensitivity",
     "max_increase",
     "expected_loss_ceiling",
     "profitability_hurdle",

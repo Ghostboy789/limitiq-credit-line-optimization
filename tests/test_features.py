@@ -49,6 +49,10 @@ def test_behavioral_batch_contract_is_strict(healthy_taiwan_row: pd.Series) -> N
     frame.insert(0, "ACCOUNT_ID", ["TEST-001"])
     frame["current_limit_inr"] = frame["LIMIT_BAL"]
     frame["current_balance_inr"] = frame["BILL_AMT1"]
+    frame["income_inr"] = 1_200_000
+    frame["total_monthly_obligation_inr"] = 25_000
+    frame["credit_lines"] = 6
+    frame["credit_age_months"] = 120
     clean = validate_behavioral_input(frame, require_account_id=True)
     assert list(clean.columns) == BEHAVIORAL_BATCH_COLUMNS
     assert BATCH_COLUMNS == BEHAVIORAL_BATCH_COLUMNS

@@ -44,14 +44,19 @@ not represent that attestation as an independent legal opinion.
 ## Synthetic business scenario
 
 The v4 demo uses 1,200 deterministic Taiwan-contract synthetic histories and
-INR exposures. Its base scenario recommends 288 +30% increases, 115 no-change
-actions, 455 manual reviews and 342 automatic-increase freezes. Credit limits
-move from ₹478.947M to ₹513.032M and exposure proxy from ₹401.899M to
-₹427.463M; loss proxy moves from ₹48.712M to ₹50.340M. Simulated incremental
-contribution is ₹2.980M at 11.66% contribution / incremental exposure.
+INR exposures. Synthetic income and obligations provide a labelled FOIR proxy.
+Its base scenario recommends 147 +10% and 47 +20% increases, 204 no-change
+actions, 460 manual reviews and 342 automatic-increase freezes. Credit limits
+move from ₹478.947M to ₹488.379M and exposure proxy from ₹428.861M to
+₹436.414M; loss proxy moves from ₹53.247M to ₹53.746M. Simulated incremental
+contribution is ₹0.460M at 6.10% contribution / incremental exposure.
 
 No source observes a line-increase treatment. These values are synthetic,
 simulated, non-causal and not realized impact, IFRS 9 ECL or regulatory capital.
+
+The committed stress holds the higher-risk increase cap at 60 of 60 accounts;
+relaxing it by one account adds ₹2,815 of simulated contribution, a discrete
+finite-difference shadow price rather than an LP dual or observed outcome.
 
 ## Engineering and governance
 

@@ -22,7 +22,7 @@ review and early-warning-freeze actions.
 | Exact gain vs v3 | +0.023728 ROC; -0.008533 Brier; paired intervals exclude zero |
 | Research union | 1,869,548 rows; six independent cohorts; governance only |
 | Temporal study | 400,000 seasoned US loans; 2015 test ROC-AUC 0.649217; research only |
-| Synthetic portfolio | 1,200 histories; ₹2.980M simulated contribution |
+| Synthetic portfolio | 1,200 histories; 147 +10% / 47 +20% actions; ₹0.460M simulated contribution |
 
 The behavioral primary has one event and one horizon. The global model remains a
 separate transportability benchmark because its labels are heterogeneous. The
@@ -41,6 +41,9 @@ impact.
 - Replaced greedy portfolio pruning with one-candidate-per-account mixed-integer
   allocation under exposure, loss, capital and concentration caps.
 - Separated source observations, model estimates and simulated economics.
+- Replaced linear response with a disclosed exponential-decay assumption,
+  linked undrawn conversion to score, and added a scale-free optimizer tie-break.
+- Made deterministic synthetic FOIR inputs visible and actionable in the demo.
 - Implemented manual review, early-warning freeze, exposure/loss/profitability
   controls and an automatic-increase kill switch.
 - Bound models, data and demo artifacts with provenance and checksums.

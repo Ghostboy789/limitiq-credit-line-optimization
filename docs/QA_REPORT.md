@@ -1,5 +1,34 @@
 # QA report
 
+## Prompt 3 allocator and affordability release - 5 September 2026
+
+- The complete Windows Python 3.12 suite passes **157 tests** at **75.61%**
+  scoped coverage. Honest all-`limitiq` coverage is **67.08%** across 3,703
+  statements, and the deployed `limitiq/behavioral.py` module is **70.43%**.
+- The regenerated 1,200-profile deterministic simulation selects **147 +10%**,
+  **47 +20%**, **0 +30%**, **204 holds**, **460 manual reviews** and
+  **342 automatic-increase freezes**. New economics and affordability inputs
+  are explicitly labelled synthetic assumptions, not estimates or outcomes.
+- The committed optimizer stress binds the higher-risk concentration cap at
+  **60 / 60 accounts**. Relaxing the integer cap by one account raises
+  simulated contribution by **INR 2,815.08**; this is a finite-difference
+  shadow value, not a continuous dual or realized impact.
+- At least five profiles are routed to manual review with the
+  customer-overextension reason; `LIQ-000292` visibly shows synthetic
+  **68.0% FOIR** and manual review in the account UI.
+- The 5,000-row batch measured **2.459 seconds end to end**, versus the
+  pre-change **11.345 seconds**, and returned all 5,000 decisions.
+- Frozen model SHA-256 remains
+  `21234ab33f782a5a4d12e6e9050ccbcd812c2b1f324ae91d1a2f4bbd07648115`.
+  Untouched-test ROC-AUC 0.781138, PR-AUC 0.567889, Brier 0.133149,
+  log loss 0.426351 and threshold 0.173874 remain unchanged.
+- Ruff lint/format, Bandit, pip-audit, analytics, SBOM, primary smoke and all
+  **19** platform-stable release hashes pass. The local host has no
+  `sha256sum` executable; the repository's newline-stable validator was used,
+  and Linux CI remains authoritative for the literal command and Docker gates.
+- Both pages of `reports/executive_report.pdf` were rendered and visually
+  checked without clipping or overlap. Playwright rendered overview, portfolio,
+  affordability-blocked account, simulator and governance at 1440, 768 and
 ## Split, policy and analysis controls — 4 September 2026
 
 - The complete local suite passes **154 tests**.

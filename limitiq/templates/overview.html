@@ -18,7 +18,7 @@
     </div>
   </section>
 
-  <div class="landing-boundary" role="note"><strong>Evidence boundary.</strong> Account decisions use the UCI Taiwan next-month default model on deterministic synthetic profiles matching its field contract. Limit response, exposure, expected loss and financial outcomes are simulations—not causal or realized results.</div>
+  <div class="landing-boundary" role="note"><strong>Evidence boundary.</strong> Account decisions use the UCI Taiwan next-month default model on deterministic synthetic profiles matching its field contract. Income, obligations, FOIR, limit response, exposure, expected loss and financial outcomes are synthetic simulations—not verified, causal or realized results.</div>
   {% if not automatic_increases_enabled %}<div class="notice warning" role="alert"><strong>Governance control active.</strong> Automatic increases are disabled; otherwise eligible accounts are routed to manual review.</div>{% endif %}
   <nav class="landing-jump-nav" aria-label="Overview sections" data-jump-nav>
     <span>Explore the decision</span>
@@ -46,7 +46,7 @@
         </div>
         <ol class="decision-flow" aria-label="Decision sequence">
           <li><span class="flow-mark" aria-hidden="true"></span><strong>Opportunity</strong><small>Current, +10%, +20%, +30%</small></li>
-          <li><span class="flow-filter" aria-hidden="true"></span><strong>Controls</strong><small>Loss, exposure, history</small></li>
+          <li><span class="flow-filter" aria-hidden="true"></span><strong>Controls</strong><small>Loss rate, exposure, FOIR</small></li>
           <li><span class="flow-check" aria-hidden="true"></span><strong>Eligible set</strong><small>Governed candidates only</small></li>
           <li><span class="flow-bars" aria-hidden="true"><i></i><i></i><i></i></span><strong>Optimize</strong><small>Risk-adjusted value</small></li>
           <li><span class="flow-outcome" aria-hidden="true"></span><strong>Outcome</strong><small>Action with reason codes</small></li>
@@ -96,7 +96,7 @@
     <details class="assumption-disclosure">
       <summary><span>Policy assumptions</span><small>Visible, adjustable and stressable</small></summary>
       <div class="assumption-content">
-        <dl class="assumption-grid">{% for key, value in assumptions.items() %}<div><dt>{{ key|replace('_',' ')|title }}</dt><dd>{% if key in ['servicing_cost','max_account_exposure','profitability_hurdle'] %}{{ value|money(ccy) }}{% elif value <= 1 %}{{ value|percent }}{% else %}{{ value|number }}{% endif %}</dd></div>{% endfor %}</dl>
+        <dl class="assumption-grid">{% for key, value in assumptions.items() %}<div><dt>{% if key == 'expected_loss_ceiling' %}Expected Loss Rate Ceiling{% else %}{{ key|replace('_',' ')|title }}{% endif %}</dt><dd>{% if key in ['servicing_cost','max_account_exposure','portfolio_capital_budget','profitability_hurdle'] %}{{ value|money(ccy) }}{% elif value <= 1 %}{{ value|percent }}{% else %}{{ value|number }}{% endif %}</dd></div>{% endfor %}</dl>
         <a class="text-link" href="/simulator">Stress the complete policy <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       </div>
     </details>

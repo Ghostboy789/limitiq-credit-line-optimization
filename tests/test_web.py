@@ -273,10 +273,14 @@ def test_account_coverage_banner_lists_actual_unavailable_fields() -> None:
     coverage = response.text.split('<p class="eyebrow">Feature coverage</p>', 1)[1].split(
         "</article>", 1
     )[0]
-    for field in ("Debt to income", "Credit lines", "Annual income", "Credit age (months)"):
-        assert f"<li>{field}</li>" in coverage
-    assert "<li>Utilization</li>" not in coverage
-    assert "<li>Reported delinquency count</li>" not in coverage
+    assert "All derived decision-profile fields are available" in coverage
+    assert "Synthetic FOIR proxy" in response.text
+    assert "Synthetic monthly obligations" in response.text
+
+    affordability_blocked = client.get("/accounts/LIQ-000292")
+    assert affordability_blocked.status_code == 200
+    assert "Synthetic affordability check: MANUAL REVIEW" in affordability_blocked.text
+    assert "Customer-overextension safeguard" in affordability_blocked.text
 
 
 def test_policy_simulator_recalculates_and_validates_extremes() -> None:
@@ -486,6 +490,9 @@ def test_governance_feature_and_monitoring_sections_render() -> None:
     assert "Decile lift" in governance.text
     assert "Conditional approval for educational portfolio simulation only" in governance.text
     assert "Not approved" in governance.text
+    assert "Committed optimizer stress" in governance.text
+    assert "Discrete shadow price" in governance.text
+    assert "60 / 60" in governance.text
     monitoring = client.get("/monitoring")
     assert monitoring.status_code == 200
     assert "Monitoring readiness" in monitoring.text
@@ -512,6 +519,7 @@ def test_sample_and_filtered_csv_downloads_are_valid() -> None:
         "/downloads/reports/behavioral-executive-html",
         "/downloads/reports/behavioral-primary-evidence",
         "/downloads/reports/behavioral-policy-simulation",
+        "/downloads/reports/behavioral-optimizer-stress",
         "/downloads/reports/data-quality",
         "/downloads/reports/global-model",
         "/downloads/reports/global-data-quality",

@@ -125,23 +125,26 @@ The educational expected-loss proxy is:
 `Expected-loss proxy = primary next-month default score × LGD × EAD`
 
 The score is not a production or regulatory PD and the result is not IFRS 9 ECL
-or regulatory capital. EAD is simulated current drawn balance, capped at line, plus
-CCF times positive undrawn line. Probability is held constant across candidate
-limits because no source observes a randomized limit increase.
+or regulatory capital. EAD is simulated current drawn balance, capped at line,
+plus effective CCF times positive undrawn line. Effective CCF is the explicit
+assumption `min(base CCF + risk-CCF sensitivity × score, 100%)`. Probability is
+held constant across candidates because no source observes a randomized increase.
 
 Incremental contribution is:
 
 `interchange + interest − incremental expected loss − funding − capital − servicing`
 
 Monthly incremental spend is simulated from incremental line, response
-elasticity and current utilization, then annualized. Interest uses simulated
-revolving-rate and APR assumptions. Funding and capital costs apply to
-incremental EAD. All assumptions are visible, editable and deterministic.
+elasticity and current utilization, multiplied by
+`exp(-response_decay_kappa × increase_pct)`, then annualized. Interest uses
+simulated revolving-rate and APR assumptions. Funding and capital costs apply
+to incremental EAD. All parameters are visible deterministic assumptions.
 
-The v4 1,200-profile base scenario produces ₹478.947M current and ₹513.032M
-proposed credit limits, ₹401.899M current and ₹427.463M proposed exposure proxy,
-₹48.712M current and ₹50.340M proposed expected-loss proxy, ₹2.980M simulated
-incremental contribution and 11.66% contribution / incremental exposure. These
+The v4 1,200-profile base scenario produces 147 +10% and 47 +20% actions.
+It has ₹478.947M current and ₹488.379M proposed credit limits, ₹428.861M current
+and ₹436.414M proposed exposure proxy, ₹53.247M current and ₹53.746M proposed
+expected-loss proxy, ₹0.460M simulated incremental contribution and 6.10%
+contribution / incremental exposure. These
 are not causal forecasts or production impact.
 
 ## Policy order
@@ -151,11 +154,12 @@ are not causal forecasts or production impact.
 2. Route severe warnings to freeze and ambiguous/insufficient cases to manual
    review.
 3. Evaluate only candidates permitted by maximum increase.
-4. Reject candidates breaching account exposure, expected-loss ceiling,
+4. Reject candidates breaching account exposure, expected-loss-rate ceiling,
    payment-history or overextension controls.
 5. Reject candidates below the profitability hurdle.
-6. Select maximum eligible simulated contribution; ties prefer the smaller
-   increase.
+6. Select maximum eligible simulated contribution. The MILP objective normalizes
+   contribution before applying a bounded dimensionless index tie-break, so
+   deterministic ordering does not depend on INR scale.
 7. Solve one candidate per account jointly with a mixed-integer program under
    portfolio growth, loss-growth, capital-budget and higher-risk concentration
    caps. If the solver cannot return a feasible allocation, fail closed rather

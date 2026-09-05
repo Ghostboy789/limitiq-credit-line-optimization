@@ -118,6 +118,10 @@ def _executive_pdf(summary: dict[str, Any], model: dict[str, Any], directory: Pa
             [
                 ["Accounts", f"{simulation['accounts']:,}"],
                 [
+                    "Increase 10% / 20% / 30%",
+                    f"{simulation['action_counts'].get('Increase 10%', 0):,} / {simulation['action_counts'].get('Increase 20%', 0):,} / {simulation['action_counts'].get('Increase 30%', 0):,}",
+                ],
+                [
                     "Current / proposed limits",
                     f"{_money(simulation['current_limit'])} / {_money(simulation['proposed_limit'])}",
                 ],
@@ -134,7 +138,10 @@ def _executive_pdf(summary: dict[str, Any], model: dict[str, Any], directory: Pa
                     _money(simulation["incremental_contribution"]),
                 ],
                 ["Simulated risk-adjusted return", _pct(simulation["risk_adjusted_return"])],
-                ["Early-warning / manual review", f"{simulation['early_warning']:,}"],
+                [
+                    "Early-warning / manual review",
+                    f"{simulation['early_warning']:,} / {simulation['action_counts'].get('Manual review', 0):,}",
+                ],
             ],
             colWidths=[72 * mm, 98 * mm],
             style=[
@@ -217,12 +224,16 @@ def build_behavioral_reports(report_dir: Path, model_dir: Path) -> None:
                             "Manual review / freeze",
                             f"{summary['action_counts'].get('Manual review', 0):,} / {summary['action_counts'].get('Freeze automatic increases', 0):,}",
                         ],
+                        [
+                            "Increase 10% / 20% / 30%",
+                            f"{summary['action_counts'].get('Increase 10%', 0):,} / {summary['action_counts'].get('Increase 20%', 0):,} / {summary['action_counts'].get('Increase 30%', 0):,}",
+                        ],
                     ],
                 ),
             ),
             (
                 "Governance boundary",
-                "<p>The source is Taiwan 2005, the split is random within source, and no public record observes response to a line increase. Scores are model estimates; exposure, loss, contribution, monitoring and experiment outputs are deterministic simulations. Real use requires representative local data, verified affordability, independent validation, approved experiments and monitored rollback.</p>",
+                "<p>The source is Taiwan 2005, the split is random within source, and no public record observes affordability or response to a line increase. Scores are model estimates; demo affordability, exposure, loss, contribution, monitoring and experiment outputs are deterministic simulations. Real use requires representative local data, verified affordability, independent validation, approved experiments and monitored rollback.</p>",
             ),
         ],
     )

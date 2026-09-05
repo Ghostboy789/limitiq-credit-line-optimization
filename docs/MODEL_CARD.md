@@ -8,6 +8,8 @@
 - **Target / horizon:** default payment in the following month / one month
 - **Champion:** three-fold sigmoid-calibrated histogram gradient boosting
 - **Raw contract:** current limit plus six repayment-status, bill and payment periods
+- **Decision-only demo fields:** deterministic synthetic annual income, monthly
+  obligations, FOIR, credit-line count and credit age; none enters the PD model
 - **Engineered contract:** 17 behavioral features; customer ID and protected attributes excluded
 - **Model SHA-256:** `21234ab33f782a5a4d12e6e9050ccbcd812c2b1f324ae91d1a2f4bbd07648115`
 - **Dataset version:** `uci-350-behavioral-6ba3a746be13`
@@ -66,7 +68,8 @@ manual review.
 ## Current limitations and controls
 
 - random within-source interpolation on Taiwan 2005 behavior, not out-of-time validation;
-- no Indian borrowers, verified affordability, external obligations or current-vintage evidence;
+- no Indian borrowers, verified affordability, observed external obligations or
+  current-vintage evidence; displayed affordability inputs are synthetic only;
 - no observed response to a line increase and no causal profit or customer-outcome evidence;
 - management expected-loss and economics are simulated, not Ind AS 109/IFRS 9 allowances;
 - fairness diagnostics cannot establish jurisdiction-specific compliance;

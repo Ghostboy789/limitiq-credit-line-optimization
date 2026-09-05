@@ -123,19 +123,23 @@ not equivalent.
 
 The v4 demo contains 1,200 deterministic **synthetic six-month histories**. No
 public source row or personal identifier is exposed.
+Synthetic annual income and monthly obligations produce a clearly labelled FOIR
+proxy; they are demonstration assumptions, not verified ability-to-pay data.
 
 | Scenario result | Simulated value |
 |---|---:|
-| Current / proposed limits | ₹478.947M / ₹513.032M |
-| Current / proposed exposure proxy | ₹401.899M / ₹427.463M |
-| Current / proposed loss proxy | ₹48.712M / ₹50.340M |
-| Eligible increases | 288 profiles |
-| Manual review / freeze | 455 / 342 profiles |
-| Incremental contribution | **₹2.980M** |
-| Contribution / incremental exposure | **11.66%** |
+| Current / proposed limits | ₹478.947M / ₹488.379M |
+| Current / proposed exposure proxy | ₹428.861M / ₹436.414M |
+| Current / proposed loss proxy | ₹53.247M / ₹53.746M |
+| +10% / +20% / +30% actions | 147 / 47 / 0 profiles |
+| Eligible increases | 194 profiles |
+| Manual review / freeze | 460 / 342 profiles |
+| Incremental contribution | **₹0.460M** |
+| Contribution / incremental exposure | **6.10%** |
 
-These are deterministic scenario outputs under disclosed LGD, CCF, response,
-revenue and cost assumptions. They are not observed uplift, causal estimates,
+These are deterministic scenario outputs under disclosed risk-linked CCF,
+diminishing-response, affordability, revenue and cost assumptions. They are not
+observed uplift, causal estimates,
 realized profit, IFRS 9 ECL or regulatory capital.
 
 ## Product workflows
@@ -156,16 +160,18 @@ For each profile, the optimizer evaluates the current line and +10%, +20%, +30%
 candidates, then maximizes simulated risk-adjusted contribution subject to:
 
 - maximum increase, account exposure and portfolio growth caps
-- expected-loss and profitability hurdles
-- delinquency and payment-history eligibility
+- expected-loss-rate and profitability hurdles
+- delinquency, payment-history and synthetic-FOIR eligibility
 - overextension safeguards
 - manual-review and early-warning routing
 - three-or-more development-support breaches routed to manual review
 - explicit customer acceptance before any positive offer is activated
 - application-level rollback via `AUTO_INCREASES_ENABLED=false`
 
-Expected loss proxy is `score × LGD × EAD`. Incremental contribution is simulated
-interchange + interest − incremental loss − funding − capital − servicing cost.
+Expected loss proxy is `score × LGD × EAD`; the account ceiling is explicitly a
+`score × LGD` rate ceiling. Undrawn conversion rises with score under a disclosed
+assumption, while response decays exponentially as the increase grows. Incremental
+contribution is simulated interchange + interest − incremental loss − funding − capital − servicing cost.
 No automatic punitive line decrease is recommended.
 
 ## Architecture

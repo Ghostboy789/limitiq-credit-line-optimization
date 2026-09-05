@@ -41,6 +41,7 @@ from limitiq.config import (
     PolicyAssumptions,
 )
 from limitiq.features import (
+    AFFORDABILITY_COLUMNS,
     BATCH_COLUMNS,
     BILL_COLUMNS,
     EXPOSURE_COLUMNS,
@@ -77,6 +78,7 @@ PRIMARY_REPORT_FILES = {
     "behavioral-policy-simulation": "behavioral_policy_simulation.json",
     "behavioral-executive-html": "executive_report.html",
     "behavioral-executive-pdf": "executive_report.pdf",
+    "behavioral-optimizer-stress": "behavioral_optimizer_stress.json",
 }
 V4_SUPPORTING_REPORT_FILES = {
     "temporal-validation-evidence": "temporal_validation.json",
@@ -284,6 +286,7 @@ def _load_artifacts() -> tuple[
     report_path = REPORT_DIR / "behavioral_model.json"
     portfolio_path = PROCESSED_DIR / "behavioral_demo_portfolio.csv"
     simulation_path = REPORT_DIR / "behavioral_policy_simulation.json"
+    optimizer_stress_path = REPORT_DIR / "behavioral_optimizer_stress.json"
     research_path = MODEL_DIR / "global_metadata.json"
     schema_path = MODEL_DIR / "behavioral_feature_schema.json"
     research_feature_path = REPORT_DIR / "global_feature_evidence.json"
@@ -295,6 +298,7 @@ def _load_artifacts() -> tuple[
         report_path,
         portfolio_path,
         simulation_path,
+        optimizer_stress_path,
         research_path,
         research_feature_path,
         robustness_path,
@@ -311,6 +315,7 @@ def _load_artifacts() -> tuple[
             report_path,
             portfolio_path,
             simulation_path,
+            optimizer_stress_path,
             research_path,
             research_feature_path,
             robustness_path,
@@ -324,6 +329,12 @@ def _load_artifacts() -> tuple[
         raise RuntimeError("Behavioral model report checksum does not match trusted metadata")
     model = joblib.load(model_path)  # noqa: S301 — repository-built artifact, checksum verified above.
     simulation = json.loads(simulation_path.read_text(encoding="utf-8"))
+    optimizer_stress = json.loads(optimizer_stress_path.read_text(encoding="utf-8"))
+    if simulation.get("optimizer_stress_sha256") != _text_sha256(optimizer_stress_path):
+        raise RuntimeError("Optimizer stress evidence does not match trusted simulation metadata")
+    if optimizer_stress.get("model_checksum") != metadata["model_checksum"]:
+        raise RuntimeError("Optimizer stress evidence does not match trusted primary metadata")
+    simulation["optimizer_stress"] = optimizer_stress
     expected_provenance = {
         "model_version": metadata["model_version"],
         "dataset_version": metadata["dataset_version"],
@@ -538,6 +549,11 @@ def _optimizer_frame(
         frame[BILL_COLUMNS[0]].clip(lower=0) / frame["LIMIT_BAL"].clip(lower=1)
     ).clip(upper=5)
     result["region"] = "taiwan"
+    result[AFFORDABILITY_COLUMNS] = frame[AFFORDABILITY_COLUMNS]
+    monthly_income = frame["income_inr"] / 12
+    result["debt_to_income"] = (frame["total_monthly_obligation_inr"] / monthly_income).clip(
+        lower=0
+    )
     result[EXPOSURE_COLUMNS] = frame[EXPOSURE_COLUMNS]
     if support:
         result = result.join(
@@ -1136,9 +1152,11 @@ def create_app() -> FastAPI:
         row = match.iloc[0].to_dict()
         row["reason_list"] = str(row["reason_codes"]).split("|")
         row["checks"] = json.loads(row["policy_checks"])
+        row["affordability_passed"] = bool(row["checks"].get("not_overextended", False))
         profile_rows = [
             ("Utilization", row.get("utilization"), "percent"),
-            ("Debt to income", row.get("debt_to_income"), "percent"),
+            ("Synthetic FOIR proxy", row.get("debt_to_income"), "percent"),
+            ("Synthetic monthly obligations", row.get("total_monthly_obligation_inr"), "money"),
             ("Reported delinquency count", row.get("delinquency_count"), "number"),
             ("Credit lines", row.get("credit_lines"), "number"),
             ("Annual income", row.get("income_inr"), "money"),
@@ -1391,6 +1409,7 @@ def create_app() -> FastAPI:
                 title="Model governance",
                 metadata=research_metadata,
                 primary=primary_report,
+                optimizer_stress=simulation["optimizer_stress"],
                 primary_charts=_primary_governance_charts(primary_report),
                 primary_importance=[
                     (item["feature"].replace("_", " ").title(), item["roc_auc_drop"])
