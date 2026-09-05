@@ -3,7 +3,7 @@
 ## Decision
 
 **Conditional approval for educational research and synthetic policy
-demonstration only.** The LimitIQ v4.2.0 candidate is not approved for lending decisions,
+demonstration only.** The LimitIQ v4.2.0 release is not approved for lending decisions,
 regulatory probability of default (PD), pricing, provisioning, capital,
 customer treatment, Indian-customer decisions or automated credit-line changes.
 
@@ -27,10 +27,10 @@ Review date: 5 September 2026.
 | Primary model | `limitiq-behavioral-4.0.0-21234ab33f78` |
 | Primary dataset | UCI 350 next-month default; 30,000 rows |
 | Research benchmark | `limitiq-global-2.0.0-37a14c45a811`; 1,869,548 rows |
-| Implementation | v4.2.0 release candidate; last verified Render boundary is commit `5c6a5ce` on the unchanged primary model and dataset |
+| Implementation | v4.2.0 verified implementation boundary `d369f12`; unchanged primary model and dataset |
 | Development evidence | `reports/behavioral_model.json`, `reports/temporal_validation.json`, `reports/global_model.json`, calibration, paired comparison and checksum metadata |
 | Controls | policy constraints, reason codes, manual review, early-warning freeze, weak-calibration segment cap, `AUTO_INCREASES_ENABLED` rollback |
-| Verification | v4.2 local acceptance pending final release gate; prior exact-commit CI, CodeQL, Render and production workflow evidence passed for `5c6a5ce` |
+| Verification | Exact-commit CI, CodeQL, Render, production HTTP and browser evidence passed for `d369f12` |
 | Documentation | methodology, data card, model card, assumptions, provenance notice and monitoring baseline |
 
 The review follows the risk-based themes in the US interagency [Revised
@@ -182,12 +182,11 @@ checksums, source provenance, fixed seeds, bootstrap evidence and artifact
 consistency checks are recorded. Strict upload validation, transient processing,
 security headers, safe production errors, liveness/readiness and bounded,
 aggregate-only operations telemetry are implemented. The last verified main
-boundary, commit `5c6a5ce`, passed CI
-[run 33955132215](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33955132215),
+boundary, commit `d369f128558a01c3550289bdfa02211606965731`, passed CI
+[run 33963179773](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33963179773),
 CodeQL
-[run 33955132193](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33955132193),
-container and live deployment checks. V4.2 verification remains pending until
-its exact candidate commit passes the same gates. These controls support the
+[run 33963179790](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33963179790),
+container, exact Render deployment, production HTTP and browser checks. These controls support the
 educational scope and do not certify a bank production environment.
 
 ## Validation findings

@@ -2,15 +2,15 @@
 
 ## Status boundary
 
-The **v4.2.0 release candidate is not yet a verified deployment**. The last
-verified public boundary is application **v4.1.0** at commit `5c6a5ce`, with behavioral primary model
+The **v4.2.0 implementation boundary is verified in production** at commit
+`d369f128558a01c3550289bdfa02211606965731`, with behavioral primary model
 `limitiq-behavioral-4.0.0-21234ab33f78` and dataset
 `uci-350-behavioral-6ba3a746be13`. Live `/health` reports the application,
 the exact deployed Git revision and the primary model and dataset identifiers.
 The v2 global model and v4 temporal loan study remain research evidence only;
 neither drives card recommendations.
 
-Verify the candidate release files with
+Verify the release files with
 `sha256sum -c release/checksums-v4.2.0.sha256`. Every manifest-bound text file
 is committed with LF line endings, so the literal command verifies its Git blob
 bytes on supported checkout platforms.
@@ -27,17 +27,26 @@ Health endpoint: https://limitiq-credit-line-optimization.onrender.com/health
 The `limitiq-production` Blueprint deploys the Docker service from `main` on
 Render's free plan with a `$0` workspace spend limit.
 
-## Last verified main boundary — 5 September 2026
+## V4.2 implementation verification — 5 September 2026
 
-1. Commit `5c6a5ceb0f444224bdd01feb48600b4474b7a685` passed GitHub Actions
-   [run 33955132215](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33955132215)
+1. Commit `d369f128558a01c3550289bdfa02211606965731` passed GitHub Actions
+   [run 33963179773](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33963179773)
    and matching CodeQL
-   [run 33955132193](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33955132193).
-2. Render `/health` bound application `4.1.0`, the unchanged frozen behavioral
-   model and dataset, and that exact commit.
-3. Production HTTP and browser checks were completed for the allocator and
-   affordability change. V4.2 must repeat all gates at its own exact commit;
-   this prior evidence is not being reused as v4.2 verification.
+   [run 33963179790](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33963179790).
+2. CI passed 161 tests, scoped and deployed-model coverage gates, Ruff, primary
+   smoke, source/analytics/SBOM and literal Git-blob manifest checks, Bandit,
+   pip-audit, secret scanning, Docker build, zero HIGH/CRITICAL Trivy findings,
+   non-root container health, per-route timing and both concurrency benchmarks.
+3. Render `/health` bound application `4.2.0`, the unchanged frozen behavioral
+   model and dataset, and that exact implementation commit.
+4. Twenty production routes and evidence endpoints returned 200; the executive
+   PDF signature, five-row valid batch, specific invalid batch, security headers
+   and per-route timings passed. Browser QA covered 27 route/viewport pairs plus
+   keyboard, mobile, reduced-motion, sticky-table, simulator, consent, support
+   routing and India-readiness flows with no unexpected failures.
+
+The final documentation-only release boundary repeats CI, CodeQL and exact
+Render verification before the immutable v4.2.0 tag is created.
 
 ## V4.1 release verification — 25 August 2026
 

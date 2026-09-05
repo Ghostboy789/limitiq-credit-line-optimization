@@ -1,6 +1,6 @@
 # QA report
 
-## V4.2.0 release candidate — 5 September 2026
+## V4.2.0 verified implementation — 5 September 2026
 
 - Frozen model scores and SHA-256 remain unchanged. The fitted calibrated HGB
   folds expose effective iteration counts **62 / 55 / 83** under the documented
@@ -39,9 +39,29 @@
   metadata and render all four pages successfully through Poppler. The Windows
   sandbox image helper failed before model-side visual inspection, so this
   section does not claim a fresh visual PDF-layout pass.
-- This section records local candidate evidence only. CI, CodeQL, exact-commit
-  Render verification and production browser QA will be recorded only after
-  they pass for the v4.2 release boundary.
+- Exact implementation commit `d369f128558a01c3550289bdfa02211606965731`
+  passed GitHub Actions
+  [run 33963179773](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33963179773)
+  and matching CodeQL
+  [run 33963179790](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33963179790).
+  CI included the literal committed-blob manifest check, Docker/Trivy, non-root
+  container health, the 500 ms route gate and both concurrency benchmarks.
+- Render `/health` returned application `4.2.0`, the unchanged primary model and
+  dataset identifiers, and exact deployed commit `d369f128558a01c3550289bdfa02211606965731`.
+- Production HTTPS checks passed 20 routes/evidence endpoints, required security
+  and request/timing headers, the `%PDF-` signature, five-row valid batch and
+  specific safe 422 invalid batch. Worst measured application timing was
+  governance at **175.97 ms**, below the 500 ms gate.
+- Production Playwright QA passed all **27 route/viewport combinations** with
+  zero page-level overflow and zero console warnings/errors. Keyboard skip and
+  search focus, mobile navigation, reduced motion, sticky table cells, positive
+  consent routing, extreme simulator economics, calibration/support exhibits,
+  out-of-support manual review, India readiness, valid download and safe invalid
+  upload all passed. The invalid 422 navigation produced the expected failed-
+  resource console entry and no unexpected application error.
+- The final documentation-only release boundary is re-gated through CI, CodeQL
+  and exact Render identity before tagging; implementation claims remain bound
+  to the verified commit and runs above.
 
 ## Prompt 3 allocator and affordability release - 5 September 2026
 

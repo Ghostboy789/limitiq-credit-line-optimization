@@ -52,11 +52,12 @@ unseen markets.
 
 ## Deployment boundary
 
-The v4.2.0 candidate is local until its exact commit passes CI, CodeQL, Render
-and production QA. The last verified public boundary is application v4.1.0 at
-commit `5c6a5ce`; live `/health` exposes the application, behavioral primary
-model, dataset and exact deployed commit. Release tags are immutable source
-boundaries. Research-source publication
+The v4.2.0 implementation boundary `d369f12` passed CI, CodeQL, exact Render
+identity and production HTTP/browser QA. Live `/health` exposes the application,
+behavioral primary model, dataset and exact deployed commit. The final
+documentation-only boundary repeats those automated gates before the immutable
+release tag is created. Release tags are immutable source boundaries.
+Research-source publication
 proceeds under the repository owner's 14 August 2026 resolution attestation in
 `NOTICE.md`; this record is not an independent legal opinion.
 

@@ -50,16 +50,18 @@ The overview captures show the current interface and synthetic demonstration
 data. The workflow capture and linked secondary-route images record the verified
 v4 release; the linked public service remains authoritative.
 
-The **v4.2.0 release candidate is not yet tagged**. The last verified live chain is
-v4.1.0 at `5c6a5ceb0f444224bdd01feb48600b4474b7a685`; Render `/health`, GitHub CI
-and CodeQL agreed on that exact commit, model
+The **v4.2.0 implementation boundary is verified** at
+`d369f128558a01c3550289bdfa02211606965731`. Render `/health`, GitHub CI and
+CodeQL agreed on that exact commit, application `4.2.0`, model
 `limitiq-behavioral-4.0.0-21234ab33f78` and dataset
-`uci-350-behavioral-6ba3a746be13` before this release work began.
+`uci-350-behavioral-6ba3a746be13`. The immutable v4.2.0 tag identifies the final
+release-evidence boundary after that documentation-only commit repeats the same
+gates.
 
-That verified Prompt 3 suite passed **157 tests**. Its default scoped
-3,157-statement report is **75.61%**; the separately printed all-`limitiq`
-3,703-statement denominator, including both offline research CLIs, is
-**67.08%**. The deployed-model producer `behavioral.py` is **70.43%** covered.
+The verified v4.2 suite passes **161 tests**. Its default scoped
+3,209-statement report is **76.07%**; the separately printed all-`limitiq`
+3,755-statement denominator, including both offline research CLIs, is
+**67.59%**. The deployed-model producer `behavioral.py` is **70.94%** covered.
 
 ## The senior-level design decision
 
