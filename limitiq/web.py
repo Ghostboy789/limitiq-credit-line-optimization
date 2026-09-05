@@ -678,6 +678,7 @@ def _directional_sensitivity(
 def _markdownish(text: str) -> str:
     """Render repository-authored Markdown with raw HTML disabled."""
     rendered = MARKDOWN.render(text)
+    rendered = re.sub(r' style="text-align:(left|center|right)"', r' class="align-\1"', rendered)
     return rendered.replace("<table>", '<div class="table-wrap"><table>').replace(
         "</table>", "</table></div>"
     )

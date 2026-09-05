@@ -578,6 +578,8 @@ def test_document_pages_render_safe_markdown() -> None:
     assert "LimitIQ v4 behavioral primary" in response.text
     assert "<code>limitiq-behavioral-4.0.0-21234ab33f78</code>" in response.text
     assert "<table>" in response.text
+    assert 'style="text-align:' not in response.text
+    assert 'class="align-right"' in response.text
     assert "**source-coherent primary candidate**" not in response.text
     assert "| Candidate |" not in response.text
 
