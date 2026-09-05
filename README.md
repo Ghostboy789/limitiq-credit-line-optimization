@@ -60,11 +60,10 @@ The v4.1 implementation commit `0ac35b7` passed an exact-commit CI gate with
 source/demo/SBOM checks, Docker, Trivy, container health and concurrency smoke all passed.
 Matching CodeQL and production browser/workflow verification passed.
 
-The current local hardening suite passes **154 tests**. Its default scoped
-3,112-statement report is **76.00%**; the separately printed all-`limitiq`
-3,658-statement denominator, including both offline research CLIs, is
-**67.30%**. The deployed-model producer `behavioral.py` is **74.63%** covered,
-up from **36.32%**.
+The current Prompt 3 suite passes **157 tests**. Its default scoped
+3,157-statement report is **75.61%**; the separately printed all-`limitiq`
+3,703-statement denominator, including both offline research CLIs, is
+**67.08%**. The deployed-model producer `behavioral.py` is **70.43%** covered.
 
 ## The senior-level design decision
 
