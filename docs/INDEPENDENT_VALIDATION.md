@@ -27,10 +27,10 @@ Review date: 5 September 2026.
 | Primary model | `limitiq-behavioral-4.0.0-21234ab33f78` |
 | Primary dataset | UCI 350 next-month default; 30,000 rows |
 | Research benchmark | `limitiq-global-2.0.0-37a14c45a811`; 1,869,548 rows |
-| Implementation | v4.2.0 verified implementation boundary `d369f12`; unchanged primary model and dataset |
+| Implementation | v4.2.0 verified implementation boundary `6a99d80`; unchanged primary model and dataset |
 | Development evidence | `reports/behavioral_model.json`, `reports/temporal_validation.json`, `reports/global_model.json`, calibration, paired comparison and checksum metadata |
 | Controls | policy constraints, reason codes, manual review, early-warning freeze, weak-calibration segment cap, `AUTO_INCREASES_ENABLED` rollback |
-| Verification | Exact-commit CI, CodeQL, Render, production HTTP and browser evidence passed for `d369f12` |
+| Verification | Exact-commit CI, CodeQL, Render, production HTTP and browser evidence passed through `6a99d80` |
 | Documentation | methodology, data card, model card, assumptions, provenance notice and monitoring baseline |
 
 The review follows the risk-based themes in the US interagency [Revised
@@ -182,10 +182,10 @@ checksums, source provenance, fixed seeds, bootstrap evidence and artifact
 consistency checks are recorded. Strict upload validation, transient processing,
 security headers, safe production errors, liveness/readiness and bounded,
 aggregate-only operations telemetry are implemented. The last verified main
-boundary, commit `d369f128558a01c3550289bdfa02211606965731`, passed CI
-[run 33963179773](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33963179773),
+boundary, commit `6a99d80c2e1eb576b60834c825efc919304f87c0`, passed CI
+[run 33968842279](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33968842279),
 CodeQL
-[run 33963179790](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33963179790),
+[run 33968842278](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33968842278),
 container, exact Render deployment, production HTTP and browser checks. These controls support the
 educational scope and do not certify a bank production environment.
 

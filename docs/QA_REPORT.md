@@ -17,8 +17,8 @@
   account is **INR 2,342.34**, and derived break-even response elasticity is
   **0.2421**. These are synthetic decision assumptions, not realized economics.
 - The complete Windows Python 3.12 suite passes **161 tests** at **76.07%**
-  scoped coverage across 3,209 statements. Honest all-`limitiq` coverage is
-  **67.59%** across 3,755 statements, and deployed-model producer
+  scoped coverage across 3,210 statements. Honest all-`limitiq` coverage is
+  **67.60%** across 3,756 statements, and deployed-model producer
   `limitiq/behavioral.py` is **70.94%** covered.
 - Ruff lint/format, Bandit, pip-audit, tracked-file secret scanning, primary
   smoke training, analytics reconciliation, SBOM verification and the literal
@@ -59,6 +59,16 @@
   out-of-support manual review, India readiness, valid download and safe invalid
   upload all passed. The invalid 422 navigation produced the expected failed-
   resource console entry and no unexpected application error.
+- A final live-document replay exposed Markdown-generated inline alignment
+  styles blocked by CSP. Corrective commit
+  `6a99d80c2e1eb576b60834c825efc919304f87c0` maps alignment to CSS classes,
+  passes all 161 local tests, CI
+  [run 33968842279](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33968842279)
+  and CodeQL
+  [run 33968842278](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33968842278),
+  and is bound by Render `/health`. Fresh production checks of the three changed
+  document views at 1440 and 390 px had zero inline styles, overflow or console
+  warnings/errors.
 - The final documentation-only release boundary is re-gated through CI, CodeQL
   and exact Render identity before tagging; implementation claims remain bound
   to the verified commit and runs above.

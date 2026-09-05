@@ -52,7 +52,7 @@ unseen markets.
 
 ## Deployment boundary
 
-The v4.2.0 implementation boundary `d369f12` passed CI, CodeQL, exact Render
+The v4.2.0 implementation boundary `6a99d80` passed CI, CodeQL, exact Render
 identity and production HTTP/browser QA. Live `/health` exposes the application,
 behavioral primary model, dataset and exact deployed commit. The final
 documentation-only boundary repeats those automated gates before the immutable

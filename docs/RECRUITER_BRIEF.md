@@ -8,7 +8,7 @@ review and early-warning-freeze actions.
 
 - **Live application:** https://limitiq-credit-line-optimization.onrender.com
 - **Repository:** https://github.com/Ghostboy789/limitiq-credit-line-optimization
-- **Release state:** v4.2.0 implementation verified live at `d369f12`; the immutable tag identifies the final re-gated evidence boundary
+- **Release state:** v4.2.0 implementation verified live at `6a99d80`; the immutable tag identifies the final re-gated evidence boundary
 
 ## Evidence at a glance
 

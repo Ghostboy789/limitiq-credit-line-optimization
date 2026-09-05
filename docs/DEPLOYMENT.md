@@ -3,7 +3,7 @@
 ## Status boundary
 
 The **v4.2.0 implementation boundary is verified in production** at commit
-`d369f128558a01c3550289bdfa02211606965731`, with behavioral primary model
+`6a99d80c2e1eb576b60834c825efc919304f87c0`, with behavioral primary model
 `limitiq-behavioral-4.0.0-21234ab33f78` and dataset
 `uci-350-behavioral-6ba3a746be13`. Live `/health` reports the application,
 the exact deployed Git revision and the primary model and dataset identifiers.
@@ -29,7 +29,7 @@ Render's free plan with a `$0` workspace spend limit.
 
 ## V4.2 implementation verification — 5 September 2026
 
-1. Commit `d369f128558a01c3550289bdfa02211606965731` passed GitHub Actions
+1. Base implementation commit `d369f128558a01c3550289bdfa02211606965731` passed GitHub Actions
    [run 33963179773](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33963179773)
    and matching CodeQL
    [run 33963179790](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33963179790).
@@ -37,9 +37,18 @@ Render's free plan with a `$0` workspace spend limit.
    smoke, source/analytics/SBOM and literal Git-blob manifest checks, Bandit,
    pip-audit, secret scanning, Docker build, zero HIGH/CRITICAL Trivy findings,
    non-root container health, per-route timing and both concurrency benchmarks.
-3. Render `/health` bound application `4.2.0`, the unchanged frozen behavioral
-   model and dataset, and that exact implementation commit.
-4. Twenty production routes and evidence endpoints returned 200; the executive
+3. Production browser QA then found Markdown-generated table alignment styles
+   blocked by CSP on live document views. Follow-up commit
+   `6a99d80c2e1eb576b60834c825efc919304f87c0` replaces those inline styles with
+   CSS classes and passed CI
+   [run 33968842279](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33968842279)
+   and CodeQL
+   [run 33968842278](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33968842278).
+4. Render `/health` bound application `4.2.0`, the unchanged frozen behavioral
+   model and dataset, and exact corrective commit `6a99d80c2e1eb576b60834c825efc919304f87c0`.
+   Fresh desktop/mobile checks of all three updated document views had no inline
+   styles, overflow or console warnings/errors.
+5. Twenty production routes and evidence endpoints returned 200; the executive
    PDF signature, five-row valid batch, specific invalid batch, security headers
    and per-route timings passed. Browser QA covered 27 route/viewport pairs plus
    keyboard, mobile, reduced-motion, sticky-table, simulator, consent, support
