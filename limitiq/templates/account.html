@@ -9,7 +9,7 @@
 <div class="notice" role="note"><strong>Evidence boundary:</strong> This educational score uses a coherent next-month default target from the UCI Taiwan source. This profile, its limit economics and expected-loss values are simulated. The result is not a production lending decision or a jurisdiction-specific affordability assessment.</div>
 
 <section class="metric-grid four">
-  <article class="metric"><span>Next-month default score</span><strong>{{ account.pd|percent(2) }}</strong><small>Pooled-calibrated within the Taiwan development source</small></article>
+  <article class="metric"><span>Next-month default score</span><strong>{{ account.pd|percent(2) }}</strong><small>Calibrated within the Taiwan development source</small></article>
   <article class="metric"><span>Current / proposed loss proxy</span><strong>{{ account.current_expected_loss|money(ccy) }}</strong><small>{{ account.proposed_expected_loss|money(ccy) }} proposed · simulated</small></article>
   <article class="metric accent"><span>Incremental contribution</span><strong>{{ account.incremental_contribution|money(ccy) }}</strong><small>Simulated annual value</small></article>
   <article class="metric"><span>Source cohort</span><strong class="metric-text">{{ account.source_name }}</strong><small>{{ account.region|replace('_', ' ')|title }}</small></article>

@@ -31,6 +31,13 @@ jobs:
       - run: python -m limitiq.sources manifest > /dev/null
       - run: python -m limitiq.analytics --check
       - run: python -m limitiq.sbom --check sbom/limitiq.cdx.json
+      - name: Verify v4.2 release manifest
+        run: |
+          sha256sum -c release/checksums-v4.2.0.sha256
+          while read -r sum path; do
+            blob=$(git show "HEAD:$path" | sha256sum | cut -d' ' -f1)
+            [ "$blob" = "$sum" ] || { echo "STALE: $path (manifest=$sum blob=$blob)"; exit 1; }
+          done < release/checksums-v4.2.0.sha256
       - run: bandit -q -r limitiq
       - run: pip-audit -r requirements.txt
       - name: Secret scan
@@ -55,7 +62,19 @@ jobs:
           done
           docker logs limitiq
           exit 1
-      - run: python -m limitiq.benchmark http://127.0.0.1:8000/ --requests 50 --concurrency 5
+      - name: Enforce per-route Server-Timing under 500 ms
+        run: |
+          python - <<'PY'
+          import re, urllib.request
+          routes = ("/", "/portfolio", "/simulator", "/batch", "/governance", "/monitoring", "/v4-lab", "/reports", "/health", "/live", "/ready", "/ops")
+          for route in routes:
+              with urllib.request.urlopen("http://127.0.0.1:8000" + route, timeout=10) as response:
+                  timing = response.headers["Server-Timing"]
+              duration = float(re.search(r"dur=([0-9.]+)", timing).group(1))
+              assert duration <= 500, (route, timing)
+          PY
+      - run: python -m limitiq.benchmark http://127.0.0.1:8000/v4-lab --requests 50 --concurrency 5
+      - run: python -m limitiq.benchmark http://127.0.0.1:8000/batch --requests 3 --concurrency 2 --timeout 30 --batch-rows 500
       - name: Remove smoke-test container
         if: always()
         run: docker rm -f limitiq || true

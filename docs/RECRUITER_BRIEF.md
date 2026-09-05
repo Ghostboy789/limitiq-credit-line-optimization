@@ -8,7 +8,7 @@ review and early-warning-freeze actions.
 
 - **Live application:** https://limitiq-credit-line-optimization.onrender.com
 - **Repository:** https://github.com/Ghostboy789/limitiq-credit-line-optimization
-- **Release state:** v4.1.0 verified live; `/health` exposes the exact deployed commit, unchanged behavioral primary and dataset
+- **Release state:** v4.2.0 candidate; v4.1.0 remains the last verified live release until exact-SHA CI, deployment and tag gates pass
 
 ## Evidence at a glance
 
@@ -21,8 +21,11 @@ review and early-warning-freeze actions.
 | Test PR-AUC / Brier | 0.567889 / 0.133149 |
 | Exact gain vs v3 | +0.023728 ROC; -0.008533 Brier; paired intervals exclude zero |
 | Research union | 1,869,548 rows; six independent cohorts; governance only |
-| Temporal study | 400,000 seasoned US loans; 2015 test ROC-AUC 0.649217; research only |
-| Synthetic portfolio | 1,200 histories; 147 +10% / 47 +20% actions; ₹0.460M simulated contribution |
+| Vintage study | 400,000 seasoned US loans; 2015 ROC-AUC 0.649217; matured-label sensitivity only, not a point-in-time backtest |
+| Risk-adjusted return | 6.25% on simulated incremental exposure |
+| Unit economics | ₹2,342 contribution per eligible account; 32.29% of gross contribution consumed by incremental expected loss |
+| Synthetic portfolio | 1,200 histories; 157 +10% / 37 +20% / 0 +30%; ₹0.454M simulated contribution |
+| Allocation exhibit | Higher-risk cap binds at 60/60; finite-difference shadow value ₹2,815.08 per additional account |
 
 The behavioral primary has one event and one horizon. The global model remains a
 separate transportability benchmark because its labels are heterogeneous. The
@@ -46,6 +49,8 @@ impact.
 - Made deterministic synthetic FOIR inputs visible and actionable in the demo.
 - Implemented manual review, early-warning freeze, exposure/loss/profitability
   controls and an automatic-increase kill switch.
+- Published the weakest stable-replay calibration segment and capped its offers
+  at +10%, changing ten demo actions without altering frozen model scores.
 - Bound models, data and demo artifacts with provenance and checksums.
 - Added validation review, issue ledger, model inventory, pilot design, India
   readiness contract, executable monitoring/experiment replays, maker-checker,
@@ -75,9 +80,11 @@ impact.
 - Separated a 1.87M-row heterogeneous transportability benchmark from the
   decision model, then shipped checksum-bound artifacts, transient batch
   inference, policy simulation, governance evidence, Docker CI and security
-  gates; kept ₹2.98M scenario value explicitly simulated.
+  gates; `reports/behavioral_optimizer_stress.json` demonstrates the higher-risk
+  cap binding at 60/60 with a ₹2,815.08 one-account finite-difference shadow
+  value, while the current ₹0.454M contribution remains explicitly simulated.
 
-Do not claim that ₹2.98M is production impact or that any employer reviewed,
+Do not claim that ₹0.454M is production impact or that any employer reviewed,
 endorsed or uses LimitIQ.
 
 ## Best-fit roles and interview angle

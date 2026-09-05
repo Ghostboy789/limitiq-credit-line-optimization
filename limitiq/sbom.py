@@ -80,7 +80,7 @@ def main() -> None:
         return
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(text, encoding="utf-8")
+        args.output.write_text(text, encoding="utf-8", newline="\n")
     else:
         print(text, end="")
 

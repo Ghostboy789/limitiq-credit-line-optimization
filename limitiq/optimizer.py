@@ -30,6 +30,7 @@ class Decision:
     proposed_ead: float
     current_expected_loss: float
     proposed_expected_loss: float
+    gross_contribution: float
     incremental_contribution: float
     risk_adjusted_return: float
     reason_codes: tuple[str, ...]
@@ -151,6 +152,10 @@ def _candidate(
         "within_expected_loss_rate_ceiling": bool(
             pd_value * assumptions.lgd <= assumptions.expected_loss_ceiling
         ),
+        "within_weak_calibration_segment_cap": bool(
+            utilization < assumptions.weak_calibration_utilization_threshold
+            or increase_pct <= assumptions.weak_calibration_max_increase + 1e-12
+        ),
         "meets_profitability_hurdle": bool(contribution >= assumptions.profitability_hurdle),
         "payment_history_eligible": bool(behavior["delinquency_count"] == 0),
         "not_overextended": bool(
@@ -166,6 +171,7 @@ def _candidate(
         "proposed_limit": proposed_limit,
         "proposed_ead": proposed_ead,
         "proposed_expected_loss": proposed_ecl,
+        "gross_contribution": interchange + interest,
         "incremental_contribution": contribution,
         "risk_adjusted_return": contribution / delta_ead if delta_ead > 0 else 0.0,
         "eligible": eligible,
@@ -222,6 +228,9 @@ def recommend_account(
                 "automatic_increases_enabled": "Automatic increases disabled by governance control",
                 "within_account_exposure": "Exposure limit reached",
                 "within_expected_loss_rate_ceiling": "Expected-loss rate exceeds policy ceiling",
+                "within_weak_calibration_segment_cap": (
+                    "Increase capped for weakly calibrated high-utilization segment"
+                ),
                 "meets_profitability_hurdle": "Incremental return below profitability hurdle",
                 "payment_history_eligible": "Payment-history eligibility rule not met",
                 "not_overextended": "Customer-overextension safeguard",
@@ -249,6 +258,7 @@ def recommend_account(
         proposed_ead=float(selected["proposed_ead"]),
         current_expected_loss=current_ecl,
         proposed_expected_loss=float(selected["proposed_expected_loss"]),
+        gross_contribution=float(selected["gross_contribution"]),
         incremental_contribution=float(selected["incremental_contribution"]),
         risk_adjusted_return=float(selected["risk_adjusted_return"]),
         reason_codes=tuple(dict.fromkeys(reasons)),
@@ -466,7 +476,8 @@ def portfolio_sensitivity(
     assumptions = assumptions or PolicyAssumptions()
     base_values = assumptions.to_dict()
     base_summary = summarize_portfolio(
-        recommend_portfolio(frame, probabilities, account_ids, assumptions)
+        recommend_portfolio(frame, probabilities, account_ids, assumptions),
+        assumptions.response_elasticity,
     )
     rows: list[dict[str, Any]] = []
     for name in SENSITIVITY_ASSUMPTIONS:
@@ -479,7 +490,8 @@ def portfolio_sensitivity(
             else:
                 scenario = PolicyAssumptions(**values)
                 summary = summarize_portfolio(
-                    recommend_portfolio(frame, probabilities, account_ids, scenario)
+                    recommend_portfolio(frame, probabilities, account_ids, scenario),
+                    scenario.response_elasticity,
                 )
             rows.append(
                 {
@@ -496,7 +508,9 @@ def portfolio_sensitivity(
     return rows
 
 
-def summarize_portfolio(decisions: list[Decision]) -> dict[str, Any]:
+def summarize_portfolio(
+    decisions: list[Decision], response_elasticity: float = PolicyAssumptions().response_elasticity
+) -> dict[str, Any]:
     current_limit = sum(item.current_limit for item in decisions)
     proposed_limit = sum(item.proposed_limit for item in decisions)
     current_ecl = sum(item.current_expected_loss for item in decisions)
@@ -504,6 +518,13 @@ def summarize_portfolio(decisions: list[Decision]) -> dict[str, Any]:
     current_ead = sum(item.current_ead for item in decisions)
     proposed_ead = sum(item.proposed_ead for item in decisions)
     contribution = sum(item.incremental_contribution for item in decisions)
+    gross_contribution = sum(item.gross_contribution for item in decisions)
+    incremental_expected_loss = proposed_ecl - current_ecl
+    eligible_increases = sum(item.increase_pct > 0 for item in decisions)
+    response_revenue_per_unit = (
+        gross_contribution / response_elasticity if response_elasticity > 0 else 0.0
+    )
+    non_revenue_costs = gross_contribution - contribution
     incremental_exposure = sum(item.proposed_ead - item.current_ead for item in decisions)
     action_counts: dict[str, int] = {}
     risk_counts: dict[str, int] = {}
@@ -519,11 +540,22 @@ def summarize_portfolio(decisions: list[Decision]) -> dict[str, Any]:
         "current_expected_loss": current_ecl,
         "proposed_expected_loss": proposed_ecl,
         "incremental_contribution": contribution,
+        "gross_contribution": gross_contribution,
+        "incremental_expected_loss": incremental_expected_loss,
+        "expected_loss_share_of_gross_contribution": (
+            incremental_expected_loss / gross_contribution if gross_contribution else 0.0
+        ),
+        "contribution_per_eligible_account": (
+            contribution / eligible_increases if eligible_increases else 0.0
+        ),
+        "break_even_response_elasticity": (
+            non_revenue_costs / response_revenue_per_unit if response_revenue_per_unit else None
+        ),
         "incremental_exposure": incremental_exposure,
         "risk_adjusted_return": contribution / incremental_exposure
         if incremental_exposure
         else 0.0,
-        "eligible_increases": sum(item.increase_pct > 0 for item in decisions),
+        "eligible_increases": eligible_increases,
         "early_warning": sum(
             item.action in {"Freeze automatic increases", "Manual review"} for item in decisions
         ),

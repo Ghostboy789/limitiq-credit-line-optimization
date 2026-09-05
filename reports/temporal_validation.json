@@ -1,5 +1,5 @@
 {
-  "classification": "Separate US installment-loan temporal validation; research only",
+  "classification": "Separate US installment-loan vintage-ordered study with matured terminal labels; not a point-in-time backtest",
   "generated_at": "2026-08-25T05:51:03.798126+00:00",
   "source": {
     "dataset": "Lending Club Loans 2007-2018 (US)",
@@ -9,7 +9,7 @@
     "terms_status": "owner-cleared 2026-08-14; mirror declares CC0; upstream not independently verified"
   },
   "target_definition": "Terminal charged-off/default outcome for seasoned 36-month loans",
-  "horizon_boundary": "Common 36-month contractual term; status timing inside the term is not available and this is not a credit-card next-month PD",
+  "horizon_boundary": "A 2013 origination's terminal 36-month outcome was not observable until 2016. The ordering uses matured terminal labels available in the later extract, so it is not evidence of point-in-time temporal stability and is not a credit-card next-month PD",
   "split": {
     "train_through": 2013,
     "validation": 2014,
@@ -177,5 +177,9 @@
   ],
   "model_checksum": "765af54f737156b801b95f23b684baa551e7ccb2087080f35a055fc90774b9d7",
   "prohibited_use": "Never feeds LimitIQ card recommendations or claims India portability",
-  "model_version": "limitiq-temporal-4.1.0-765af54f7371"
+  "limitations": [
+    "Training labels are matured terminal outcomes, not labels available at a notional 2013 decision date.",
+    "The study is vintage-ordered sensitivity evidence, not a point-in-time backtest or temporal-stability validation."
+  ],
+  "model_version": "limitiq-temporal-4.2.0-765af54f7371"
 }

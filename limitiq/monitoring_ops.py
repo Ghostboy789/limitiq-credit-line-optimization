@@ -206,7 +206,11 @@ def main() -> None:
     else:
         payload = evaluate_snapshot(reference, pd.read_csv(args.input))
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    args.output.write_text(
+        json.dumps(payload, indent=2, allow_nan=False) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     print(json.dumps(payload, indent=2))
     if not args.demo and payload["status"] == "red":
         sys.exit(2)

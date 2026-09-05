@@ -58,6 +58,7 @@ FEATURE_NAMES = [
     "recent_balance_growth",
     "inactive_month_count",
 ]
+PAYMENT_RATIO_CAP = 5.0
 
 
 class SchemaError(ValueError):
@@ -249,7 +250,12 @@ def engineer_features(frame: pd.DataFrame, *, clip: bool = True) -> pd.DataFrame
     payments = clean[PAYMENT_COLUMNS].clip(lower=0)
     pay_status = clean[PAY_COLUMNS]
     utilization = bills.div(limit, axis=0)
-    payment_ratios = payments.to_numpy() / np.maximum(bills.to_numpy(), 1)
+    # Ratios above 5x are dominated by near-zero bill denominators and are not
+    # economically interpretable. Bound them before the generic model clip so
+    # support diagnostics retain useful ranges without changing in-range inputs.
+    payment_ratios = np.minimum(
+        payments.to_numpy() / np.maximum(bills.to_numpy(), 1), PAYMENT_RATIO_CAP
+    )
     result = pd.DataFrame(index=clean.index)
     result["limit_bal"] = limit
     result["current_utilization"] = utilization["BILL_AMT1"]

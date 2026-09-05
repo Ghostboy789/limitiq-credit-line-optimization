@@ -182,6 +182,11 @@ def test_runtime_probes_and_privacy_safe_operations_metrics() -> None:
     assert after["server_errors"] >= before["server_errors"]
     assert after["mean_latency_ms"] >= 0
     assert after["max_latency_ms"] >= after["mean_latency_ms"]
+    assert {"/live", "/ready", "/accounts/{account_id}"} <= set(after["routes"])
+    assert all(
+        route_metrics["p95_ms"] >= route_metrics["p50_ms"] >= 0
+        for route_metrics in after["routes"].values()
+    )
     assert after["contains_customer_data"] is False
     assert after_response.headers["cache-control"] == "no-store"
 
@@ -493,6 +498,10 @@ def test_governance_feature_and_monitoring_sections_render() -> None:
     assert "Committed optimizer stress" in governance.text
     assert "Discrete shadow price" in governance.text
     assert "60 / 60" in governance.text
+    assert "0.0708 calibration gap, 3.7×" in governance.text
+    assert "caps them at +10%" in governance.text
+    assert "SYNTH-OOS-001" in governance.text
+    assert "Outside behavioral model support" in governance.text
     monitoring = client.get("/monitoring")
     assert monitoring.status_code == 200
     assert "Monitoring readiness" in monitoring.text

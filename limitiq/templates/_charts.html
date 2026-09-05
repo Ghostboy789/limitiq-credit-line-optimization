@@ -34,7 +34,7 @@
 <figure class="chart-card" aria-labelledby="{{ id }}-heading">
   <figcaption><h3 id="{{ id }}-heading">{{ title }}</h3><p>{{ description }}</p></figcaption>
   {% if rows %}
-  {% set scale = namespace(maximum=1) %}{% for item in rows %}{% if item[1] > scale.maximum %}{% set scale.maximum = item[1] %}{% endif %}{% endfor %}
+  {% set scale = namespace(maximum=0.000000001) %}{% for item in rows %}{% if item[1] > scale.maximum %}{% set scale.maximum = item[1] %}{% endif %}{% endfor %}
   <div class="chart-frame">
     <svg class="bar-chart" viewBox="0 0 640 {{ 44 + rows|length * 48 }}" role="img" aria-labelledby="{{ id }}-title {{ id }}-desc" preserveAspectRatio="xMidYMid meet">
       <title id="{{ id }}-title">{{ title }}</title><desc id="{{ id }}-desc">{{ description }} Exact account counts are printed beside each bar.</desc>
@@ -72,7 +72,7 @@
 <figure class="chart-card" aria-labelledby="{{ id }}-heading">
   <figcaption><h3 id="{{ id }}-heading">{{ title }}</h3><p>{{ description }}</p></figcaption>
   {% if rows %}
-  {% set scale = namespace(maximum=1) %}{% for item in rows %}{% if item[1] > scale.maximum %}{% set scale.maximum = item[1] %}{% endif %}{% endfor %}
+  {% set scale = namespace(maximum=0.000000001) %}{% for item in rows %}{% if item[1] > scale.maximum %}{% set scale.maximum = item[1] %}{% endif %}{% endfor %}
   <div class="chart-frame">
     <svg class="bar-chart" viewBox="0 0 640 {{ 44 + rows|length * 48 }}" role="img" aria-labelledby="{{ id }}-title {{ id }}-desc" preserveAspectRatio="xMidYMid meet">
       <title id="{{ id }}-title">{{ title }}</title><desc id="{{ id }}-desc">{{ description }} Exact values are printed beside each bar.</desc>

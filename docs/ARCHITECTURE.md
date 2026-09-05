@@ -52,11 +52,11 @@ unseen markets.
 
 ## Deployment boundary
 
-The public Render service serves verified v4.1.0. Live `/health` exposes the
-application, behavioral primary model, dataset and exact deployed commit. CI,
-CodeQL, container security, production workflows and responsive browser QA
-passed for implementation commit `0ac35b7` on 25 August 2026. The release tag is
-the immutable source boundary. Research-source publication
+The v4.2.0 candidate is local until its exact commit passes CI, CodeQL, Render
+and production QA. The last verified public boundary is application v4.1.0 at
+commit `5c6a5ce`; live `/health` exposes the application, behavioral primary
+model, dataset and exact deployed commit. Release tags are immutable source
+boundaries. Research-source publication
 proceeds under the repository owner's 14 August 2026 resolution attestation in
 `NOTICE.md`; this record is not an independent legal opinion.
 

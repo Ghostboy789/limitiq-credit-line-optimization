@@ -10,8 +10,8 @@ definition, materiality and ownership framework before any real use.
 | MOD-002 | Multi-source adverse-credit-outcome model | `limitiq-global-2.0.0-37a14c45a811` | Transportability research and governance comparison only | Explicitly prohibited from account decisioning |
 | MOD-003 | US terminal 36-month loan temporal model | `limitiq-temporal-4.1.0-765af54f7371` | Expanding-window and stressed-segment research only | Prohibited from card decisioning |
 | MOD-004 | V3 two-feature Taiwan model | `limitiq-primary-3.0.0-89f9a2530bde` | Exact paired benchmark | Superseded |
-| CALC-001 | Candidate-limit optimizer and policy rules | v4.1.0 | Mixed-integer +10%, +20%, +30%, hold, review, support-bound and freeze allocation | Model-adjacent; high materiality if real |
-| SIM-001 | Line-response and financial simulation | v4.1.0 assumptions | Synthetic EAD, loss, revenue, cost and contribution | Not causal or observed |
+| CALC-001 | Candidate-limit optimizer and policy rules | v4.2.0 | Mixed-integer +10%, +20%, +30%, hold, review, support-bound, weak-calibration-cap and freeze allocation | Model-adjacent; high materiality if real |
+| SIM-001 | Line-response and financial simulation | v4.2.0 assumptions | Synthetic EAD, loss, revenue, cost, gross contribution and break-even elasticity | Not causal or observed |
 
 ## MOD-001 — primary application candidate
 

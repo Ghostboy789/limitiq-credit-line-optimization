@@ -12,6 +12,7 @@ from limitiq.features import (
     FEATURE_NAMES,
     HARMONIZED_BATCH_COLUMNS,
     MODEL_INPUT_COLUMNS,
+    PAYMENT_RATIO_CAP,
     REGION_CATEGORIES,
     TAIWAN_MODEL_INPUT_COLUMNS,
     TARGET,
@@ -140,6 +141,19 @@ def test_legacy_taiwan_validation_and_zero_bill_are_safe(healthy_taiwan_row: pd.
     for column in [f"BILL_AMT{i}" for i in range(1, 7)]:
         zero_bill[column] = 0
     assert np.isfinite(engineer_features(pd.DataFrame([zero_bill])).to_numpy()).all()
+
+
+def test_payment_ratios_are_capped_before_generic_feature_clipping(
+    healthy_taiwan_row: pd.Series,
+) -> None:
+    row = healthy_taiwan_row.copy()
+    row["BILL_AMT1"] = 1
+    row["PAY_AMT1"] = 1_000_000
+
+    engineered = engineer_features(pd.DataFrame([row]))
+
+    assert engineered.loc[0, "recent_payment_ratio"] == PAYMENT_RATIO_CAP
+    assert engineered.loc[0, "average_payment_ratio"] <= PAYMENT_RATIO_CAP
 
 
 def test_legacy_source_cleaning_rejects_duplicate_and_invalid_rows(

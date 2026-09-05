@@ -72,5 +72,15 @@
     "behavioral_candidate.joblib": "21234ab33f782a5a4d12e6e9050ccbcd812c2b1f324ae91d1a2f4bbd07648115",
     "behavioral_feature_schema.json": "d4c1c51013b0e064bb6ccf060515dcecc5f655108b67b961b51b36118f13a9a7",
     "behavioral_model.json": "91fd6496754822171c9559a51eca852d12d1c41e1a53c8d7632f4f1e5e4de29c"
+  },
+  "boosting_configuration": {
+    "maximum_iterations": 180,
+    "early_stopping": "auto",
+    "validation_fraction": 0.1,
+    "effective_iterations_by_calibration_fold": [
+      62,
+      55,
+      83
+    ]
   }
 }

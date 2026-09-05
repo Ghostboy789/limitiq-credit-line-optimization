@@ -192,7 +192,7 @@ def train_temporal_track(
     report_dir: Path = REPORT_DIR,
     iterations: int = 160,
 ) -> dict[str, Any]:
-    """Train on <=2013, calibrate on 2014 and evaluate once on 2015."""
+    """Fit a vintage-ordered matured-label study; not a point-in-time backtest."""
     train = frame[frame["vintage"] <= 2013]
     validation = frame[frame["vintage"] == 2014]
     test = frame[frame["vintage"] == 2015]
@@ -217,7 +217,10 @@ def train_temporal_track(
         probability = model.predict_proba(cohort[FEATURES])[:, 1]
         per_vintage.append({"vintage": int(vintage), **_metrics(cohort["target"], probability)})
     payload = {
-        "classification": "Separate US installment-loan temporal validation; research only",
+        "classification": (
+            "Separate US installment-loan vintage-ordered study with matured terminal labels; "
+            "not a point-in-time backtest"
+        ),
         "generated_at": datetime.now(UTC).isoformat(),
         "source": {
             "dataset": source.get("name", "Lending Club accepted loans 2007-2018Q4"),
@@ -228,8 +231,9 @@ def train_temporal_track(
         },
         "target_definition": "Terminal charged-off/default outcome for seasoned 36-month loans",
         "horizon_boundary": (
-            "Common 36-month contractual term; status timing inside the term is not available and "
-            "this is not a credit-card next-month PD"
+            "A 2013 origination's terminal 36-month outcome was not observable until 2016. "
+            "The ordering uses matured terminal labels available in the later extract, so it is "
+            "not evidence of point-in-time temporal stability and is not a credit-card next-month PD"
         ),
         "split": {"train_through": 2013, "validation": 2014, "untouched_test": 2015},
         "rows": {"train": len(train), "validation": len(validation), "test": len(test)},
@@ -244,8 +248,12 @@ def train_temporal_track(
         "stress_segments": _stress_segments(test, test_probability),
         "model_checksum": _sha256(model_path),
         "prohibited_use": "Never feeds LimitIQ card recommendations or claims India portability",
+        "limitations": [
+            "Training labels are matured terminal outcomes, not labels available at a notional 2013 decision date.",
+            "The study is vintage-ordered sensitivity evidence, not a point-in-time backtest or temporal-stability validation.",
+        ],
     }
-    payload["model_version"] = f"limitiq-temporal-4.1.0-{payload['model_checksum'][:12]}"
+    payload["model_version"] = f"limitiq-temporal-4.2.0-{payload['model_checksum'][:12]}"
     _write_json(report_dir / "temporal_validation.json", payload)
     return payload
 

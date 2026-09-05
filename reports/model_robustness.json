@@ -1,6 +1,6 @@
 {
   "classification": "Development-only robustness study; frozen v4 test was not reread",
-  "generated_at": "2026-09-04T08:53:14.647405+00:00",
+  "generated_at": "2026-09-05T09:15:00.535685+00:00",
   "development_rows": 24000,
   "source": {
     "dataset": "Default of Credit Card Clients",
@@ -21,133 +21,141 @@
   "boosting_configuration": {
     "iterations": 180,
     "deployed_iterations": 180,
-    "matches_deployed_configuration": true
+    "matches_deployed_configuration": true,
+    "maximum_iterations": 180,
+    "early_stopping": "auto",
+    "validation_fraction": 0.1,
+    "effective_iterations_by_calibration_fold": [
+      62,
+      55,
+      83
+    ]
   },
   "selection_rule": "Lowest out-of-fold Brier score within 0.02 ROC-AUC of the best",
   "calibrator_decision_rule": "Adopt a new calibrator only if its paired 95% candidate-minus-reference Brier and log-loss intervals both exclude zero in its favor",
   "candidates": {
     "Logistic + sigmoid": {
-      "roc_auc": 0.7472233416414964,
-      "pr_auc": 0.5088466516633088,
-      "brier_score": 0.1405939611434662,
-      "log_loss": 0.4478592218796547,
-      "calibration_intercept": 0.007903237680345074,
-      "calibration_slope": 1.0065524354267688,
-      "expected_calibration_error": 0.018914872981895273,
+      "roc_auc": 0.7472573735102606,
+      "pr_auc": 0.508590070037071,
+      "brier_score": 0.14069247069176988,
+      "log_loss": 0.4481134537003669,
+      "calibration_intercept": 0.006130239499791321,
+      "calibration_slope": 1.0051966759964148,
+      "expected_calibration_error": 0.017725080965225685,
       "folds": [
         {
           "fold": 1,
-          "roc_auc": 0.7425265855118726,
-          "brier_score": 0.14073012061060838
+          "roc_auc": 0.7429351990934294,
+          "brier_score": 0.14075624428962868
         },
         {
           "fold": 2,
-          "roc_auc": 0.7514601753860943,
-          "brier_score": 0.1400388122011672
+          "roc_auc": 0.7521306145768153,
+          "brier_score": 0.14021720624604253
         },
         {
           "fold": 3,
-          "roc_auc": 0.7482321734635579,
-          "brier_score": 0.14101295061862293
+          "roc_auc": 0.7475448667374015,
+          "brier_score": 0.14110396153963842
         }
       ]
     },
     "HGB + sigmoid": {
-      "roc_auc": 0.772345985613559,
-      "pr_auc": 0.5467897730618035,
-      "brier_score": 0.1357780001137678,
-      "log_loss": 0.433135325029564,
-      "calibration_intercept": 0.03372585895863302,
-      "calibration_slope": 1.0303034599040344,
-      "expected_calibration_error": 0.008445537092238218,
+      "roc_auc": 0.7727187388791145,
+      "pr_auc": 0.5479782193508155,
+      "brier_score": 0.13568872211031374,
+      "log_loss": 0.4328965645768775,
+      "calibration_intercept": 0.03193790712074808,
+      "calibration_slope": 1.0284701675492707,
+      "expected_calibration_error": 0.008635413544395312,
       "folds": [
         {
           "fold": 1,
-          "roc_auc": 0.7687773318168182,
-          "brier_score": 0.1357151565270712
+          "roc_auc": 0.7692992576460138,
+          "brier_score": 0.13565904360403902
         },
         {
           "fold": 2,
-          "roc_auc": 0.7774882335337487,
-          "brier_score": 0.13613537479792395
+          "roc_auc": 0.7782835922409337,
+          "brier_score": 0.1359345856163642
         },
         {
           "fold": 3,
-          "roc_auc": 0.7723617723608202,
-          "brier_score": 0.13548346901630828
+          "roc_auc": 0.7724351370713969,
+          "brier_score": 0.13547253711053805
         }
       ]
     },
     "HGB + isotonic": {
-      "roc_auc": 0.7721848456723278,
-      "pr_auc": 0.547072216625629,
-      "brier_score": 0.13573665056386403,
-      "log_loss": 0.43286758805678455,
-      "calibration_intercept": 0.006449634697084501,
-      "calibration_slope": 1.0055099433880201,
-      "expected_calibration_error": 0.005496568156374723,
+      "roc_auc": 0.7719463605748147,
+      "pr_auc": 0.5470737472019103,
+      "brier_score": 0.13579104532992692,
+      "log_loss": 0.4330692127489107,
+      "calibration_intercept": 0.0012206448431788357,
+      "calibration_slope": 1.0011203459467528,
+      "expected_calibration_error": 0.005343688706251521,
       "folds": [
         {
           "fold": 1,
-          "roc_auc": 0.7682409357686486,
-          "brier_score": 0.1357592194700528
+          "roc_auc": 0.7679664552200248,
+          "brier_score": 0.13586129275091816
         },
         {
           "fold": 2,
-          "roc_auc": 0.7774118761959175,
-          "brier_score": 0.13613831357765127
+          "roc_auc": 0.7775469978507495,
+          "brier_score": 0.13597176067050998
         },
         {
           "fold": 3,
-          "roc_auc": 0.7722995166453555,
-          "brier_score": 0.13531241864388807
+          "roc_auc": 0.7723289441466932,
+          "brier_score": 0.13554008256835265
         }
       ]
     },
     "Monotonic HGB + sigmoid": {
-      "roc_auc": 0.7710376078956113,
-      "pr_auc": 0.5423649711343084,
-      "brier_score": 0.13618843400000175,
-      "log_loss": 0.43441240549665366,
-      "calibration_intercept": 0.018498668472777327,
-      "calibration_slope": 1.0159171369560152,
-      "expected_calibration_error": 0.009181854157092996,
+      "roc_auc": 0.7707213543849347,
+      "pr_auc": 0.5424358469015943,
+      "brier_score": 0.13622597532223846,
+      "log_loss": 0.4345587545238017,
+      "calibration_intercept": 0.01552319503492243,
+      "calibration_slope": 1.0137862110228393,
+      "expected_calibration_error": 0.010118471276896858,
       "folds": [
         {
           "fold": 1,
-          "roc_auc": 0.76778959194799,
-          "brier_score": 0.13613696728801145
+          "roc_auc": 0.7673500420362129,
+          "brier_score": 0.13623463391086157
         },
         {
           "fold": 2,
-          "roc_auc": 0.7765416111216912,
-          "brier_score": 0.1361972235062446
+          "roc_auc": 0.7765837346174426,
+          "brier_score": 0.13611750425920852
         },
         {
           "fold": 3,
-          "roc_auc": 0.7703053840084881,
-          "brier_score": 0.1362311112057492
+          "roc_auc": 0.7699775099527527,
+          "brier_score": 0.13632578779664528
         }
       ]
     }
   },
-  "development_preference": "HGB + isotonic",
+  "development_preference": "HGB + sigmoid",
   "paired_calibrator_comparison": {
     "candidate": "HGB + isotonic",
     "reference": "HGB + sigmoid",
     "metrics": {
       "brier_score": {
-        "candidate_minus_reference": -4.1349549903785254e-05,
-        "lower_95": -0.00019489870760826532,
-        "upper_95": 0.00010568486821890812,
+        "candidate_minus_reference": 0.00010232321961317625,
+        "lower_95": -4.4101699599593396e-05,
+        "upper_95": 0.0002698414958354738,
         "repeats": 500,
         "method": "seeded paired nonparametric percentile bootstrap",
         "higher_is_better": false
       },
       "log_loss": {
-        "candidate_minus_reference": -0.000267736972779431,
-        "lower_95": -0.0007643660483347553,
-        "upper_95": 0.00020019687213754922,
+        "candidate_minus_reference": 0.00017264817203321847,
+        "lower_95": -0.00030350846272068216,
+        "upper_95": 0.0006477412864628496,
         "repeats": 500,
         "method": "seeded paired nonparametric percentile bootstrap",
         "higher_is_better": false
@@ -178,11 +186,11 @@
     },
     "recent_payment_ratio": {
       "lower": 0.0,
-      "upper": 30059.830350000095
+      "upper": 5.0
     },
     "average_payment_ratio": {
       "lower": 0.0,
-      "upper": 49640.18032015131
+      "upper": 2.748974481413333
     },
     "payment_consistency": {
       "lower": 0.0,

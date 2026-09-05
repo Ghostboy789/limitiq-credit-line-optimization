@@ -7,6 +7,7 @@ import json
 from datetime import UTC, datetime
 from typing import Any
 
+import joblib
 import numpy as np
 import pandas as pd
 from sklearn.base import clone
@@ -20,7 +21,9 @@ from sklearn.preprocessing import StandardScaler
 
 from limitiq.behavioral import (
     BEHAVIORAL_HGB_ITERATIONS,
+    CANDIDATE_MODEL_PATH,
     _paired_bootstrap,
+    boosting_configuration,
     load_behavioral_source,
 )
 from limitiq.config import REPORT_DIR, SEED
@@ -244,6 +247,7 @@ def build_report(*, folds: int = 3) -> dict[str, Any]:
             "iterations": BEHAVIORAL_HGB_ITERATIONS,
             "deployed_iterations": BEHAVIORAL_HGB_ITERATIONS,
             "matches_deployed_configuration": True,
+            **boosting_configuration(joblib.load(CANDIDATE_MODEL_PATH)),  # noqa: S301
         },
         **development_benchmark(
             features.reset_index(drop=True),
@@ -260,7 +264,11 @@ def build_report(*, folds: int = 3) -> dict[str, Any]:
             "Support bounds use unclipped engineered values; estimator inputs remain clipped.",
         ],
     }
-    REPORT_PATH.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    REPORT_PATH.write_text(
+        json.dumps(payload, indent=2, allow_nan=False) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     return payload
 
 

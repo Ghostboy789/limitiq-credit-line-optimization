@@ -27,16 +27,19 @@ Intervals use 500 seeded paired bootstrap samples. This is a credible within-sou
 improvement, not temporal or India validation. Candidate artifact:
 `limitiq-behavioral-4.0.0-21234ab33f78`.
 
-## 2. Separate temporal track
+## 2. Separate vintage-ordered track
 
-The Lending Club track uses only application-time features and terminal 36-month loans.
-Training vintages end in 2013, 2014 is reserved for calibration and 2015 is evaluated
-once. The deterministic proportional sample contains 69,912 training, 65,702 validation
-and 114,385 test loans. The 2015 result is ROC-AUC 0.647084, PR-AUC 0.229972,
-Brier 0.122924 and log loss 0.404746.
+The Lending Club track uses only application-time features and matured terminal
+36-month labels. Training vintages end in 2013, 2014 is reserved for calibration
+and 2015 is evaluated once. The deterministic proportional sample contains
+111,860 training, 105,124 validation and 183,015 test loans. The 2015 result is
+ROC-AUC 0.649217, PR-AUC 0.232211, Brier 0.123224 and log loss 0.405290.
 
-This is US installment-loan temporal evidence, not a card next-month PD. Status timing
-inside the contractual term is unavailable. It never feeds LimitIQ recommendations.
+This is a vintage-ordered study with terminal labels available in the later
+extract, not a point-in-time backtest or temporal-stability validation. A loan
+originated in 2013 did not have its terminal 36-month outcome until 2016. This
+US installment-loan research is not a card next-month PD and never feeds LimitIQ
+recommendations.
 
 ## 3. Portfolio-wide optimization
 

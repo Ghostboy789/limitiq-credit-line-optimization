@@ -1,5 +1,20 @@
 # Changelog
 
+## 4.2.0 — 2026-09-05
+
+- Published stable-replay segment calibration evidence and capped increases at
+  +10% for the weakly calibrated high-utilization segment; ten demo actions
+  moved from +20% to +10%.
+- Corrected simulated incremental contribution from INR 460,379 to INR 454,414.
+  It fell because the new calibration control reduces incremental exposure for
+  those ten accounts, not because model scores or test metrics changed.
+- Relabelled the matured-terminal-label vintage study as sensitivity evidence,
+  not a point-in-time backtest, and disclosed effective early-stopping rounds.
+- Added bounded payment-ratio engineering, a demonstrated out-of-support route,
+  loss-first unit economics, break-even elasticity, per-route latency telemetry,
+  release-manifest and performance gates, realistic concurrency smoke, and an
+  immutable Docker base-image digest.
+
 ## 4.1.0 — 2026-08-25
 
 - Added a prespecified four-candidate, out-of-fold calibration challenge without

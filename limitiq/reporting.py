@@ -50,7 +50,9 @@ def _table(headers: list[str], rows: list[list[str]]) -> str:
 def _write_html(
     directory: Path, name: str, title: str, label: str, sections: list[tuple[str, str]]
 ) -> None:
-    (directory / name).write_text(_html_page(title, label, sections), encoding="utf-8")
+    (directory / name).write_text(
+        _html_page(title, label, sections), encoding="utf-8", newline="\n"
+    )
 
 
 def _executive_pdf(summary: dict[str, Any], model: dict[str, Any], directory: Path) -> None:

@@ -192,6 +192,45 @@ def test_diminishing_response_and_pd_linked_ccf_are_live(healthy_row: pd.Series)
     assert high_risk.current_ead > low_risk.current_ead
 
 
+def test_weak_calibration_segment_caps_high_utilization_increase(
+    healthy_row: pd.Series,
+) -> None:
+    row = healthy_row.copy()
+    row["utilization"] = 0.80
+    decision = recommend_account(row, 0.04, "WEAK-CAL")
+
+    assert decision.increase_pct == pytest.approx(0.10)
+    larger = [
+        candidate for candidate in decision.candidate_results if candidate["increase_pct"] > 0.10
+    ]
+    assert larger
+    assert all(
+        not candidate["checks"]["within_weak_calibration_segment_cap"] for candidate in larger
+    )
+
+
+def test_portfolio_summary_exposes_reconciled_unit_economics(healthy_row: pd.Series) -> None:
+    frame = pd.DataFrame([healthy_row], columns=DECISION_COLUMNS)
+    elasticity = 0.35
+    decision = recommend_portfolio(frame, np.array([0.04]), ["ECON"])[0]
+    summary = summarize_portfolio([decision], response_elasticity=elasticity)
+
+    incremental_loss = decision.proposed_expected_loss - decision.current_expected_loss
+    assert summary["gross_contribution"] == pytest.approx(decision.gross_contribution)
+    assert summary["incremental_expected_loss"] == pytest.approx(incremental_loss)
+    assert summary["expected_loss_share_of_gross_contribution"] == pytest.approx(
+        incremental_loss / decision.gross_contribution
+    )
+    assert summary["contribution_per_eligible_account"] == pytest.approx(
+        decision.incremental_contribution
+    )
+    assert summary["break_even_response_elasticity"] == pytest.approx(
+        elasticity
+        * (decision.gross_contribution - decision.incremental_contribution)
+        / decision.gross_contribution
+    )
+
+
 def test_tightening_growth_cap_cannot_raise_aggregate_limit(healthy_row: pd.Series) -> None:
     frame = pd.DataFrame([healthy_row] * 12, columns=DECISION_COLUMNS)
     probabilities = np.full(len(frame), 0.04)

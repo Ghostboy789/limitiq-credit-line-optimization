@@ -33,13 +33,16 @@ log loss `-0.021093` (`-0.025538–-0.016470`). This supports application-level
 promotion for the educational demo; it does not establish India, temporal,
 regulatory or production suitability.
 
-## V4.1 development-only robustness challenge
+## V4.2 development-only robustness challenge
 
 The frozen 6,000-row v4 test was not reread. The split is reconstructed through
 the same frozen split function used for primary training, leaving exactly
 24,000 development rows. Four prespecified candidates were compared with
-three-fold out-of-fold predictions. Every HGB candidate used 180 maximum
-boosting iterations, matching the deployed model configuration.
+three-fold out-of-fold predictions. The deployed HGB declares 180 maximum
+boosting iterations, but `early_stopping='auto'` is active at this sample size.
+Its three calibration-fold estimators stopped at 62, 55 and 83 iterations; each
+fold reserves 10% of its own training data for internal validation. The maximum
+was therefore not binding and must not be read as effective model complexity.
 
 The decision rule was fixed before reading this result: adopt a new calibrator
 only if paired 95% candidate-minus-reference intervals for both Brier score and
@@ -47,23 +50,26 @@ log loss exclude zero in the candidate's favor.
 
 | Candidate | ROC-AUC | PR-AUC | Brier | Log loss | Calibration gap | Slope |
 |---|---:|---:|---:|---:|---:|---:|
-| Logistic + sigmoid | 0.747223 | 0.508847 | 0.140594 | 0.447859 | 0.018915 | 1.0066 |
-| HGB + sigmoid | **0.772346** | 0.546790 | 0.135778 | 0.433135 | 0.008446 | 1.0303 |
-| HGB + isotonic | 0.772185 | **0.547072** | **0.135737** | **0.432868** | **0.005497** | 1.0055 |
-| Monotonic HGB + sigmoid | 0.771038 | 0.542365 | 0.136188 | 0.434412 | 0.009182 | 1.0159 |
+| Logistic + sigmoid | 0.747257 | 0.508590 | 0.140692 | 0.448113 | 0.017725 | 1.0052 |
+| HGB + sigmoid | **0.772719** | **0.547978** | **0.135689** | **0.432897** | 0.008635 | 1.0285 |
+| HGB + isotonic | 0.771946 | 0.547074 | 0.135791 | 0.433069 | **0.005344** | 1.0011 |
+| Monotonic HGB + sigmoid | 0.770721 | 0.542436 | 0.136226 | 0.434559 | 0.010118 | 1.0138 |
 
 For isotonic minus sigmoid, the seeded 500-repeat paired bootstrap gives Brier
-`-0.00004135` (95% interval `-0.00019490–0.00010568`) and log loss
-`-0.00026774` (95% interval `-0.00076437–0.00020020`). Both intervals cross
+`+0.00010232` (95% interval `-0.00004410–0.00026984`) and log loss
+`+0.00017265` (95% interval `-0.00030351–0.00064774`). Both intervals cross
 zero, so the calibrator-adoption rule is not met.
 
-The development selection metric still prefers isotonic HGB, but the conclusion
+The development selection metric now prefers sigmoid HGB, and the conclusion
 remains **no promotion**. Even if its paired intervals had excluded zero,
 selection after this comparison would require a new current-vintage or
-independent holdout before promotion. Support ranges use unclipped engineered
-values so extremes remain detectable; the frozen estimator pipeline continues
-to receive clipped values. Three or more support breaches route inference to
-manual review.
+independent holdout before promotion. Payment-to-bill ratios are capped at 5×
+before the generic feature clip so near-zero bills cannot make the 99.5th-percentile
+support bounds meaningless. In-range estimator inputs and demo probabilities are
+unchanged to float64 precision. Three or more support breaches route inference to
+manual review. The shipped 1,200-row portfolio currently has zero such routes,
+which is expected because it is generated from the same distribution; governance
+shows a separate labelled synthetic request that does trigger the control.
 
 ## Current limitations and controls
 
@@ -75,11 +81,20 @@ manual review.
 - fairness diagnostics cannot establish jurisdiction-specific compliance;
 - automatic increases can be disabled with `AUTO_INCREASES_ENABLED=false`;
 - requests outside multiple development-support ranges route to manual review;
+- the stable replay's weakest calibration is utilization ≥70%: gap 0.0708,
+  3.7× the 0.0192 portfolio gap. As an assumption-driven control—not an estimate—
+  that segment is capped at +10%, changing ten demo actions from +20% to +10%;
+- +30% remains in the action set but is unpopulated in the present demo. Under
+  current assumptions it is reachable only for high-utilization, low-risk accounts
+  in a narrow window below the 1.10 overextension safeguard;
 - positive recommendations are eligibility offers requiring explicit customer acceptance;
 - monitoring and experiment outputs are executable deterministic replays, not live results.
 
-The separate 2015 US installment-loan vintage study and heterogeneous 1.87M-row
-global benchmark never feed card recommendations.
+The separate 2015 US installment-loan study orders vintages using matured
+terminal labels. A 2013 loan's 36-month outcome was not observable until 2016,
+so this is vintage-sensitivity research, not a point-in-time backtest or temporal-
+stability evidence. It and the heterogeneous 1.87M-row global benchmark never
+feed card recommendations.
 
 ---
 
@@ -124,7 +139,7 @@ validation cost with false negatives weighted five times false positives.
 | Regularized logistic regression | 0.704729 | 0.460870 | 0.149363 | 0.469577 |
 | **Histogram gradient boosting** | **0.743372** | **0.474880** | **0.146294** | **0.458581** |
 
-The champion type and threshold `0.163964` were frozen before refitting on train
+The champion type and threshold `0.173874` were frozen before refitting on train
 plus validation and reading the untouched test set once.
 
 ## Untouched-test evidence

@@ -3,7 +3,7 @@
 ## Decision
 
 **Conditional approval for educational research and synthetic policy
-demonstration only.** LimitIQ v4.1.0 is not approved for lending decisions,
+demonstration only.** The LimitIQ v4.2.0 candidate is not approved for lending decisions,
 regulatory probability of default (PD), pricing, provisioning, capital,
 customer treatment, Indian-customer decisions or automated credit-line changes.
 
@@ -20,17 +20,17 @@ approved it.
 
 ## Scope and evidence
 
-Review date: 25 August 2026.
+Review date: 5 September 2026.
 
 | Item | Reviewed evidence |
 |---|---|
 | Primary model | `limitiq-behavioral-4.0.0-21234ab33f78` |
 | Primary dataset | UCI 350 next-month default; 30,000 rows |
 | Research benchmark | `limitiq-global-2.0.0-37a14c45a811`; 1,869,548 rows |
-| Implementation | v4.1.0 verified on Render; `/health` binds the application, unchanged primary model, dataset and exact deployed commit |
+| Implementation | v4.2.0 release candidate; last verified Render boundary is commit `5c6a5ce` on the unchanged primary model and dataset |
 | Development evidence | `reports/behavioral_model.json`, `reports/temporal_validation.json`, `reports/global_model.json`, calibration, paired comparison and checksum metadata |
-| Controls | policy constraints, reason codes, manual review, early-warning freeze, `AUTO_INCREASES_ENABLED` rollback |
-| Verification | 137 local tests at 72.26% coverage; CI, CodeQL, container, exact-commit Render and production browser/workflow evidence passed |
+| Controls | policy constraints, reason codes, manual review, early-warning freeze, weak-calibration segment cap, `AUTO_INCREASES_ENABLED` rollback |
+| Verification | v4.2 local acceptance pending final release gate; prior exact-commit CI, CodeQL, Render and production workflow evidence passed for `5c6a5ce` |
 | Documentation | methodology, data card, model card, assumptions, provenance notice and monitoring baseline |
 
 The review follows the risk-based themes in the US interagency [Revised
@@ -81,7 +81,8 @@ The six-cohort global score remains separate research. Its targets include
 next-month default, two-year serious delinquency, historical good/bad credit,
 status at extract and payment difficulty. Pooling those labels does not create a
 shared PD event or horizon; region and structural missingness can identify
-sources and base rates. V3 never loads that artifact for account decisions.
+sources and base rates. The production decision path never loads that artifact
+for account decisions.
 
 ### Primary development evidence — adequate for demonstration
 
@@ -124,7 +125,7 @@ have not been produced.
 
 ### Calibration and threshold — adequate for demonstration
 
-The primary model uses sigmoid calibration and a threshold of 0.163964 frozen
+The primary model uses sigmoid calibration and a threshold of 0.173874 frozen
 on validation data using a five-to-one false-negative cost preference. That is a
 documented research preference, not an institution-approved risk appetite or
 customer-treatment boundary. For the research model, the pooled mean absolute
@@ -179,12 +180,15 @@ testing.
 Training and inference share serialized preprocessing. Dataset and model
 checksums, source provenance, fixed seeds, bootstrap evidence and artifact
 consistency checks are recorded. Strict upload validation, transient processing,
-security headers, safe production errors, liveness/readiness and aggregate-only
-operations telemetry are implemented. Final CI passed 137 tests at 72.26%
-scoped coverage with clean lint, format, Bandit, dependency and secret audits.
-CI, CodeQL, container and live deployment verification passed for implementation
-commit `0ac35b7`. These controls
-support the educational scope and do not certify a bank production environment.
+security headers, safe production errors, liveness/readiness and bounded,
+aggregate-only operations telemetry are implemented. The last verified main
+boundary, commit `5c6a5ce`, passed CI
+[run 33955132215](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33955132215),
+CodeQL
+[run 33955132193](https://github.com/Ghostboy789/limitiq-credit-line-optimization/actions/runs/33955132193),
+container and live deployment checks. V4.2 verification remains pending until
+its exact candidate commit passes the same gates. These controls support the
+educational scope and do not certify a bank production environment.
 
 ## Validation findings
 

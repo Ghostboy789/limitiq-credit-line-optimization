@@ -9,6 +9,7 @@ import re
 import secrets
 import threading
 import time
+from collections import deque
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote_plus
@@ -140,7 +141,7 @@ DOCUMENT_FILES = {
     "model-improvement-evidence": "MODEL_IMPROVEMENT_EVIDENCE.md",
 }
 MARKDOWN = MarkdownIt("commonmark", {"html": False, "linkify": False}).enable("table")
-RELEASE_MANIFEST_PATH = ROOT / "release" / "checksums-v4.1.0.sha256"
+RELEASE_MANIFEST_PATH = ROOT / "release" / "checksums-v4.2.0.sha256"
 
 
 class RequestBodyLimitMiddleware:
@@ -597,7 +598,7 @@ def _run_simulator(
         AUTO_INCREASES_ENABLED,
     )
     return (
-        summarize_portfolio(decisions),
+        summarize_portfolio(decisions, assumptions.response_elasticity),
         np.asarray([item.current_ead for item in decisions]),
         np.asarray([item.proposed_ead for item in decisions]),
         np.asarray([item.proposed_limit for item in decisions]),
@@ -762,6 +763,27 @@ def create_app() -> FastAPI:
         portfolio[TAIWAN_MODEL_INPUT_COLUMNS], robustness["support_bounds"]
     )
     portfolio[support_flags.columns] = support_flags
+    support_history = portfolio.iloc[[0]][TAIWAN_MODEL_INPUT_COLUMNS].copy()
+    support_limit = float(support_history.iloc[0]["LIMIT_BAL"])
+    support_history[BILL_COLUMNS] = support_limit * 50
+    support_history[[f"PAY_AMT{i}" for i in range(1, 7)]] = 0
+    support_result = behavioral_support_flags(support_history, robustness["support_bounds"])
+    support_profile = portfolio.iloc[[0]].copy()
+    support_profile[TAIWAN_MODEL_INPUT_COLUMNS] = support_history
+    support_optimizer = _optimizer_frame(support_profile, robustness["support_bounds"]).iloc[0]
+    support_decision = recommend_account(
+        support_optimizer,
+        float(model.predict_proba(support_history)[:, 1][0]),
+        "SYNTH-OOS-001",
+    )
+    support_example = {
+        "account_id": support_decision.account_id,
+        "classification": "Synthetic exhibited control case; not an observed customer",
+        "breach_count": int(support_result.iloc[0]["support_breach_count"]),
+        "breaches": support_result.iloc[0]["support_breaches"].split("|"),
+        "action": support_decision.action,
+        "reason_codes": support_decision.reason_codes,
+    }
     v4_evidence, v4_explanation = _load_v4_lab_state()
     review_ledger = ReviewLedger(max_events=REVIEW_LEDGER_MAX_EVENTS)
     app = FastAPI(
@@ -802,7 +824,9 @@ def create_app() -> FastAPI:
         "server_errors": 0,
         "latency_seconds": 0.0,
         "max_latency_seconds": 0.0,
+        "routes": {},
     }
+    app.state.operations_lock = threading.Lock()
 
     def context(request: Request, **values: Any) -> dict[str, Any]:
         return {
@@ -822,6 +846,17 @@ def create_app() -> FastAPI:
             **values,
         }
 
+    def _record_operation(request: Request, elapsed: float, status_code: int) -> None:
+        route = getattr(request.scope.get("route"), "path", "<unmatched>")
+        with app.state.operations_lock:
+            operations = app.state.operations
+            operations["requests"] += 1
+            operations["client_errors"] += 400 <= status_code < 500
+            operations["server_errors"] += status_code >= 500
+            operations["latency_seconds"] += elapsed
+            operations["max_latency_seconds"] = max(operations["max_latency_seconds"], elapsed)
+            operations["routes"].setdefault(route, deque(maxlen=500)).append(elapsed)
+
     @app.middleware("http")
     async def security_headers(request: Request, call_next: Any) -> Response:
         request_id = secrets.token_hex(16)
@@ -831,19 +866,10 @@ def create_app() -> FastAPI:
             response = await call_next(request)
         except Exception:
             elapsed = time.perf_counter() - started
-            operations = app.state.operations
-            operations["requests"] += 1
-            operations["server_errors"] += 1
-            operations["latency_seconds"] += elapsed
-            operations["max_latency_seconds"] = max(operations["max_latency_seconds"], elapsed)
+            _record_operation(request, elapsed, 500)
             raise
         elapsed = time.perf_counter() - started
-        operations = app.state.operations
-        operations["requests"] += 1
-        operations["client_errors"] += 400 <= response.status_code < 500
-        operations["server_errors"] += response.status_code >= 500
-        operations["latency_seconds"] += elapsed
-        operations["max_latency_seconds"] = max(operations["max_latency_seconds"], elapsed)
+        _record_operation(request, elapsed, response.status_code)
         response.headers["X-Request-ID"] = request_id
         response.headers["Server-Timing"] = f"app;dur={elapsed * 1_000:.2f}"
         response.headers.update(
@@ -944,8 +970,18 @@ def create_app() -> FastAPI:
     @app.get("/ops")
     def operations() -> JSONResponse:
         """Bounded, process-local aggregates only; no request paths, inputs or identities."""
-        values = app.state.operations
-        request_count = values["requests"]
+        with app.state.operations_lock:
+            values = app.state.operations
+            request_count = values["requests"]
+            routes = {
+                route: {
+                    "requests": len(samples),
+                    "p50_ms": round(float(np.percentile(samples, 50)) * 1_000, 2),
+                    "p95_ms": round(float(np.percentile(samples, 95)) * 1_000, 2),
+                }
+                for route, samples in values["routes"].items()
+                if samples
+            }
         return JSONResponse(
             {
                 "scope": "single-process in-memory aggregates",
@@ -958,6 +994,7 @@ def create_app() -> FastAPI:
                     2,
                 ),
                 "max_latency_ms": round(values["max_latency_seconds"] * 1_000, 2),
+                "routes": routes,
                 "contains_customer_data": False,
             },
             headers={"Cache-Control": "no-store"},
@@ -970,6 +1007,7 @@ def create_app() -> FastAPI:
         risks = [
             (name, summary["risk_counts"].get(name, 0))
             for name in ("Low", "Moderate", "High", "Very high")
+            if summary["risk_counts"].get(name, 0)
         ]
         return templates.TemplateResponse(
             request,
@@ -1388,6 +1426,15 @@ def create_app() -> FastAPI:
             for key, value in research_metadata["per_market_test_metrics"].items()
         ]
         charts = _governance_charts(research_metadata)
+        monitoring = app.state.v4_evidence["monitoring-replay-evidence"]["stable"]
+        segment_calibration = [
+            ("Portfolio", monitoring["signals"]["calibration_gap"]),
+            *[
+                (row["segment"], row["calibration_gap"])
+                for row in monitoring["segment_metrics"]
+                if row["segment"].startswith("Utilization")
+            ],
+        ]
         feature_path = REPORT_DIR / "global_feature_evidence.json"
         feature_evidence = json.loads(feature_path.read_text(encoding="utf-8"))
         importance_rows: list[tuple[str, float]] = []
@@ -1410,6 +1457,8 @@ def create_app() -> FastAPI:
                 metadata=research_metadata,
                 primary=primary_report,
                 optimizer_stress=simulation["optimizer_stress"],
+                segment_calibration=segment_calibration,
+                support_example=support_example,
                 primary_charts=_primary_governance_charts(primary_report),
                 primary_importance=[
                     (item["feature"].replace("_", " ").title(), item["roc_auc_drop"])
@@ -1484,7 +1533,7 @@ def create_app() -> FastAPI:
             "v4_lab.html",
             context(
                 request,
-                title="V4.1 decision-science lab",
+                title="V4.2 decision-science lab",
                 behavioral=primary_report,
                 temporal=evidence.get("temporal-validation-evidence"),
                 monitoring_replay=evidence.get("monitoring-replay-evidence"),

@@ -25,7 +25,7 @@ rules and a recruiter-ready banking workflow in one Dockerized FastAPI service.
 3. [Policy simulator](https://limitiq-credit-line-optimization.onrender.com/simulator) — baseline-versus-scenario trade-offs.
 4. [Model governance](https://limitiq-credit-line-optimization.onrender.com/governance) — primary evidence, independent challenge and research benchmark.
 5. [Recruiter brief](docs/RECRUITER_BRIEF.md) — interview narrative, résumé bullets and role fit.
-6. [V4.1 model-improvement evidence](docs/MODEL_IMPROVEMENT_EVIDENCE.md) — calibration challenge, temporal stress, support routing and India/pilot gates.
+6. [V4.2 model-improvement evidence](docs/MODEL_IMPROVEMENT_EVIDENCE.md) — calibration challenge, vintage sensitivity, support routing and India/pilot gates.
 
 ## Product preview
 
@@ -50,17 +50,13 @@ The overview captures show the current interface and synthetic demonstration
 data. The workflow capture and linked secondary-route images record the verified
 v4 release; the linked public service remains authoritative.
 
-The **v4.1.0 release is live**. Render `/health` exposes application `4.1.0`, model
-`limitiq-behavioral-4.0.0-21234ab33f78`, dataset
-`uci-350-behavioral-6ba3a746be13` and the exact currently deployed commit.
-The v4.1 implementation commit `0ac35b7` passed an exact-commit CI gate with
-**137 passed** tests at **72.26% scoped statement coverage**. That historical
-2,963-statement denominator excluded `limitiq/external.py` and
-`limitiq/multisource.py`. Ruff, format, Bandit, dependency/secret scans,
-source/demo/SBOM checks, Docker, Trivy, container health and concurrency smoke all passed.
-Matching CodeQL and production browser/workflow verification passed.
+The **v4.2.0 release candidate is not yet tagged**. The last verified live chain is
+v4.1.0 at `5c6a5ceb0f444224bdd01feb48600b4474b7a685`; Render `/health`, GitHub CI
+and CodeQL agreed on that exact commit, model
+`limitiq-behavioral-4.0.0-21234ab33f78` and dataset
+`uci-350-behavioral-6ba3a746be13` before this release work began.
 
-The current Prompt 3 suite passes **157 tests**. Its default scoped
+That verified Prompt 3 suite passed **157 tests**. Its default scoped
 3,157-statement report is **75.61%**; the separately printed all-`limitiq`
 3,703-statement denominator, including both offline research CLIs, is
 **67.08%**. The deployed-model producer `behavioral.py` is **70.43%** covered.
@@ -74,17 +70,18 @@ loan study:
 |---|---|---|---|
 | **Primary** | Source-coherent behavioral application model | UCI Taiwan, 30,000 accounts, default in the following month | Drives only the educational synthetic demo |
 | **Research** | Cross-source transportability benchmark | 1,869,548 rows, six independent cohorts with different events and horizons | Governance evidence only; never drives account recommendations |
-| **Temporal study** | Expanding-window and stressed-segment robustness research | 400,000 seasoned US installment loans; terminal 36-month outcome | Never feeds card recommendations |
+| **Vintage study** | Vintage-ordered and stressed-segment sensitivity research | 400,000 seasoned US installment loans; matured terminal 36-month outcomes | Never feeds card recommendations; not a point-in-time backtest |
 
 This avoids pretending that heterogeneous public labels form one regulatory PD.
 The primary model still does **not** establish Indian-market, out-of-time,
 production, regulatory or fair-lending suitability.
 
-V4.1 adds a development-only four-candidate calibration challenge, conservative
-out-of-support manual-review routing, expanding-window temporal/stress evidence,
+V4.2 adds a development-only four-candidate calibration challenge, conservative
+out-of-support manual-review routing, vintage-ordered sensitivity/stress evidence,
 segment monitoring, an observed randomized-pilot analyzer and a strict Indian
-account-month forward-validation runner. It deliberately leaves the checksum-
-bound v4 primary unchanged until a genuinely new validation population exists.
+account-month forward-validation runner. It publishes the weak high-utilization
+calibration segment and caps that segment at +10%. It deliberately leaves the
+checksum-bound v4 primary unchanged until a genuinely new validation population exists.
 
 ## Exact primary-model evidence
 
@@ -127,14 +124,16 @@ proxy; they are demonstration assumptions, not verified ability-to-pay data.
 
 | Scenario result | Simulated value |
 |---|---:|
-| Current / proposed limits | ₹478.947M / ₹488.379M |
-| Current / proposed exposure proxy | ₹428.861M / ₹436.414M |
-| Current / proposed loss proxy | ₹53.247M / ₹53.746M |
-| +10% / +20% / +30% actions | 147 / 47 / 0 profiles |
+| Risk-adjusted return on incremental exposure | **6.25%** |
+| Contribution per eligible account | **₹2,342** |
+| Incremental expected loss / gross contribution | **32.29%** |
+| Current / proposed limits | ₹478.947M / ₹488.029M |
+| Current / proposed exposure proxy | ₹428.861M / ₹436.129M |
+| Current / proposed loss proxy | ₹53.247M / ₹53.723M |
+| +10% / +20% / +30% actions | 157 / 37 / 0 profiles |
 | Eligible increases | 194 profiles |
 | Manual review / freeze | 460 / 342 profiles |
-| Incremental contribution | **₹0.460M** |
-| Contribution / incremental exposure | **6.10%** |
+| Incremental contribution | **₹0.454M** |
 
 These are deterministic scenario outputs under disclosed risk-linked CCF,
 diminishing-response, affordability, revenue and cost assumptions. They are not
@@ -150,7 +149,8 @@ realized profit, IFRS 9 ECL or regulatory capital.
 - Strict transient batch scoring: 5 MB / 5,000 rows, no retention
 - Two-track model governance, calibration, source stability and limitations
 - Printable credit-committee memo and downloadable evidence
-- `/health`, `/live`, `/ready` and aggregate-only `/ops` operational endpoints
+- `/health`, `/live`, `/ready` and aggregate-only `/ops` operational endpoints,
+  including bounded per-route p50/p95 latency
 - INR-native simulation with presentation-only USD/EUR display conversion
 
 ## Decision logic
@@ -164,6 +164,7 @@ candidates, then maximizes simulated risk-adjusted contribution subject to:
 - overextension safeguards
 - manual-review and early-warning routing
 - three-or-more development-support breaches routed to manual review
+- +10% maximum for the stable replay's weakly calibrated ≥70%-utilization segment
 - explicit customer acceptance before any positive offer is activated
 - application-level rollback via `AUTO_INCREASES_ENABLED=false`
 
@@ -172,6 +173,9 @@ Expected loss proxy is `score × LGD × EAD`; the account ceiling is explicitly 
 assumption, while response decays exponentially as the increase grows. Incremental
 contribution is simulated interchange + interest − incremental loss − funding − capital − servicing cost.
 No automatic punitive line decrease is recommended.
+The +30% rung remains available but is unpopulated in the current demo: under the
+current decay and CCF assumptions it is reachable only for high-utilization,
+low-risk accounts in a narrow window below the 1.10 overextension safeguard.
 
 ## Architecture
 
@@ -256,11 +260,11 @@ docker run --rm -p 8000:8000 limitiq
 - Pinned runtime and development dependencies
 - Deterministic source manifest with URLs, licence/terms, hashes and row counts
 - CycloneDX 1.6 direct-dependency [SBOM](sbom/limitiq.cdx.json)
-- Release [SHA-256 manifest](release/checksums-v4.1.0.sha256) covering the
+- Release [SHA-256 manifest](release/checksums-v4.2.0.sha256) covering the
   behavioral and temporal models, metadata, schema, evidence, demo portfolio,
   executive report, India contract and SBOM. Verify it with
-  `sha256sum -c release/checksums-v4.1.0.sha256`; text entries are SHA-256 of
-  LF-normalised UTF-8 content.
+  `sha256sum -c release/checksums-v4.2.0.sha256`; entries are SHA-256 of the
+  literal committed bytes, with text artifacts committed as LF UTF-8.
 - GitHub Actions for tests, coverage, Ruff, Bandit, dependency/secret scanning,
   Docker build, Trivy image scan, health and concurrency smoke
 - Separate CodeQL workflow and Dependabot configuration
@@ -278,7 +282,7 @@ docker run --rm -p 8000:8000 limitiq
 - [Model and decision-component inventory](docs/MODEL_INVENTORY.md)
 - [Randomized pilot design](docs/EXPERIMENT_DESIGN.md)
 - [India readiness assessment](docs/INDIA_READINESS.md)
-- [V4.1 model-improvement evidence](docs/MODEL_IMPROVEMENT_EVIDENCE.md)
+- [V4.2 model-improvement evidence](docs/MODEL_IMPROVEMENT_EVIDENCE.md)
 - [Model card](docs/MODEL_CARD.md) and [data card](docs/DATA_CARD.md)
 - [Methodology](docs/METHODOLOGY.md), [PRD](docs/PRD.md), [architecture](docs/ARCHITECTURE.md)
 - [Career targeting guide](docs/CAREER_TARGETING.md)
@@ -292,6 +296,8 @@ repository owner's dated attestation and is not an independent legal opinion.
 
 - Primary source is Taiwan, 2005; India and temporal portability are unproven.
 - Primary evidence uses a random within-source split, not a mature future vintage.
+- The loan study orders vintages with matured terminal labels; it is not a
+  point-in-time backtest because 2013 outcomes were not observable until 2016.
 - Rich repayment behavior improves within-source metrics but does not prove portability.
 - No dataset observes treatment response to a limit increase.
 - Fairness diagnostics cannot establish jurisdiction-specific legal compliance.
@@ -302,19 +308,22 @@ The correct next step is representative local data, a future-vintage holdout,
 organizationally independent validation and a governed randomized pilot—not a
 larger decorative model.
 
-V4.1 closes the software-readiness portion of those next steps; the evidence
+V4.2 closes more of the software-readiness portion of those next steps; the evidence
 gates stay open because public files cannot substitute for representative Indian
 outcomes or observed line-increase treatments.
 
 ## V4 decision-science workbench
 
 The [v4 decision-science workbench](docs/V4_WORKBENCH.md) adds a 17-feature Taiwan behavioral primary,
-ordered US loan-vintage validation, mixed-integer portfolio allocation, executable
+ordered US loan-vintage sensitivity, mixed-integer portfolio allocation, executable
 monitoring and experiment replays, model-linked sensitivities, a maker-checker demo
 and a machine-readable India readiness contract.
 
 ## Release history
 
+- **v4.2.0:** segment-calibration control, support-range repair and exhibited
+  routing, honest vintage relabel, unit economics, latency gates and pinned base image;
+  frozen primary model unchanged.
 - **v4.1.0:** calibration/challenger evidence, support-bound review routing,
   temporal stress cohorts, segment monitoring, observed-pilot analysis and a
   governed India forward-validation gate; frozen primary model unchanged.

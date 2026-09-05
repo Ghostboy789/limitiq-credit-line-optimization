@@ -65,9 +65,9 @@
       <article class="posture-card">
         <h3>Portfolio posture</h3>
         <dl>
-          <div><dt>Synthetic profiles</dt><dd>{{ summary.accounts|number }}</dd></div>
-          <div><dt>Eligible increases</dt><dd>{{ summary.eligible_increases|number }}</dd></div>
-          <div><dt>Simulated contribution</dt><dd>{{ summary.incremental_contribution|money(ccy) }}</dd></div>
+          <div><dt>Risk-adjusted return</dt><dd>{{ summary.risk_adjusted_return|percent }}</dd></div>
+          <div><dt>Contribution / eligible account</dt><dd>{{ summary.contribution_per_eligible_account|money(ccy) }}</dd></div>
+          <div><dt>Loss share of gross contribution</dt><dd>{{ summary.expected_loss_share_of_gross_contribution|percent }}</dd></div>
         </dl>
       </article>
 
@@ -84,10 +84,10 @@
       <p>Observed inputs, model estimates and simulations stay visibly separated throughout the decision trail.</p>
     </header>
     <dl class="portfolio-ledger-grid">
-      <div><dt>Current credit limits</dt><dd>{{ summary.current_limit|money(ccy) }}</dd><small>Synthetic portfolio inputs</small></div>
-      <div><dt>Proposed credit limits</dt><dd>{{ summary.proposed_limit|money(ccy) }}</dd><small>Simulated policy outcome</small></div>
-      <div><dt>Incremental contribution</dt><dd>{{ summary.incremental_contribution|money(ccy) }}</dd><small>Simulated annualized economics</small></div>
       <div><dt>Risk-adjusted return proxy</dt><dd>{{ summary.risk_adjusted_return|percent }}</dd><small>Contribution ÷ incremental exposure</small></div>
+      <div><dt>Contribution / eligible account</dt><dd>{{ summary.contribution_per_eligible_account|money(ccy) }}</dd><small>Simulated annualized unit economics</small></div>
+      <div><dt>Loss share of gross contribution</dt><dd>{{ summary.expected_loss_share_of_gross_contribution|percent }}</dd><small>Incremental expected loss ÷ gross contribution</small></div>
+      <div><dt>Incremental contribution</dt><dd>{{ summary.incremental_contribution|money(ccy) }}</dd><small>Simulated absolute portfolio total</small></div>
     </dl>
     <div class="dashboard-grid landing-charts">
       {{ horizontal_bars('portfolio-actions', 'Simulated recommendations', 'Account count by governed policy outcome.', actions) }}

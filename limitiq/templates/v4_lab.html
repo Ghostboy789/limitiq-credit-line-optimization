@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="page-heading"><p class="eyebrow">Executable evidence</p><h1>V4.1 decision-science lab</h1><p>Eight governed evidence tracks connect behavioral risk, calibration, temporal stability, portfolio allocation, experimentation and human oversight.</p></section>
+<section class="page-heading"><p class="eyebrow">Executable evidence</p><h1>V4.2 decision-science lab</h1><p>Eight governed evidence tracks connect behavioral risk, calibration, vintage sensitivity, portfolio allocation, experimentation and human oversight.</p></section>
 <div class="notice" role="note"><strong>Boundary:</strong> The behavioral model drives only synthetic educational decisions. The temporal loan model is separate research; monitoring and experiment outcomes are deterministic simulations; the India contract validates readiness only.</div>
 {% if message %}<div class="notice" role="status">{{ message }}</div>{% endif %}
 <section class="metric-grid">
@@ -15,7 +15,7 @@
 </section>
 <section class="two-column">
   <article class="panel"><p class="eyebrow">1 · Rich behavioral primary</p><h2>Six-month behavioral history</h2>{% if behavioral %}<p>Uses {{ behavioral.schema.engineered_features|length }} engineered repayment, bill, utilization and payment features. Test Brier {{ behavioral.untouched_test_metrics.brier_score|round(4) }} versus {{ behavioral.v3_two_feature_benchmark.metrics_on_same_test_rows.brier_score|round(4) }} for v3.</p>{% else %}<p>Primary evidence is unavailable.</p>{% endif %}</article>
-  <article class="panel"><p class="eyebrow">2 · Temporal stability</p><h2>Ordered loan vintages</h2>{% if temporal %}<p>Train through {{ temporal.split.train_through }}, calibrate on {{ temporal.split.validation }}, evaluate once on {{ temporal.split.untouched_test }}. This loan-domain track never feeds card decisions.</p>{% else %}<p>The large vintage build is not yet complete.</p>{% endif %}</article>
+  <article class="panel"><p class="eyebrow">2 · Vintage sensitivity</p><h2>Matured terminal labels</h2>{% if temporal %}<p>Vintage-ordered train through {{ temporal.split.train_through }}, calibrate on {{ temporal.split.validation }}, evaluate once on {{ temporal.split.untouched_test }}. A 2013 loan's 36-month terminal outcome was not observable until 2016, so this is not a point-in-time backtest or temporal-stability evidence. This loan-domain track never feeds card decisions.</p>{% else %}<p>The large vintage build is not yet complete.</p>{% endif %}</article>
 </section>
 <section class="two-column">
   <article class="panel"><p class="eyebrow">3 · Global allocation</p><h2>Portfolio constraints</h2><p>The engine solves one candidate per account under exposure, loss-growth, capital-budget and higher-risk concentration constraints instead of dropping accounts greedily.</p></article>

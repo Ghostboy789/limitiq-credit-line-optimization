@@ -52,6 +52,16 @@ BOOTSTRAP_SEED = SEED + 4_100
 BEHAVIORAL_HGB_ITERATIONS = 180
 
 
+def boosting_configuration(model: Any) -> dict[str, Any]:
+    estimators = [item.estimator.named_steps["model"] for item in model.calibrated_classifiers_]
+    return {
+        "maximum_iterations": BEHAVIORAL_HGB_ITERATIONS,
+        "early_stopping": estimators[0].early_stopping,
+        "validation_fraction": estimators[0].validation_fraction,
+        "effective_iterations_by_calibration_fold": [int(item.n_iter_) for item in estimators],
+    }
+
+
 def _canonical_sha256(value: Any) -> str:
     return hashlib.sha256(
         json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
@@ -427,6 +437,7 @@ def train_behavioral_candidate(
         schema_path.name: _text_sha256(schema_path),
         report_path.name: _text_sha256(report_path),
     }
+    metadata["boosting_configuration"] = boosting_configuration(champion)
     _write_json(model_dir / CANDIDATE_METADATA_PATH.name, metadata)
     return payload
 

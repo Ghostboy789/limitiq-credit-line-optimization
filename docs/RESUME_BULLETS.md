@@ -11,7 +11,10 @@
 - Separated a 1.87M-row heterogeneous transportability benchmark from the
   decision model, then shipped checksum-bound artifacts, transient batch
   inference, policy simulation, validation evidence, Docker CI and security
-  gates; kept ₹2.98M scenario contribution explicitly simulated.
+  gates; demonstrated a higher-risk allocation cap binding at 60/60 with a
+  ₹2,815.08 finite-difference value per additional account in
+  `reports/behavioral_optimizer_stress.json`, while keeping ₹0.454M contribution
+  explicitly simulated.
 
 Deployment-focused alternative—use only after the v4 commit is verified live:
 
@@ -20,5 +23,5 @@ Deployment-focused alternative—use only after the v4 commit is verified live:
   SBOM, Trivy image scan, container health and concurrency smoke; verified
   portfolio, simulator, batch, report and operational endpoints over HTTPS.
 
-Never claim that ₹2.98M is observed or realized impact, that the primary model
+Never claim that ₹0.454M is observed or realized impact, that the primary model
 is validated for India, or that any employer reviewed or endorsed the project.

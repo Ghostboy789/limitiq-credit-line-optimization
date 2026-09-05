@@ -188,7 +188,9 @@ def train_forward_validation(
         joblib.dump(champion, model_path, compress=3)
         payload["model_sha256"] = hashlib.sha256(model_path.read_bytes()).hexdigest()
         report_path.write_text(
-            json.dumps(payload, indent=2, allow_nan=False) + "\n", encoding="utf-8"
+            json.dumps(payload, indent=2, allow_nan=False) + "\n",
+            encoding="utf-8",
+            newline="\n",
         )
     return payload
 
@@ -220,7 +222,9 @@ def main() -> None:
     if args.readiness_output:
         args.readiness_output.parent.mkdir(parents=True, exist_ok=True)
         args.readiness_output.write_text(
-            json.dumps(readiness_report(), indent=2, allow_nan=False) + "\n", encoding="utf-8"
+            json.dumps(readiness_report(), indent=2, allow_nan=False) + "\n",
+            encoding="utf-8",
+            newline="\n",
         )
         print(args.readiness_output)
         return

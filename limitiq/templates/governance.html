@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% from "_charts.html" import line_chart, horizontal_bars, histogram, cohort_comparison, value_bars, pdp_card %}
 {% block content %}
-<section class="page-heading"><p class="eyebrow">Independent challenge & control</p><h1>Multi-track model governance</h1><p>The source-coherent behavioral primary drives this educational decision demo. Separate pooled and temporal models investigate transportability and vintage stability without feeding account recommendations.</p></section>
+<section class="page-heading"><p class="eyebrow">Independent challenge & control</p><h1>Multi-track model governance</h1><p>The source-coherent behavioral primary drives this educational decision demo. Separate pooled and vintage-ordered models investigate transportability and vintage sensitivity without feeding account recommendations.</p></section>
 <section class="validation-verdict" aria-labelledby="validation-verdict-heading">
   <div><p class="eyebrow">Validation verdict</p><h2 id="validation-verdict-heading">Conditional approval for educational portfolio simulation only</h2></div>
   <p><strong>Not approved</strong> for real lending decisions, regulatory PD, IFRS 9, Indian-customer decisions or automated customer treatment. Any broader use requires coherent target and horizon evidence, representative local validation, effective challenge and formal accountable approval.</p>
@@ -20,6 +20,17 @@
   </div><p class="footnote">{{ binding.method }} No causal or realized financial effect is claimed.</p>
 </section>
 
+<section class="panel"><div class="section-heading"><div><p class="eyebrow">Stable replay calibration</p><h2>Calibration is weakest where the policy acts</h2></div><span class="badge action">Monitoring evidence</span></div>
+  <p>The high-utilization segment has a 0.0708 calibration gap, 3.7× the 0.0192 portfolio figure. Because these accounts are candidates for increases, the policy caps them at +10%. This is an assumption-driven control, not an estimated treatment effect.</p>
+  {{ value_bars('segment-calibration-gaps', 'Calibration gap by utilization segment', 'Absolute calibration gaps from the deterministic stable monitoring replay; lower is better.', segment_calibration, digits=4) }}
+  <table class="sr-only"><caption>Exact stable-replay calibration gaps</caption><thead><tr><th>Segment</th><th>Calibration gap</th></tr></thead><tbody>{% for label, gap in segment_calibration %}<tr><td>{{ label }}</td><td>{{ '%.4f'|format(gap) }}</td></tr>{% endfor %}</tbody></table>
+</section>
+
+<section class="panel"><div class="section-heading"><div><p class="eyebrow">Exhibited support control</p><h2>Synthetic request routed before optimization</h2></div><span class="badge action">Demonstrated control</span></div>
+  <p>{{ support_example.classification }}. <strong>{{ support_example.account_id }}</strong> breaches {{ support_example.breach_count|number }} engineered support bounds and routes to <strong>{{ support_example.action }}</strong>.</p>
+  <div class="table-wrap" tabindex="0" aria-label="Synthetic out-of-support control example"><table><thead><tr><th>Breached features</th><th>Reason codes</th></tr></thead><tbody><tr><td>{{ support_example.breaches|join(', ')|replace('_', ' ') }}</td><td>{{ support_example.reason_codes|join(' · ') }}</td></tr></tbody></table></div>
+</section>
+
 <section class="panel"><div class="section-heading"><div><p class="eyebrow">Primary decision track</p><h2>UCI Taiwan next-month default</h2></div><span class="badge action">Behavioral primary</span></div>
   <p>One disclosed event and one-month horizon; 18,000 training, 6,000 validation and 6,000 untouched-test rows. Only utilization and delinquency count are active. Random within-source validation does not establish out-of-time or geographic portability.</p>
   <div class="metric-grid four">
@@ -31,7 +42,7 @@
   <div class="table-wrap" tabindex="0" aria-label="Scrollable primary model comparison"><table><thead><tr><th>Candidate</th><th>ROC-AUC</th><th>PR-AUC</th><th>Brier</th><th>Log loss</th></tr></thead><tbody>{% for name, result in primary.validation_models.items() %}<tr><td><strong>{{ name }}</strong>{% if name == primary.champion %}<span class="badge action">Champion</span>{% endif %}</td><td>{{ result.roc_auc|round(3) }}</td><td>{{ result.pr_auc|round(3) }}</td><td>{{ result.brier_score|round(3) }}</td><td>{{ result.log_loss|round(3) }}</td></tr>{% endfor %}</tbody></table></div>
   <div class="dashboard-grid">
     {{ line_chart('primary-roc', 'Primary ROC curve', 'Discrimination on the 6,000-row untouched Taiwan test partition.', primary_charts.roc, 'False positive rate', 'True positive rate') }}
-    {{ line_chart('primary-calibration', 'Primary calibration', 'Pooled-calibrated score compared with observed next-month default in quantile bins.', primary_charts.calibration, 'Mean predicted probability', 'Observed next-month default rate') }}
+    {{ line_chart('primary-calibration', 'Primary calibration', 'Calibrated score compared with observed next-month default in quantile bins.', primary_charts.calibration, 'Mean predicted probability', 'Observed next-month default rate') }}
   </div>
   <div class="two-column">
     <article><p class="eyebrow">Threshold outcome</p><h3>Primary untouched-test confusion matrix</h3><div class="confusion"><div></div><strong>Predicted non-default</strong><strong>Predicted default</strong><strong>Observed non-default</strong><span>{{ primary.untouched_test_metrics.confusion_matrix[0][0]|number }}</span><span>{{ primary.untouched_test_metrics.confusion_matrix[0][1]|number }}</span><strong>Observed default</strong><span>{{ primary.untouched_test_metrics.confusion_matrix[1][0]|number }}</span><span>{{ primary.untouched_test_metrics.confusion_matrix[1][1]|number }}</span></div><p>Precision {{ primary.untouched_test_metrics.precision|percent }} · Recall {{ primary.untouched_test_metrics.recall|percent }} · F1 {{ primary.untouched_test_metrics.f1|percent }}</p></article>

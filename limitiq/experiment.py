@@ -310,7 +310,11 @@ def main() -> None:
         "required_rows_per_arm": required_sample_per_arm(0.10, 0.01),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(payload, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    args.output.write_text(
+        json.dumps(payload, indent=2, allow_nan=False) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     print(json.dumps(payload, indent=2))
 
 

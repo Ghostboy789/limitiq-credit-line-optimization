@@ -152,12 +152,12 @@ def test_behavioral_primary_artifacts_are_checksum_bound_and_sane() -> None:
     assert optimizer_stress["binding_constraint"]["shadow_price_inr_per_additional_account"] > 0
 
 
-def test_v41_release_manifest_matches_current_artifacts() -> None:
+def test_v42_release_manifest_matches_current_artifacts_and_uses_lf() -> None:
     entries = {
         relative: checksum
         for checksum, relative in (
             line.split(maxsplit=1)
-            for line in (ROOT / "release" / "checksums-v4.1.0.sha256")
+            for line in (ROOT / "release" / "checksums-v4.2.0.sha256")
             .read_text(encoding="utf-8")
             .splitlines()
             if line
@@ -191,3 +191,5 @@ def test_v41_release_manifest_matches_current_artifacts() -> None:
             else hashlib.sha256(path.read_text(encoding="utf-8").encode()).hexdigest()
         )
         assert actual == expected, relative
+        if path.suffix not in {".joblib", ".pdf"}:
+            assert b"\r" not in path.read_bytes(), relative

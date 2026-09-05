@@ -1,5 +1,48 @@
 # QA report
 
+## V4.2.0 release candidate — 5 September 2026
+
+- Frozen model scores and SHA-256 remain unchanged. The fitted calibrated HGB
+  folds expose effective iteration counts **62 / 55 / 83** under the documented
+  180-iteration early-stopping configuration.
+- The payment-to-bill ratios are capped at **5.0** before generic feature
+  clipping, and the governance page includes a synthetic out-of-support example
+  with explicit support flags and manual-review routing.
+- High-utilization accounts in the weakly calibrated segment are capped at a
+  **+10%** increase. The candidate portfolio selects **157 +10%**, **37 +20%**,
+  **0 +30%**, **204 holds**, **460 manual reviews** and **342 freezes**.
+- Simulated incremental contribution is **INR 454,414.31**; gross contribution
+  is **INR 1,473,970.50**, incremental expected loss is **INR 475,890.70**,
+  expected loss is **32.29%** of gross contribution, contribution per eligible
+  account is **INR 2,342.34**, and derived break-even response elasticity is
+  **0.2421**. These are synthetic decision assumptions, not realized economics.
+- The complete Windows Python 3.12 suite passes **161 tests** at **76.07%**
+  scoped coverage across 3,209 statements. Honest all-`limitiq` coverage is
+  **67.59%** across 3,755 statements, and deployed-model producer
+  `limitiq/behavioral.py` is **70.94%** covered.
+- Ruff lint/format, Bandit, pip-audit, tracked-file secret scanning, primary
+  smoke training, analytics reconciliation, SBOM verification and the literal
+  19-entry v4.2 checksum manifest all pass locally.
+- Local Playwright QA covered **27 route/viewport combinations** across nine
+  routes at 1440x1000, 768x1024 and 390x844. There was no page-level overflow;
+  keyboard search/navigation, reduced motion, sticky table cells, disclosure
+  behavior, the extreme simulator and valid/invalid batch flows passed. The
+  only browser console error was the expected 422 response in the intentional
+  invalid-batch test; a fresh overview console was clean.
+- Warm GET `Server-Timing` was below the 500 ms gate on all 12 checked routes
+  (worst: governance at **13.27 ms**). The 50-request `/v4-lab` benchmark
+  completed 50/50 at **30.46 ms p50 / 51.50 ms p95**; the three-request,
+  500-row multipart `/batch` benchmark completed 3/3 at **2.267 s p50 /
+  2.391 s p95**. These are point-in-time local smoke measurements, not capacity
+  claims.
+- Both regenerated executive PDFs are two-page A4 documents with descriptive
+  metadata and render all four pages successfully through Poppler. The Windows
+  sandbox image helper failed before model-side visual inspection, so this
+  section does not claim a fresh visual PDF-layout pass.
+- This section records local candidate evidence only. CI, CodeQL, exact-commit
+  Render verification and production browser QA will be recorded only after
+  they pass for the v4.2 release boundary.
+
 ## Prompt 3 allocator and affordability release - 5 September 2026
 
 - The complete Windows Python 3.12 suite passes **157 tests** at **75.61%**
@@ -29,6 +72,7 @@
 - Both pages of `reports/executive_report.pdf` were rendered and visually
   checked without clipping or overlap. Playwright rendered overview, portfolio,
   affordability-blocked account, simulator and governance at 1440, 768 and
+  390 px without page-level overflow or browser-console errors.
 ## Split, policy and analysis controls — 4 September 2026
 
 - The complete local suite passes **154 tests**.

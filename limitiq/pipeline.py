@@ -69,7 +69,7 @@ from limitiq.optimizer import portfolio_sensitivity, recommend_portfolio, summar
 
 def _write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, indent=2, ensure_ascii=False), encoding="utf-8")
+    path.write_text(json.dumps(value, indent=2, ensure_ascii=False), encoding="utf-8", newline="\n")
 
 
 def _sha256(path: Path) -> str:

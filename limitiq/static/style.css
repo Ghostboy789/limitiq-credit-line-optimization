@@ -203,7 +203,7 @@ table { width: 100%; min-width: max-content; border-collapse: collapse; backgrou
 th, td { padding: 13px 14px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: middle; white-space: nowrap; }
 th { color: var(--navy-800); background: #f2f6f7; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
 .portfolio-table th { position: sticky; z-index: 2; top: 0; }
-.portfolio-table th:first-child, .portfolio-table td:first-child { position: sticky; z-index: 1; left: 0; background: #fff; box-shadow: 1px 0 0 var(--line); }
+.portfolio-table th:first-child, .portfolio-table td:first-child { position: sticky; z-index: 1; left: 0; background: var(--surface-subtle); box-shadow: 1px 0 0 var(--line); }
 .portfolio-table th:first-child { z-index: 3; background: #f2f6f7; }
 .portfolio-table tbody tr:hover td:first-child { background: #f6fafb; }
 th a { color: inherit; }
@@ -319,8 +319,6 @@ summary { cursor: pointer; font-weight: 700; }
 .metric-grid .metric:nth-child(2), .dashboard-grid > :nth-child(2), .report-grid article:nth-child(2) { animation-delay: 50ms; }
 .metric-grid .metric:nth-child(3), .dashboard-grid > :nth-child(3), .report-grid article:nth-child(3) { animation-delay: 100ms; }
 .metric-grid .metric:nth-child(4), .dashboard-grid > :nth-child(4), .report-grid article:nth-child(4) { animation-delay: 150ms; }
-.reveal { opacity: 0; transform: translateY(24px); transition: opacity 720ms var(--ease-out), transform 720ms var(--ease-out); }
-.reveal.is-visible { opacity: 1; transform: translateY(0); }
 @media (hover: hover) {
   .metric:hover, .report-grid article:hover { border-color: #c4d0d4; box-shadow: var(--shadow-hover); transform: translateY(-5px); }
   .metric:hover::after { opacity: .8; transform: scale(1.25); }

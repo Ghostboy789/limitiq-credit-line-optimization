@@ -14,8 +14,10 @@ data/processed/clean_source.csv
 data/processed/splits/
 uploads/
 playwright-report/
+.playwright-cli/
 test-results/
 tmp/
+.tmp/
 *.log
 .DS_Store
 Thumbs.db

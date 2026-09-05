@@ -85,6 +85,10 @@ def test_deployed_iterations_and_in_range_predictions_are_unchanged() -> None:
         calibrated.estimator.named_steps["model"].max_iter
         for calibrated in model.calibrated_classifiers_
     } == {BEHAVIORAL_HGB_ITERATIONS}
+    assert sorted(
+        calibrated.estimator.named_steps["model"].n_iter_
+        for calibrated in model.calibrated_classifiers_
+    ) == [55, 62, 83]
 
     raw = synthetic_behavioral_profiles(5)[TAIWAN_MODEL_INPUT_COLUMNS]
     expected = np.asarray(

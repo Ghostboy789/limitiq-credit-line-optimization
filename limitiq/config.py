@@ -24,13 +24,14 @@ DATASET_LICENSE = "CC BY 4.0"
 SOURCE_CURRENCY = "TWD"
 DISPLAY_CURRENCY = "INR"
 TWD_TO_INR = 2.97
-USD_TO_INR = 83.0
-DEM_TO_INR = 45.0
-EUR_TO_INR = 90.0
-CURRENCY_RATE_DATE = "2026-07-31"
+USD_TO_INR = 96.5390
+EUR_TO_INR = 109.8681
+DEM_TO_INR = EUR_TO_INR / 1.95583
+CURRENCY_RATE_DATE = "2026-07-24 (USD/EUR); 2026-07-31 (TWD)"
 CURRENCY_RATE_SOURCES = (
     "https://rate.bot.com.tw/cr?Lang=en-US",
     "https://m.rbi.org.in/Scripts/BS_ViewBulletin.aspx?Id=22920",
+    "https://economy-finance.ec.europa.eu/euro/eu-countries-and-euro/conversion-rates_en",
 )
 CURRENCY_RATES = {
     "TWD": TWD_TO_INR,
@@ -47,11 +48,11 @@ CURRENCY_RATES = {
 DEFAULT_DISPLAY_CURRENCY = "INR"
 DISPLAY_RATES = {
     "INR": 1.0,
-    "USD": 1.0 / 95.4,
-    "EUR": 1.0 / 110.0,
+    "USD": 1.0 / 96.5390,
+    "EUR": 1.0 / 109.8681,
 }
-DISPLAY_RATE_DATE = "2026-07-31"
-DISPLAY_RATE_SOURCES = CURRENCY_RATE_SOURCES
+DISPLAY_RATE_DATE = "2026-07-24"
+DISPLAY_RATE_SOURCES = ("https://m.rbi.org.in/Scripts/BS_ViewBulletin.aspx?Id=22920",)
 
 AUTO_INCREASES_ENABLED = os.getenv("AUTO_INCREASES_ENABLED", "true").strip().lower() in {
     "1",
@@ -89,6 +90,8 @@ class PolicyAssumptions:
     portfolio_capital_budget: float = 25_000_000.0
     max_higher_risk_increase_share: float = 0.25
     expected_loss_ceiling: float = 0.12
+    weak_calibration_utilization_threshold: float = 0.70
+    weak_calibration_max_increase: float = 0.10
     profitability_hurdle: float = 300.0
 
     def validate(self) -> None:
@@ -108,6 +111,8 @@ class PolicyAssumptions:
             "capital_allocation_rate",
             "max_higher_risk_increase_share",
             "expected_loss_ceiling",
+            "weak_calibration_utilization_threshold",
+            "weak_calibration_max_increase",
         )
         for name in rates:
             value = getattr(self, name)
