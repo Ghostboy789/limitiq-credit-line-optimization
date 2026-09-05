@@ -5,7 +5,7 @@ markdown-it-py==4.2.0
 python-multipart==0.0.32
 pandas==2.3.1
 numpy==2.3.2
-scikit-learn==1.7.1
+scikit-learn==1.9.0
 scipy==1.17.1
 joblib==1.5.1
 xlrd==2.0.2
