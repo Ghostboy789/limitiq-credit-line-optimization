@@ -10,3 +10,10 @@
 *.ttf binary
 *.xls binary
 limitiq/static/vendor/*.min.js binary
+
+# Language statistics. The repository is a Python risk-modelling project; the
+# presentation layer and generated evidence should not dominate the language bar.
+limitiq/static/vendor/* linguist-vendored
+reports/*.html linguist-generated
+limitiq/templates/*.html linguist-detectable=false
+limitiq/static/*.css linguist-detectable=false
