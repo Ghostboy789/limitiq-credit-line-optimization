@@ -21,7 +21,11 @@ jobs:
         env:
           HEALTH_URL: https://limitiq-credit-line-optimization.onrender.com/health
         run: |
+          # Render free tier cold-starts take ~40-60s, so --max-time is generous.
           curl --fail --silent --show-error \
-            --retry 5 --retry-all-errors --retry-delay 20 --max-time 60 \
+            --retry 5 --retry-all-errors --retry-delay 20 --max-time 120 \
             "$HEALTH_URL" --output health.json
-          python -c 'import json; d=json.load(open("health.json", encoding="utf-8")); assert d["status"] == "ok"; assert d["version"] == "4.1.0"; assert d["model_version"].startswith("limitiq-behavioral-4.0.0-"); print(d["deployment_commit"])'
+          # The app version is deliberately not pinned: it moves with every
+          # release and pinning it turns this into a daily false alarm. Model
+          # and dataset provenance are what this check exists to guard.
+          python -c 'import json; d=json.load(open("health.json", encoding="utf-8")); assert d["status"] == "ok"; assert d["version"]; assert d["model_version"].startswith("limitiq-behavioral-4.0.0-"); assert d["dataset_version"].startswith("uci-350-behavioral-"); print(d["version"], d["model_version"], d["deployment_commit"])'
