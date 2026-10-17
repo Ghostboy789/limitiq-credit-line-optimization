@@ -9,4 +9,4 @@ scikit-learn==1.7.1
 scipy==1.17.1
 joblib==1.5.1
 xlrd==2.0.2
-reportlab==4.4.3
+reportlab==5.0.1
